@@ -1,27 +1,49 @@
 import Image from "next/image";
 import { database } from "@/src/db/database";
-import { bids as bidsSchema } from "@/src/db/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { revalidatePath } from "next/cache";
+import SignIn from "@/components/ui/sign-in";
+import { SignOut } from "@/components/ui/sign-out";
+import { auth } from "./auth";
+import { items } from "@/src/db/schema";
 
 export default async function HomePage() {
-  const bids = await database.query.bids.findMany();
+  const session = await auth();
+
+  console.log(database);
+  console.log(database.query);
+  const allItems = await database.query.items.findMany();
+
+  if (!session) return null;
+
+  const user = session.user;
+
+  if (!user) return null;
+
+  const renderButtons = () => (session ? <SignOut /> : <SignIn />);
+  const renderName = () => user.name;
+
   return (
     <main className="container mx-auto py-12">
+      {renderButtons()}
+      {renderName()}
       <form
         action={async (formData: FormData) => {
           "use server";
-          await database.insert(bidsSchema).values({});
+          await database.insert(items).values({
+            name: formData.get("name") as string,
+            userId: user.id!,
+          });
           revalidatePath("/");
         }}
       >
-        <Input name="bid" placeholder="Bid" />
+        <Input name="name" placeholder="Name your Item" />
         <Button type="submit">Place Bid</Button>
       </form>
 
-      {bids.map((bid) => (
-        <div key={bid.id}>{bid.id}</div>
+      {allItems.map((item) => (
+        <div key={item.id}>{item.name}</div>
       ))}
     </main>
   );
