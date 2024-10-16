@@ -24,6 +24,7 @@ export async function createItemAction(formData: FormData) {
     name: formData.get("name") as string,
     startingPrice: parseFloat(formData.get("startingPrice") as string),
     userId: user.id!,
+    imageId: formData.get("imageId") as string, // Add the imageId from the form data
   });
   // action after user clicked the button
   redirect("/");
