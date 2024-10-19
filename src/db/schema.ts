@@ -72,6 +72,7 @@ export const items = pgTable("bb_item", {
     name: text("name").notNull(),
     startingPrice: integer("startingPrice").notNull().default(0),
     imageId: text("imageId"), // New column for storing the image ID
+    bidInterval: integer("bidInterval").notNull().default(100),
   });
 
 

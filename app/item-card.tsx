@@ -3,8 +3,8 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Item } from "@/src/db/schema";
-import { index } from "drizzle-orm/pg-core";
 import { CldImage } from "next-cloudinary";
+import Link from "next/link";
 
 function ItemCard({ item }: { item: Item }) {
   return (
@@ -28,7 +28,9 @@ function ItemCard({ item }: { item: Item }) {
               Starting price : ${item.startingPrice}
             </p>
           </div>
-          <Button size="sm">Bid Now</Button>
+          <Button asChild size="sm">
+            <Link href={`items/${item.id}`}>Bid Now</Link>
+          </Button>
         </CardFooter>
       </Card>
     </div>

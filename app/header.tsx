@@ -13,15 +13,24 @@ export async function Header() {
         <div className="flex items-center gap-8">
           <Link href="/" className="hover:underline flex items-center gap-1">
             <Image src="/public/next.svg" width="50" height="50" alt="Logo" />
-            BidBidder.com
+            All Auction
           </Link>
 
-          <Link
-            href="/items/create"
-            className="hover:underline flex items-center gap-1"
-          >
-            Auction Item
-          </Link>
+          <div className="flex items-center gap-8">
+            <Link
+              href="/items/create"
+              className="hover:underline flex items-center gap-1"
+            >
+              Create Auction
+            </Link>
+
+            <Link
+              href="/auctions"
+              className="hover:underline flex items-center gap-1"
+            >
+              My Auction
+            </Link>
+          </div>
         </div>
 
         <div className="flex items-center gap-4">

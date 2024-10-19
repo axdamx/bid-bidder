@@ -59,8 +59,8 @@ export default function CreatePage() {
 
         <CldUploadWidget
           uploadPreset="jzhhmoah"
-          onSuccess={(results: UploadResult) => {
-            setImageId(results?.info.public_id); // Set image ID when upload is successful
+          onSuccess={(results) => {
+            setImageId(results?.info?.public_id); // Set image ID when upload is successful
             setIsImageUploaded(true); // Enable form submission after upload
           }}
         >
