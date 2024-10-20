@@ -3,8 +3,9 @@
 import { auth } from "@/app/auth"
 import { database } from "@/src/db/database";
 import { bids, items } from "@/src/db/schema";
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { broadcastNewBid } from "../../../websocketServer"; // Adjust the path based on your project structure
 
 export async function createBidAction(itemId: number) {
     const session = await auth();
@@ -36,6 +37,25 @@ export async function createBidAction(itemId: number) {
         currentBid: latestBidValue,
     }).where(eq(items.id, itemId))
 
-    revalidatePath(`/items/${itemId}`);
+        // Fetch the latest bid with user information
+        const latestBid = await database.query.bids.findFirst({
+            where: eq(bids.itemId, itemId),
+            orderBy: desc(bids.id),
+            with: {
+                user: {
+                    columns: {
+                        image: true,
+                        name: true,
+                    },
+                },
+            },
+        });
+    
+        broadcastNewBid({
+            itemId,
+            newBid: latestBidValue,
+            bidInfo: latestBid
+        });
 
+    revalidatePath(`/items/${itemId}`);
 }  
