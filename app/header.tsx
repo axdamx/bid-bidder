@@ -16,21 +16,23 @@ export async function Header() {
             All Auction
           </Link>
 
-          <div className="flex items-center gap-8">
-            <Link
-              href="/items/create"
-              className="hover:underline flex items-center gap-1"
-            >
-              Create Auction
-            </Link>
+          {session && (
+            <div className="flex items-center gap-8">
+              <Link
+                href="/items/create"
+                className="hover:underline flex items-center gap-1"
+              >
+                Create Auction
+              </Link>
 
-            <Link
-              href="/auctions"
-              className="hover:underline flex items-center gap-1"
-            >
-              My Auction
-            </Link>
-          </div>
+              <Link
+                href="/auctions"
+                className="hover:underline flex items-center gap-1"
+              >
+                My Auction
+              </Link>
+            </div>
+          )}
         </div>
 
         <div className="flex items-center gap-4">

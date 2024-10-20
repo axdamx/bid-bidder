@@ -25,6 +25,8 @@ export async function createItemAction(formData: FormData) {
     startingPrice: parseFloat(formData.get("startingPrice") as string),
     userId: user.id!,
     imageId: formData.get("imageId") as string, // Add the imageId from the form data
+    bidInterval: parseFloat(formData.get("bidInterval") as string),
+    endDate: new Date(formData.get("endDate") as string),
   });
   // action after user clicked the button
   redirect("/");

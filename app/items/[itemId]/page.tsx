@@ -1,11 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { database } from "@/src/db/database";
-import { items } from "@/src/db/schema";
-import { eq } from "drizzle-orm";
+import { bids, items } from "@/src/db/schema";
+import { desc, eq } from "drizzle-orm";
 import Link from "next/link";
 import Image from "next/image";
 import ItemImage from "./image-component";
 import { formatDistance, subDays } from "date-fns";
+import { createBidAction } from "./actions";
 
 function formatTimestamp(timestamp: Date) {
   return formatDistance(timestamp, new Date(), {
@@ -22,28 +23,20 @@ export default async function ItemPage({
     where: eq(items.id, parseInt(itemId)),
   });
 
-  const bids = [
-    // {
-    //   id: 1,
-    //   amount: 100,
-    //   userName: "Alice",
-    //   timestamp: new Date(),
-    // },
-    // {
-    //   id: 2,
-    //   amount: 120,
-    //   userName: "John",
-    //   timestamp: new Date(),
-    // },
-    // {
-    //   id: 3,
-    //   amount: 190,
-    //   userName: "Jack",
-    //   timestamp: new Date(),
-    // },
-  ];
+  const allBids = await database.query.bids.findMany({
+    where: eq(bids.itemId, parseInt(itemId)),
+    orderBy: desc(bids.id),
+    with: {
+      user: {
+        columns: {
+          image: true,
+          name: true,
+        },
+      },
+    },
+  });
 
-  const hasBids = bids.length > 0;
+  const hasBids = allBids.length > 0;
 
   if (!item) {
     return (
@@ -57,32 +50,42 @@ export default async function ItemPage({
       </div>
     );
   }
+
   return (
     <main className="container mx-auto py-12">
       <div className="flex gap-8">
         <div>
           <h1 className="text-4xl font-bold mb-4">Auction for: {item.name}</h1>
           <ItemImage item={item} />
-          <div className="text-xl mt-8">
+          <div className="text-xl mt-8 space-y-4">
+            <h1 className="text-2xl font-bold">
+              Current Bid: ${item.currentBid}
+            </h1>
             <h1 className="text-2xl font-bold">
               Starting Price of ${item.startingPrice}
             </h1>
-          </div>
-          <div className="text-xl mt-8">
             <h1 className="text-2xl font-bold">
-              Bid Interval of {item.bidInterval}
+              Bid Interval of ${item.bidInterval}
             </h1>
           </div>
         </div>
         <div className="space-y-4 flex-1">
-          <h2 className="text-2xl font-bold">Current Bids</h2>
+          <div className="flex justify-between">
+            <h2 className="text-2xl font-bold">Current Bids</h2>
+            {hasBids && (
+              <form action={createBidAction.bind(null, item.id)}>
+                <Button> Place A Bid </Button>
+              </form>
+            )}
+          </div>
+
           {hasBids ? (
             <ul className="space-y-4">
-              {bids.map((bid) => (
+              {allBids.map((bid) => (
                 <li key={bid.id} className="bg-gray-100 rounded-xl p-8">
                   <div>
                     <span className="font-bold">${bid.amount}</span> by{" "}
-                    <span className="font-bold">{bid.userName}</span>{" "}
+                    <span className="font-bold">{bid.user.name}</span>{" "}
                     <span className="">{formatTimestamp(bid.timestamp)}</span>
                   </div>
                 </li>
@@ -92,7 +95,9 @@ export default async function ItemPage({
             <div className="flex flex-col items-center gap-8 bg-gray-100 rounded-xl p-12">
               <Image src="/empty.svg" width={200} height={200} alt="empty" />
               <h2 className="text-2xl font-bold"> No Bids Yet! </h2>
-              <Button> Place A Bid </Button>
+              <form action={createBidAction.bind(null, item.id)}>
+                <Button> Place A Bid </Button>
+              </form>
             </div>
           )}
         </div>

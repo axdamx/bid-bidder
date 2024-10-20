@@ -17,8 +17,6 @@ export default function CreatePage() {
   const [imageId, setImageId] = useState();
   const [isImageUploaded, setIsImageUploaded] = useState(false); // Track upload status
 
-  console.log("image", imageId);
-
   const handleSubmit = (e) => {
     if (!isImageUploaded) {
       e.preventDefault(); // Prevent form submission if image is not uploaded
@@ -49,12 +47,28 @@ export default function CreatePage() {
           placeholder="Start Price"
         />
 
+        <Input
+          required
+          className="max-w-lg mb-4"
+          name="endDate"
+          type="datetime-local" // For both date and time input
+          placeholder="End Date and Time"
+        />
+
+        <Input
+          required
+          className="max-w-lg mb-4"
+          name="bidInterval"
+          type="number"
+          placeholder="Interval"
+        />
+
         {/* Hidden input to include the imageId in form submission */}
         <input type="hidden" name="imageId" value={imageId || ""} />
 
         {/* Disable submit button until image is uploaded */}
         <Button type="submit" disabled={!isImageUploaded}>
-          Place Bid
+          Create Bid
         </Button>
 
         <CldUploadWidget

@@ -3,10 +3,15 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Item } from "@/src/db/schema";
+import { format } from "date-fns";
 import { CldImage } from "next-cloudinary";
 import Link from "next/link";
 
 function ItemCard({ item }: { item: Item }) {
+  function isBidOver(item: Item) {
+    return item.endDate < new Date();
+  }
+
   return (
     <div>
       <Card key={item.id} className="overflow-hidden">
@@ -27,9 +32,20 @@ function ItemCard({ item }: { item: Item }) {
             <p className="text-sm text-gray-500">
               Starting price : ${item.startingPrice}
             </p>
+            {isBidOver(item) ? (
+              <h2> Bidding is Over </h2>
+            ) : (
+              <h2> Ends on {format(new Date(item.endDate), "d/M/yyyy")}</h2>
+            )}
           </div>
-          <Button asChild size="sm">
-            <Link href={`items/${item.id}`}>Bid Now</Link>
+          <Button
+            asChild
+            size="sm"
+            variant={isBidOver(item) ? "default" : "outline"}
+          >
+            <Link href={`items/${item.id}`}>
+              {isBidOver(item) ? "View Bid" : "Bid Now"}
+            </Link>
           </Button>
         </CardFooter>
       </Card>
