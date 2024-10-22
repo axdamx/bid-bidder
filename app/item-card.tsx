@@ -32,7 +32,9 @@ function ItemCard({ item }: { item: Item }) {
             />
           )}
         </CardContent>
-        <CountdownTimer endDate={item.endDate} />
+        <div className="flex justify-center">
+          <CountdownTimer endDate={item.endDate} />
+        </div>
         <CardFooter className="flex justify-between items-center mt-4">
           <div>
             <h3 className="text-xl font-bold">{item.name}</h3>

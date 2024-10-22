@@ -68,8 +68,10 @@ export default async function Home() {
       </section>
 
       {/* Upcoming Auctions Section */}
-      <section className="py-10 text-center">
-        <h2 className="text-3xl font-bold mb-6">Upcoming Auctions</h2>
+      <section className="py-10">
+        <h2 className="text-center text-3xl font-bold mb-6">
+          Upcoming Auctions
+        </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 px-6">
           {allItems.slice(0, 2).map((item) => (
             <ItemCard key={item.id} item={item} />
