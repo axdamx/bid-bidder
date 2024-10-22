@@ -12,8 +12,12 @@ export async function Header() {
       <div className="container flex justify-between">
         <div className="flex items-center gap-8">
           <Link href="/" className="hover:underline flex items-center gap-1">
-            <Image src="/public/next.svg" width="50" height="50" alt="Logo" />
-            All Auction
+            <Image
+              src="/renown-high-resolution-logo-transparent.png"
+              width="50"
+              height="50"
+              alt="Logo"
+            />
           </Link>
 
           {session && (

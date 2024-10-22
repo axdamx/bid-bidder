@@ -155,6 +155,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Car } from "lucide-react";
+import CountdownTimer from "@/app/countdown-timer";
 
 function formatTimestamp(timestamp: Date) {
   return formatDistance(new Date(timestamp), new Date(), { addSuffix: true });
@@ -257,11 +258,7 @@ export default function AuctionItem({
 
               {/* Product Details */}
               <div className="space-y-2">
-                <h3 className="text-md font-semibold">Product Details</h3>
-                <p>{item.artist}</p>
-                <p>{item.title}</p>
-                <p>{item.medium}</p>
-                <p>{item.dimensions}</p>
+                <CountdownTimer endDate={item.endDate} />
               </div>
             </CardContent>
           </Card>
