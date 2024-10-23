@@ -66,18 +66,18 @@ export const verificationTokens = pgTable(
 );
 
 export const items = pgTable("bb_item", {
-    id: serial("id").primaryKey(),
-    userId: text("userId")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    name: text("name").notNull(),
-    currentBid: integer("currentBid").notNull().default(0),
-    startingPrice: integer("startingPrice").notNull().default(0),
-    imageId: text("imageId"), // New column for storing the image ID
-    bidInterval: integer("bidInterval").notNull().default(0),
-    endDate: timestamp("endDate", { mode: "date" }).notNull(),
-  });
-
+  id: serial("id").primaryKey(),
+  userId: text("userId")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  currentBid: integer("currentBid").notNull().default(0),
+  startingPrice: integer("startingPrice").notNull().default(0),
+  imageId: text("imageId"), // New column for storing the image ID
+  bidInterval: integer("bidInterval").notNull().default(0),
+  endDate: timestamp("endDate", { mode: "date" }).notNull(),
+  description: text("description"),
+});
 
 export const bids = pgTable("bb_bids", {
   id: serial("id").primaryKey(),
@@ -88,13 +88,13 @@ export const bids = pgTable("bb_bids", {
   userId: text("userId")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
-  timestamp: timestamp("timestamp", { mode: "date"}).notNull(),
+  timestamp: timestamp("timestamp", { mode: "date" }).notNull(),
 });
 
-export const usersRelations = relations(bids, ({ one}) => ({
+export const usersRelations = relations(bids, ({ one }) => ({
   user: one(users, {
     fields: [bids.userId],
-    references: [users.id]
-  })
-}))
+    references: [users.id],
+  }),
+}));
 export type Item = typeof items.$inferSelect;

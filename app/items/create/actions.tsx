@@ -7,6 +7,7 @@ import { auth } from "@/app/auth";
 import { redirect } from "next/navigation";
 
 export async function createItemAction(formData: FormData) {
+  console.log("createItemAction called", formData);
   const session = await auth();
 
   if (!session) {
@@ -27,6 +28,7 @@ export async function createItemAction(formData: FormData) {
     imageId: formData.get("imageId") as string, // Add the imageId from the form data
     bidInterval: parseFloat(formData.get("bidInterval") as string),
     endDate: new Date(formData.get("endDate") as string),
+    description: formData.get("description") as string,
   });
   // action after user clicked the button
   redirect("/");

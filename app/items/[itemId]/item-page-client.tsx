@@ -191,7 +191,10 @@ export default function AuctionItem({
     setShowWinnerModal(true);
   }, []);
 
-  const isWinner = bids[0].userId === userId;
+  const latestBidderName = bids.length > 0 && bids[0].user.name;
+  const isWinner = bids.length > 0 && bids[0].userId === userId;
+
+  console.log("item,", item);
 
   useEffect(() => {
     const socket = io("http://localhost:8082", {
@@ -257,8 +260,6 @@ export default function AuctionItem({
     );
   };
 
-  const latestBidderName = bids[0].user.name;
-
   const LoserDialog = () => {
     return (
       <>
@@ -320,6 +321,7 @@ export default function AuctionItem({
                   Bid Interval:{" "}
                   <span className="font-bold">${item.bidInterval}</span>
                 </p>
+                <p>Details: {item.description}</p>
                 <p>Connected users: {userCount}</p>
               </div>
 
