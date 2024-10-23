@@ -257,6 +257,8 @@ export default function AuctionItem({
     );
   };
 
+  const latestBidderName = bids[0].user.name;
+
   const LoserDialog = () => {
     return (
       <>
@@ -268,7 +270,7 @@ export default function AuctionItem({
           <div className="p-4 bg-blue-50 rounded-lg mt-4">
             <p className="font-medium text-blue-700">This auction has ended</p>
             <p className="text-sm text-blue-600 mt-2">
-              The winning bid was ${item.currentBid} by {item.latestBidder}
+              The winning bid was ${item.currentBid} by {latestBidderName}
             </p>
             <p className="text-sm text-blue-600 mt-2">
               Better luck next time! Check out our other active auctions.
@@ -337,6 +339,8 @@ export default function AuctionItem({
             </CardContent>
           </Card>
         </div>
+
+        {/* Dialog Modal */}
         <Dialog open={showWinnerModal} onOpenChange={setShowWinnerModal}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
@@ -353,6 +357,7 @@ export default function AuctionItem({
           </DialogContent>
         </Dialog>
       </div>
+
       {/* Bottom Section: Bid History Table */}
       <Card className="mt-5">
         <div className="mt-8 w-full px-12">

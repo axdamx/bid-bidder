@@ -22,7 +22,7 @@ export default async function MyAuctionPage() {
     <main className="container mx-auto py-12">
       <h2 className="text-2xl font-bold mb-4">My Current Auctions</h2>
       {hasItems ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-8">
           {allItems.map((item) => (
             <ItemCard key={item.id} item={item} />
           ))}

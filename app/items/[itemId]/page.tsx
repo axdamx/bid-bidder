@@ -40,7 +40,7 @@ export default async function ItemPage({
   return (
     <>
       <div>{session?.user?.id}</div>
-      <ItemPageClient item={item} allBids={allBids} userId={userId} />
+      <ItemPageClient item={item} allBids={allBids} userId={userId!} />
     </>
   );
 }
