@@ -154,8 +154,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Car } from "lucide-react";
 import CountdownTimer from "@/app/countdown-timer";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { AlertCircle, Trophy } from "lucide-react";
 
 function formatTimestamp(timestamp: Date) {
   return formatDistance(new Date(timestamp), new Date(), { addSuffix: true });
@@ -164,18 +171,27 @@ function formatTimestamp(timestamp: Date) {
 export default function AuctionItem({
   item,
   allBids,
+  userId,
 }: {
   item: any;
   allBids: any[];
+  userId: string;
 }) {
   const [highestBid, setHighestBid] = useState<number | null>(item.currentBid);
   const [bids, setBids] = useState(allBids);
   const [userCount, setUserCount] = useState<number>(0);
+  const [showWinnerModal, setShowWinnerModal] = useState(false);
 
   const handleNewBid = useCallback((newBid: any) => {
     setHighestBid(newBid.newBid);
     setBids((prevBids) => [newBid.bidInfo, ...prevBids]);
   }, []);
+
+  const handleAuctionEnd = useCallback(() => {
+    setShowWinnerModal(true);
+  }, []);
+
+  const isWinner = bids[0].userId === userId;
 
   useEffect(() => {
     const socket = io("http://localhost:8082", {
@@ -214,6 +230,55 @@ export default function AuctionItem({
 
   const hasBids = bids.length > 0;
 
+  const isBidOver = item.endDate < new Date();
+
+  const WinnerDialog = () => {
+    return (
+      <>
+        <DialogTitle className="flex items-center gap-2">
+          <Trophy className="w-6 h-6 text-yellow-500" />
+          Congratulations! You Won!
+        </DialogTitle>
+        <DialogDescription className="space-y-4">
+          <div className="p-4 bg-green-50 rounded-lg mt-4">
+            <p className="font-medium text-green-700">
+              Youve won this auction!
+            </p>
+            <p className="text-sm text-green-600 mt-2">
+              You won {item.name} with a final bid of ${item.currentBid}
+            </p>
+            <p className="text-sm text-green-600 mt-2">
+              The seller will contact you soon with payment and delivery
+              details.
+            </p>
+          </div>
+        </DialogDescription>
+      </>
+    );
+  };
+
+  const LoserDialog = () => {
+    return (
+      <>
+        <DialogTitle className="flex items-center gap-2">
+          <AlertCircle className="w-6 h-6 text-blue-500" />
+          Auction Ended
+        </DialogTitle>
+        <DialogDescription className="space-y-4">
+          <div className="p-4 bg-blue-50 rounded-lg mt-4">
+            <p className="font-medium text-blue-700">This auction has ended</p>
+            <p className="text-sm text-blue-600 mt-2">
+              The winning bid was ${item.currentBid} by {item.latestBidder}
+            </p>
+            <p className="text-sm text-blue-600 mt-2">
+              Better luck next time! Check out our other active auctions.
+            </p>
+          </div>
+        </DialogDescription>
+      </>
+    );
+  };
+
   return (
     <div className="container mx-auto py-12">
       {/* Back to previous */}
@@ -234,12 +299,12 @@ export default function AuctionItem({
               <CardTitle className="text-xl">
                 Auction for: {item.name}
               </CardTitle>
-              <CardDescription className="text-gray-600">
+              {/* <CardDescription className="text-gray-600">
                 Estimate From{" "}
                 <span className="font-bold">
                   ${item.startingPrice} - ${item.bidInterval}
                 </span>
-              </CardDescription>
+              </CardDescription> */}
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -249,20 +314,44 @@ export default function AuctionItem({
                   Current Bid: <span className="font-bold">${highestBid}</span>
                 </p>
                 <p>Starting Price: ${item.startingPrice}</p>
+                <p>
+                  Bid Interval:{" "}
+                  <span className="font-bold">${item.bidInterval}</span>
+                </p>
                 <p>Connected users: {userCount}</p>
               </div>
 
-              <form action={createBidAction.bind(null, item.id)}>
-                <Button className="w-full">Place a Bid</Button>
-              </form>
+              {!isBidOver && (
+                <form action={createBidAction.bind(null, item.id)}>
+                  <Button className="w-full">Place a Bid</Button>
+                </form>
+              )}
 
               {/* Product Details */}
               <div className="space-y-2">
-                <CountdownTimer endDate={item.endDate} />
+                <CountdownTimer
+                  endDate={item.endDate}
+                  onExpire={handleAuctionEnd}
+                />
               </div>
             </CardContent>
           </Card>
         </div>
+        <Dialog open={showWinnerModal} onOpenChange={setShowWinnerModal}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              {isWinner ? <WinnerDialog /> : <LoserDialog />}
+              <div className="flex justify-end mt-4">
+                <Button
+                  onClick={() => setShowWinnerModal(false)}
+                  className="mt-2"
+                >
+                  Close
+                </Button>
+              </div>
+            </DialogHeader>
+          </DialogContent>
+        </Dialog>
       </div>
       {/* Bottom Section: Bid History Table */}
       <Card className="mt-5">

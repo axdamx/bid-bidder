@@ -83,7 +83,7 @@ export default async function Home() {
       <section className="bg-gray-100 py-10">
         <h2 className="text-center text-3xl font-bold mb-6">Recent Auctions</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-6">
-          {allItems.map((item) => (
+          {allItems.slice(0, 3).map((item) => (
             <ItemCard key={item.id} item={item} />
           ))}
           {/* Add more cards */}
@@ -102,7 +102,7 @@ export default async function Home() {
       </section>
 
       {/* Join Us Section */}
-      <section className="bg-red-500 text-white py-10">
+      <section className="bg-gray-900 text-white py-10">
         <div className="text-center">
           <h2 className="text-3xl font-bold mb-4">Want to Join Us?</h2>
           <p className="mb-4">
@@ -119,7 +119,7 @@ export default async function Home() {
       {/* Footer Section */}
       <footer className="bg-gray-900 text-gray-300 py-10">
         <div className="container mx-auto text-center">
-          <p>&copy; 2024 BidZone. All rights reserved.</p>
+          <p>&copy; 2024 Renown. All rights reserved.</p>
         </div>
       </footer>
     </div>

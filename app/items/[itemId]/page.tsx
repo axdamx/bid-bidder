@@ -2,12 +2,16 @@ import { database } from "@/src/db/database";
 import { items, bids } from "@/src/db/schema";
 import { eq, desc } from "drizzle-orm";
 import ItemPageClient from "./item-page-client";
+import { auth } from "@/app/auth";
 
 export default async function ItemPage({
   params: { itemId },
 }: {
   params: { itemId: string };
 }) {
+  const session = await auth();
+  const userId = session?.user?.id;
+
   const item = await database.query.items.findFirst({
     where: eq(items.id, parseInt(itemId)),
   });
@@ -33,5 +37,10 @@ export default async function ItemPage({
     },
   });
 
-  return <ItemPageClient item={item} allBids={allBids} />;
+  return (
+    <>
+      <div>{session?.user?.id}</div>
+      <ItemPageClient item={item} allBids={allBids} userId={userId} />
+    </>
+  );
 }

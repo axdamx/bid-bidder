@@ -1,57 +1,79 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Trophy } from "lucide-react";
 
-const CountdownTimer = ({ endDate }) => {
+const CountdownTimer = ({ endDate, onExpire = () => {} }) => {
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
     minutes: 0,
     seconds: 0,
   });
-
   const [isExpired, setIsExpired] = useState(false);
 
-  useEffect(() => {
-    const calculateTimeLeft = () => {
-      const now = new Date().getTime();
-      const targetDate = new Date(endDate).getTime();
-      const difference = targetDate - now;
+  // Memoize the calculation function to prevent re-creation on every render
+  const calculateTimeLeft = useCallback(() => {
+    const now = new Date().getTime();
+    const targetDate = new Date(endDate).getTime();
+    const difference = targetDate - now;
 
-      if (difference <= 0) {
+    if (difference <= 0) {
+      if (!isExpired) {
+        // Only call onExpire once
         setIsExpired(true);
         setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-        return false;
+        onExpire();
       }
-
-      const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-      const hours = Math.floor(
-        (difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
-      );
-      const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((difference % (1000 * 60)) / 1000);
-
-      setTimeLeft({ days, hours, minutes, seconds });
-      return true;
-    };
-
-    // Calculate immediately
-    const isValid = calculateTimeLeft();
-
-    // Only set interval if not expired
-    let timer;
-    if (isValid) {
-      timer = setInterval(calculateTimeLeft, 1000);
+      return null;
     }
 
+    return {
+      days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+      hours: Math.floor(
+        (difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+      ),
+      minutes: Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)),
+      seconds: Math.floor((difference % (1000 * 60)) / 1000),
+    };
+  }, [endDate, isExpired]);
+
+  useEffect(() => {
+    // Initial calculation
+    const initialTimeLeft = calculateTimeLeft();
+    if (initialTimeLeft) {
+      setTimeLeft(initialTimeLeft);
+    }
+
+    // Set up interval only if not expired
+    const timer =
+      !isExpired &&
+      setInterval(() => {
+        const newTimeLeft = calculateTimeLeft();
+        if (newTimeLeft) {
+          setTimeLeft(newTimeLeft);
+        } else {
+          clearInterval(timer);
+        }
+      }, 1000);
+
+    // Cleanup
     return () => {
       if (timer) {
         clearInterval(timer);
       }
     };
-  }, [endDate]);
+  }, [calculateTimeLeft, isExpired]);
 
   return (
-    <Card className="w-full max-w-lg bg-white shadow-sm space-y-2">
+    <Card className="w-full max-w-lg bg-white shadow-sm">
       <CardContent className="flex justify-between p-6">
         {isExpired ? (
           <div className="w-full text-center text-red-500 font-medium">
