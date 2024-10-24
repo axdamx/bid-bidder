@@ -5,7 +5,7 @@ import { database } from "@/src/db/database";
 import { bids, items } from "@/src/db/schema";
 import { desc, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { io } from "../../../websocket";
+import { redirect } from "next/navigation";
 
 export async function createBidAction(itemId: number) {
   const session = await auth();
@@ -80,4 +80,20 @@ export async function createBidAction(itemId: number) {
   }
 
   revalidatePath(`/items/${itemId}`);
+}
+
+export async function updateItemStatus(itemId: number, userId: string) {
+  "use server"; // Directive for server action
+
+  // Update the item status to "checkout" and associate with the winning user
+  await database
+    .update(items)
+    .set({ status: "checkout", winnerId: userId }) // Assuming you have a winnerId field
+    .where(eq(items.id, itemId));
+
+  // Optionally revalidate the page to reflect changes
+  revalidatePath("/");
+
+  // Redirect to the checkout page after updating the status
+  redirect(`/checkout/${itemId}`);
 }

@@ -77,6 +77,8 @@ export const items = pgTable("bb_item", {
   bidInterval: integer("bidInterval").notNull().default(0),
   endDate: timestamp("endDate", { mode: "date" }).notNull(),
   description: text("description"),
+  status: text("status"),
+  winnerId: text("winnerId"),
 });
 
 export const bids = pgTable("bb_bids", {
