@@ -24,6 +24,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { AlertCircle, Trophy } from "lucide-react";
+import toast, { Toaster } from "react-hot-toast";
 
 function formatTimestamp(timestamp: Date) {
   return formatDistance(new Date(timestamp), new Date(), { addSuffix: true });
@@ -93,8 +94,9 @@ export default function AuctionItem({
   }, [item.currentBid, allBids]);
 
   const hasBids = bids.length > 0;
-
   const isBidOver = item.endDate < new Date();
+  // const notify = () =>
+  //   toast(`You've succesfully bid ${item.currentBid + item.bidInterval}!`);
 
   const WinnerDialog = () => {
     return (
@@ -156,6 +158,7 @@ export default function AuctionItem({
       <Button variant="link" className="mb-4 text-sm">
         ← Back to previous
       </Button>
+      <Toaster position="bottom-right" reverseOrder={false} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Item Image */}
