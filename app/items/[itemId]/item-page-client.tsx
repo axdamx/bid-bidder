@@ -95,12 +95,23 @@ export default function AuctionItem({
   const isBidOver = item.endDate < new Date();
   // const notify = () =>
   //   toast(`You've succesfully bid ${item.currentBid + item.bidInterval}!`);
-  const formatter = new Intl.NumberFormat("en", {
-    notation: "compact",
-    compactDisplay: "short",
-    style: "currency",
-    currency: "MYR",
-  });
+  function formatCurrency(value) {
+    const absValue = Math.abs(value);
+    let formattedValue;
+
+    if (absValue >= 1e6) {
+      // Use the raw value divided by 1e6, and ensure it retains two decimal places
+      formattedValue = (value / 1e6).toFixed(2) + "M"; // Millions
+    } else if (absValue >= 1e3) {
+      // Thousands
+      formattedValue = (value / 1e3).toFixed(2) + "K";
+    } else {
+      // Less than thousand
+      formattedValue = value.toFixed(2);
+    }
+
+    return `${formattedValue} MYR`;
+  }
   const WinnerDialog = () => {
     return (
       <>
@@ -190,14 +201,14 @@ export default function AuctionItem({
                 <p>
                   Current Bid:{" "}
                   <span className="font-bold">
-                    {formatter.format(highestBid!)}
+                    {formatCurrency(highestBid)}
                   </span>
                 </p>
-                <p>Starting Price: {formatter.format(item.startingPrice)}</p>
+                <p>Starting Price: {formatCurrency(item.startingPrice)}</p>
                 <p>
                   Bid Interval:{" "}
                   <span className="font-bold">
-                    {formatter.format(item.bidInterval)}
+                    {formatCurrency(item.bidInterval)}
                   </span>
                 </p>
                 <p>Details: {item.description}</p>
@@ -264,7 +275,7 @@ export default function AuctionItem({
                         {bid.user.name}
                       </TableCell>
                       <TableCell className="py-2 px-4">
-                        {formatter.format(bid.amount)}
+                        {formatCurrency(bid.amount)}
                       </TableCell>
                       <TableCell className="py-2 px-4">
                         {formatTimestamp(bid.timestamp)}

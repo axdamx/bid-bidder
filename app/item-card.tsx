@@ -19,12 +19,23 @@ function ItemCard({ item }: { item: Item }) {
     return item.endDate < new Date();
   }
 
-  const formatter = new Intl.NumberFormat("en", {
-    notation: "compact",
-    compactDisplay: "short",
-    style: "currency",
-    currency: "USD",
-  });
+  function formatCurrency(value) {
+    const absValue = Math.abs(value);
+    let formattedValue;
+
+    if (absValue >= 1e6) {
+      // Use the raw value divided by 1e6, and ensure it retains two decimal places
+      formattedValue = (value / 1e6).toFixed(2) + "M"; // Millions
+    } else if (absValue >= 1e3) {
+      // Thousands
+      formattedValue = (value / 1e3).toFixed(2) + "K";
+    } else {
+      // Less than thousand
+      formattedValue = value.toFixed(2);
+    }
+
+    return `${formattedValue} MYR`;
+  }
 
   return (
     <div className="w-full h-full">
@@ -52,7 +63,7 @@ function ItemCard({ item }: { item: Item }) {
             <p className="text-sm">
               {isBidOver(item) ? "Final Bid: " : "Current Bid: "}
               <span className="font-bold">
-                {formatter.format(item.currentBid)}
+                {formatCurrency(item.currentBid)}
               </span>
             </p>
           </div>
@@ -72,30 +83,4 @@ function ItemCard({ item }: { item: Item }) {
   );
 }
 
-// design 2
-//   <Card key={item.id} className="overflow-hidden">
-//     <CardHeader className="p-0 w-full">
-//       {item.imageId && (
-//         <CldImage
-//           width="960"
-//           height="600"
-//           src={item.imageId}
-//           alt="Description of my image"
-//           className="w-full h-full object-cover" // Ensure the image covers the content area
-//         />
-//       )}
-//     </CardHeader>
-//     <CardContent className="mt-2 space-y-2">
-//       <h3 className="text-xl font-bold">{item.name}</h3>
-//       {/* {timeLeft && <p>Time left: {timeLeft}</p>} */}
-//       <p>
-//         Current Bid: <span className="font-bold">${item.currentBid}</span>
-//       </p>
-//     </CardContent>
-
-//     <CardFooter>
-//       <Button>Place Bid</Button>
-//     </CardFooter>
-//   </Card>
-// );
 export default ItemCard;

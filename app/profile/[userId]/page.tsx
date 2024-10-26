@@ -1,7 +1,6 @@
 import { database } from "@/src/db/database";
-import { items, bids, users, Item } from "@/src/db/schema";
-import { eq, desc } from "drizzle-orm";
-import { auth } from "@/app/auth";
+import { items, users } from "@/src/db/schema";
+import { eq } from "drizzle-orm";
 import ItemCard from "@/app/item-card";
 import { EmptyState } from "@/app/auctions/empty-state";
 
@@ -13,8 +12,6 @@ export default async function ProfilePage({
   const allItems = await database.query.items.findMany({
     where: eq(items.userId, userId),
   });
-
-  const hasItems = allItems.length > 0;
 
   const user = await database.query.users.findFirst({
     where: eq(users.id, userId),
@@ -50,23 +47,6 @@ export default async function ProfilePage({
 // ProfilePage.tsx
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
-// import { HeartIcon, ChatIcon, ShareIcon } from "@heroicons/react/outline"; // Example icons
-
-// export default function ProfilePage() {
-//   return (
-//     <div className="container mx-auto p-4">
-//       <ProfileHeader />
-//       <div className="flex flex-col md:flex-row mt-6 gap-6">
-//         <div className="md:w-1/4 space-y-4">
-//           <Stats />
-//           <About />
-//           <SocialLinks />
-//         </div>
-//         <PostFeed />
-//       </div>
-//     </div>
-//   );
-// }
 
 function ProfileHeader({ user }) {
   return (
@@ -156,11 +136,35 @@ function SocialLinks() {
 }
 
 function PostFeed({ allItems }) {
+  const hasItems = allItems.length > 0;
   return (
-    <div className="md:w-3/4 grid grid-cols-1 md:grid-cols-2 gap-4">
-      {allItems.map((item) => (
-        <ItemCard key={item.id} item={item} />
-      ))}
-    </div>
+    <>
+      {hasItems ? (
+        <div className="md:w-3/4 grid grid-cols-1 md:grid-cols-2 gap-4">
+          {allItems.map((item) => (
+            <ItemCard key={item.id} item={item} />
+          ))}
+        </div>
+      ) : (
+        <div className="flex-1 flex items-center justify-center">
+          <EmptyState />
+        </div>
+      )}
+    </>
+    // <div className="md:w-3/4 grid grid-cols-1 md:grid-cols-2 gap-4">
+    //   {allItems.map((item) => (
+    //     <ItemCard key={item.id} item={item} />
+    //   ))}
+    // </div>
   );
 }
+
+// {hasItems ? (
+//   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-8">
+//     {allItems.map((item) => (
+//       <ItemCard key={item.id} item={item} />
+//     ))}
+//   </div>
+// ) : (
+//   <EmptyState />
+// )}

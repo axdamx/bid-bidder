@@ -8,7 +8,7 @@ export function EmptyState() {
       <Image src="/empty.svg" width={200} height={200} alt="empty" />
       <h2 className="text-2xl font-bold">You have no auctions yet</h2>
       <Button asChild>
-        <Link href="items/create">Create Auction</Link>
+        <Link href="/items/create">Create Auction</Link>
       </Button>
     </div>
   );
