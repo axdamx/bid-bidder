@@ -1,7 +1,13 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { createBidAction, updateItemStatus } from "./actions";
 import { formatDistance } from "date-fns";
@@ -187,12 +193,11 @@ export default function AuctionItem({
               <CardTitle className="text-xl">
                 Auction for: {item.name}
               </CardTitle>
-              {/* <CardDescription className="text-gray-600">
-                Estimate From{" "}
-                <span className="font-bold">
-                  ${item.startingPrice} - ${item.bidInterval}
-                </span>
-              </CardDescription> */}
+              {isWinner && (
+                <CardDescription className="text-gray-600">
+                  You are currently winning this bid!
+                </CardDescription>
+              )}
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -217,7 +222,11 @@ export default function AuctionItem({
 
               {!isBidOver && (
                 <form action={createBidAction.bind(null, item.id)}>
-                  <Button className="w-full">Place a Bid</Button>
+                  <Button className="w-full" disabled={isWinner}>
+                    {isWinner
+                      ? "You are currently winning this bid!"
+                      : "Place Bid"}
+                  </Button>
                 </form>
               )}
 
@@ -269,7 +278,7 @@ export default function AuctionItem({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {bids.map((bid) => (
+                  {bids.slice(0, 10).map((bid) => (
                     <TableRow key={bid.id}>
                       <TableCell className="py-2 px-4">
                         {bid.user.name}
