@@ -40,7 +40,12 @@ export async function Header() {
         </div>
 
         <div className="flex items-center gap-4">
-          <div>{session?.user?.name}</div>
+          <Link
+            href={`/profile/${session?.user?.id}`}
+            className="hover:underline flex items-center gap-1"
+          >
+            {session?.user?.name}
+          </Link>
           <div>{session ? <SignOut /> : <SignIn />}</div>
         </div>
       </div>

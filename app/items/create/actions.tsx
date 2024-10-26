@@ -7,7 +7,6 @@ import { auth } from "@/app/auth";
 import { redirect } from "next/navigation";
 
 export async function createItemAction(formData: FormData) {
-  console.log("createItemAction called", formData);
   const session = await auth();
 
   if (!session) {

@@ -1,14 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Trophy } from "lucide-react";
 
 const CountdownTimer = ({ endDate, onExpire = () => {} }) => {
   const [timeLeft, setTimeLeft] = useState({
@@ -73,8 +64,8 @@ const CountdownTimer = ({ endDate, onExpire = () => {} }) => {
   }, [calculateTimeLeft, isExpired]);
 
   return (
-    <Card className="w-full max-w-lg bg-white shadow-sm">
-      <CardContent className="flex justify-between p-6">
+    <Card className="w-full bg-white shadow-sm">
+      <CardContent className="flex justify-between p-1 px-4">
         {isExpired ? (
           <div className="w-full text-center text-red-500 font-medium">
             Auction Ended

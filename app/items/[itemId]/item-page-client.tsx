@@ -56,8 +56,6 @@ export default function AuctionItem({
   const latestBidderName = bids.length > 0 && bids[0].user.name;
   const isWinner = bids.length > 0 && bids[0].userId === userId;
 
-  console.log("item,", item);
-
   useEffect(() => {
     const socket = io("http://localhost:8082", {
       withCredentials: true,
@@ -97,7 +95,12 @@ export default function AuctionItem({
   const isBidOver = item.endDate < new Date();
   // const notify = () =>
   //   toast(`You've succesfully bid ${item.currentBid + item.bidInterval}!`);
-
+  const formatter = new Intl.NumberFormat("en", {
+    notation: "compact",
+    compactDisplay: "short",
+    style: "currency",
+    currency: "MYR",
+  });
   const WinnerDialog = () => {
     return (
       <>
@@ -185,12 +188,17 @@ export default function AuctionItem({
                 <h3 className="text-md font-semibold">Auction Details</h3>
                 <p>Bids: {bids.length}</p>
                 <p>
-                  Current Bid: <span className="font-bold">${highestBid}</span>
+                  Current Bid:{" "}
+                  <span className="font-bold">
+                    {formatter.format(highestBid!)}
+                  </span>
                 </p>
-                <p>Starting Price: ${item.startingPrice}</p>
+                <p>Starting Price: {formatter.format(item.startingPrice)}</p>
                 <p>
                   Bid Interval:{" "}
-                  <span className="font-bold">${item.bidInterval}</span>
+                  <span className="font-bold">
+                    {formatter.format(item.bidInterval)}
+                  </span>
                 </p>
                 <p>Details: {item.description}</p>
                 <p>Connected users: {userCount}</p>
@@ -233,7 +241,7 @@ export default function AuctionItem({
 
       {/* Bottom Section: Bid History Table */}
       <Card className="mt-5">
-        <div className="mt-8 w-full px-12">
+        <div className="mt-8 mb-8 w-full px-12">
           <h2 className="text-xl font-bold mb-4">Bid History</h2>
           {hasBids ? (
             <div className="overflow-x-auto">
@@ -255,7 +263,9 @@ export default function AuctionItem({
                       <TableCell className="py-2 px-4">
                         {bid.user.name}
                       </TableCell>
-                      <TableCell className="py-2 px-4">${bid.amount}</TableCell>
+                      <TableCell className="py-2 px-4">
+                        {formatter.format(bid.amount)}
+                      </TableCell>
                       <TableCell className="py-2 px-4">
                         {formatTimestamp(bid.timestamp)}
                       </TableCell>
