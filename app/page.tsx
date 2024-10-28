@@ -45,9 +45,12 @@ export default async function Home() {
             currentBid="$50,000"
             timeLeft="1d 3h 40m"
           /> */}
-          {allItems.slice(0, 3).map((item) => (
-            <ItemCard key={item.id} item={item} />
-          ))}
+          {allItems
+            .filter((item) => new Date(item.endDate) > new Date()) // Filter out ended auctions
+            // .slice(0, 3)
+            .map((item) => (
+              <ItemCard key={item.id} item={item} />
+            ))}
           {/* Add more cards */}
         </div>
       </section>
@@ -68,9 +71,12 @@ export default async function Home() {
       <section className="bg-gray-100 py-10">
         <h2 className="text-center text-3xl font-bold mb-6">Recent Auctions</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-6">
-          {allItems.slice(0, 3).map((item) => (
-            <ItemCard key={item.id} item={item} />
-          ))}
+          {allItems
+            .filter((item) => new Date(item.endDate) < new Date()) // Filter out ended auctions
+            .slice(0, 3)
+            .map((item) => (
+              <ItemCard key={item.id} item={item} />
+            ))}
           {/* Add more cards */}
         </div>
       </section>

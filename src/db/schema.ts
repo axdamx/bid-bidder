@@ -118,4 +118,23 @@ export const usersRelations = relations(bids, ({ one }) => ({
 //     }),
 //   })
 // )
+
+export const follows = pgTable(
+  "follows",
+  {
+    followerId: text("followerId")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    followingId: text("followingId")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
+  },
+  (follow) => ({
+    // Make followerId + followingId combination unique
+    compoundKey: primaryKey({
+      columns: [follow.followerId, follow.followingId],
+    }),
+  })
+);
 export type Item = typeof items.$inferSelect;

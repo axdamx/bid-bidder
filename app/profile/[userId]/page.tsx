@@ -17,6 +17,15 @@ export default async function ProfilePage({
     where: eq(users.id, userId),
   });
 
+  const session = await auth(); // Your auth implementation
+  const currentUserId = session?.user?.id;
+
+  const { isFollowing } = await getFollowStatus(currentUserId, userId);
+  const { followersCount, followingCount } = await getFollowCounts(userId);
+
+  console.log("followersCount", followersCount);
+  console.log("followingCount", followingCount);
+
   if (!user) {
     return (
       <div className="space-y-4 justify-center flex items-center flex-col mt-8">
@@ -34,7 +43,14 @@ export default async function ProfilePage({
         <ProfileHeader user={user} />
         <div className="flex flex-col md:flex-row mt-6 gap-6">
           <div className="md:w-1/4 space-y-4">
-            <Stats items={allItems} />
+            <Stats
+              itemsCount={allItems.length}
+              followersCount={followersCount}
+              followingCount={followingCount}
+              userId={userId}
+              currentUserId={currentUserId}
+              isFollowing={isFollowing}
+            />
             <About />
             <SocialLinks />
           </div>
@@ -48,6 +64,9 @@ export default async function ProfilePage({
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { FollowButton } from "./components/follow-button";
+import { auth } from "@/app/auth";
+import { getFollowCounts, getFollowStatus } from "./action";
 
 function ProfileHeader({ user }) {
   return (
@@ -72,35 +91,48 @@ function ProfileHeader({ user }) {
           <h1 variant="subtitle2" className="text-gray-200">
             BoomBayah
           </h1>
-          <Button>Follow</Button>
         </div>
       </div>
     </div>
   );
 }
 
-function Stats({ items }) {
-  const numberOfItems = items.length;
+function Stats({
+  itemsCount,
+  followersCount,
+  followingCount,
+  userId,
+  currentUserId,
+  isFollowing,
+}) {
+  // const numberOfItems = items.length;
   return (
     <Card className="p-4 text-center space-y-2">
       <div className="grid grid-cols-3 gap-4">
         <div>
-          <h1 variant="h6">{numberOfItems}</h1>
+          <h1 variant="h6">{itemsCount}</h1>
           <h1 variant="body2" className="text-gray-500">
             Posts
           </h1>
         </div>
         <div>
-          <h1 variant="h6">1.3m</h1>
+          <h1 variant="h6">{followersCount}</h1>
           <h1 variant="body2" className="text-gray-500">
             Followers
           </h1>
         </div>
         <div>
-          <h1 variant="h6">923</h1>
+          <h1 variant="h6">{followingCount}</h1>
           <h1 variant="body2" className="text-gray-500">
             Following
           </h1>
+        </div>
+        <div className="col-span-3">
+          <FollowButton
+            targetUserId={userId}
+            currentUserId={currentUserId}
+            initialIsFollowing={isFollowing}
+          />
         </div>
       </div>
     </Card>
