@@ -1,5 +1,5 @@
 import { database } from "@/src/db/database";
-import { items, bids } from "@/src/db/schema";
+import { items, bids, users } from "@/src/db/schema";
 import { eq, desc } from "drizzle-orm";
 import ItemPageClient from "./item-page-client";
 import { auth } from "@/app/auth";
@@ -15,6 +15,12 @@ export default async function ItemPage({
   const item = await database.query.items.findFirst({
     where: eq(items.id, parseInt(itemId)),
   });
+
+  const itemWithUser =
+    item &&
+    (await database.query.users.findFirst({
+      where: eq(users.id, item.userId),
+    }));
 
   if (!item) {
     return (
@@ -37,10 +43,14 @@ export default async function ItemPage({
     },
   });
 
+  const itemWithOwner = {
+    ...item,
+    itemWithUser,
+  };
+
   return (
     <>
-      <div>{session?.user?.id}</div>
-      <ItemPageClient item={item} allBids={allBids} userId={userId!} />
+      <ItemPageClient item={itemWithOwner} allBids={allBids} userId={userId!} />
     </>
   );
 }

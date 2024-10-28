@@ -31,6 +31,10 @@ import {
 } from "@/components/ui/dialog";
 import { AlertCircle, Trophy } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
+import { database } from "@/src/db/database";
+import { eq } from "drizzle-orm";
+import { users } from "@/src/db/schema";
+import Link from "next/link";
 
 function formatTimestamp(timestamp: Date) {
   return formatDistance(new Date(timestamp), new Date(), { addSuffix: true });
@@ -99,6 +103,8 @@ export default function AuctionItem({
 
   const hasBids = bids.length > 0;
   const isBidOver = item.endDate < new Date();
+
+  console.log("tem", item);
   // const notify = () =>
   //   toast(`You've succesfully bid ${item.currentBid + item.bidInterval}!`);
   function formatCurrency(value) {
@@ -190,6 +196,21 @@ export default function AuctionItem({
         <div>
           <Card>
             <CardHeader>
+              <div className="space-y-2">
+                <Card className="mb-4">
+                  <CardHeader>
+                    <CardTitle className="text-xl">
+                      Created by:{" "}
+                      <Link
+                        href={`/profile/${item.itemWithUser.id}`}
+                        className="hover:underline flex items-center gap-1"
+                      >
+                        {item.itemWithUser.name}
+                      </Link>
+                    </CardTitle>
+                  </CardHeader>
+                </Card>
+              </div>
               <CardTitle className="text-xl">
                 Auction for: {item.name}
               </CardTitle>

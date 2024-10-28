@@ -47,6 +47,7 @@ export default async function ProfilePage({
 // ProfilePage.tsx
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 function ProfileHeader({ user }) {
   return (
@@ -71,6 +72,7 @@ function ProfileHeader({ user }) {
           <h1 variant="subtitle2" className="text-gray-200">
             BoomBayah
           </h1>
+          <Button>Follow</Button>
         </div>
       </div>
     </div>

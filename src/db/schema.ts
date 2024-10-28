@@ -99,4 +99,23 @@ export const usersRelations = relations(bids, ({ one }) => ({
     references: [users.id],
   }),
 }));
+
+// // another table, follows
+// export const follows = pgTable(
+//   //   "follows",
+//   "bb_follows",
+//   {
+//     followerId: text("followerId")
+//       .notNull()
+//       .references(() => users.id, { onDelete: "cascade" }),
+//     followingId: text("followingId")
+//       .notNull()
+//       .references(() => users.id, { onDelete: "cascade" }),
+//   },
+//   (follows) => ({
+//     compositePk: primaryKey({
+//       columns: [follows.followerId, follows.followingId],
+//     }),
+//   })
+// )
 export type Item = typeof items.$inferSelect;
