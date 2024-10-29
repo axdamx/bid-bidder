@@ -71,19 +71,14 @@ export default function CreatePage() {
           </div>
 
           {/* Vehicle Description Section */}
-          <h2 className="text-2xl font-semibold mb-4">Listing Description</h2>
-          <p className="text-sm text-muted-foreground mb-6">
-            Help buyers know more about the item you're listing.
-          </p>
-
-          <p className="text-sm text-muted-foreground mb-6">Listing Name</p>
+          <p className="text-sm text-muted-foreground mb-2">Listing Name</p>
           <Input
             required
             className="max-w-lg mb-4"
             name="name"
             // placeholder="Listing Title"
           />
-          <p className="text-sm text-muted-foreground mb-6">Starting Price</p>
+          <p className="text-sm text-muted-foreground mb-2">Starting Price</p>
 
           <Input
             required
@@ -92,7 +87,7 @@ export default function CreatePage() {
             type="number"
             // placeholder="Starting Bid"
           />
-          <p className="text-sm text-muted-foreground mb-6">Bid Interval</p>
+          <p className="text-sm text-muted-foreground mb-2">Bid Interval</p>
 
           <Input
             required
@@ -101,7 +96,7 @@ export default function CreatePage() {
             type="number"
             // placeholder="Interval"
           />
-          <p className="text-sm text-muted-foreground mb-6">End Date</p>
+          <p className="text-sm text-muted-foreground mb-2">End Date</p>
 
           <Input
             required
@@ -111,7 +106,7 @@ export default function CreatePage() {
             // placeholder="End Date and Time"
           />
 
-          <p className="text-sm text-muted-foreground mb-6">Description</p>
+          <p className="text-sm text-muted-foreground mb-2">Description</p>
 
           <Textarea
             className="max-w-lg mb-4"

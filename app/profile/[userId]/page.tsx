@@ -20,8 +20,16 @@ export default async function ProfilePage({
   const session = await auth(); // Your auth implementation
   const currentUserId = session?.user?.id;
 
-  const { isFollowing } = await getFollowStatus(currentUserId, userId);
+  const { isFollowing } = await getFollowStatus(currentUserId!, userId);
   const { followersCount, followingCount } = await getFollowCounts(userId);
+
+  const { ownedItems, error } = await getItemsByUserId(userId);
+  if (error) {
+    // Handle error
+  } else {
+    // Use items
+    console.log("ownedItems", ownedItems);
+  }
 
   console.log("followersCount", followersCount);
   console.log("followingCount", followingCount);
@@ -54,7 +62,7 @@ export default async function ProfilePage({
             <About />
             <SocialLinks />
           </div>
-          <PostFeed allItems={allItems} />
+          <PostFeed ownedItems={ownedItems} />
         </div>
       </div>
     </>
@@ -66,9 +74,9 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FollowButton } from "./components/follow-button";
 import { auth } from "@/app/auth";
-import { getFollowCounts, getFollowStatus } from "./action";
+import { getFollowCounts, getFollowStatus, getItemsByUserId } from "./action";
 
-function ProfileHeader({ user }) {
+export function ProfileHeader({ user }) {
   return (
     <div
       className="relative w-full h-64 bg-cover bg-center rounded-lg overflow-hidden"
@@ -89,7 +97,7 @@ function ProfileHeader({ user }) {
             {user.name}
           </h1>
           <h1 variant="subtitle2" className="text-gray-200">
-            BoomBayah
+            {user.email}
           </h1>
         </div>
       </div>
@@ -169,13 +177,13 @@ function SocialLinks() {
   );
 }
 
-function PostFeed({ allItems }) {
-  const hasItems = allItems.length > 0;
+function PostFeed({ ownedItems }) {
+  const hasItems = ownedItems.length > 0;
   return (
     <>
       {hasItems ? (
         <div className="md:w-3/4 grid grid-cols-1 md:grid-cols-2 gap-4">
-          {allItems.map((item) => (
+          {ownedItems.map((item) => (
             <ItemCard key={item.id} item={item} />
           ))}
         </div>

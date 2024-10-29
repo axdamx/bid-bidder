@@ -13,13 +13,19 @@ import { CldImage } from "next-cloudinary";
 import Link from "next/link";
 import CountdownTimer from "./countdown-timer";
 import { Heading1 } from "lucide-react";
+import ItemCardProfile from "./components/item-card-profile";
+import { ItemWithUser, User } from "./items";
 
-function ItemCard({ item }: { item: Item }) {
+interface ItemCardProps {
+  item: ItemWithUser;
+  user?: User;
+}
+const ItemCard: React.FC<ItemCardProps> = ({ item, user }) => {
   function isBidOver(item: Item) {
     return item.endDate < new Date();
   }
 
-  function formatCurrency(value) {
+  function formatCurrency(value: number) {
     const absValue = Math.abs(value);
     let formattedValue;
 
@@ -34,7 +40,7 @@ function ItemCard({ item }: { item: Item }) {
       formattedValue = value.toFixed(2);
     }
 
-    return `${formattedValue} MYR`;
+    return `RM${formattedValue}`;
   }
 
   return (
@@ -54,6 +60,8 @@ function ItemCard({ item }: { item: Item }) {
             />
           )}
         </CardContent>
+        <div className="flex justify-center">Created by: {item.user.name}</div>
+        {/* <ItemCardProfile userId={item.userId} /> */}
         <div className="flex justify-center mt-2">
           <CountdownTimer endDate={item.endDate} />
         </div>
@@ -81,6 +89,6 @@ function ItemCard({ item }: { item: Item }) {
       </Card>
     </div>
   );
-}
+};
 
 export default ItemCard;

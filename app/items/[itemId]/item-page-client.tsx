@@ -181,9 +181,9 @@ export default function AuctionItem({
   return (
     <div className="container mx-auto py-12">
       {/* Back to previous */}
-      <Button variant="link" className="mb-4 text-sm">
+      {/* <Button variant="link" className="mb-4 text-sm">
         ← Back to previous
-      </Button>
+      </Button> */}
       <Toaster position="bottom-right" reverseOrder={false} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

@@ -1,8 +1,10 @@
 "use server";
+import { getUserById } from "@/app/action";
 import { database } from "@/src/db/database";
 import { follows, items, users } from "@/src/db/schema";
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { cache } from "react";
 
 export type NotificationFollower = {
   id: string;
@@ -99,7 +101,11 @@ export async function getFollowersForNotification(
       .innerJoin(users, eq(users.id, follows.followerId))
       .where(eq(follows.followingId, authorId));
 
-    return followers;
+    return followers.map((follower) => ({
+      id: follower.id,
+      email: follower.email ?? "", // Use the nullish coalescing operator to provide a default value for email
+      name: follower.name,
+    }));
   } catch (error) {
     console.error("Error fetching followers for notification:", error);
     return [];
@@ -212,3 +218,28 @@ async function notifyFollowers({
     throw error;
   }
 }
+
+export const getItemsByUserId = cache(async (userId: string) => {
+  try {
+    // Query items filtering by userId
+    const userItems = await database.query.items.findMany({
+      where: eq(items.userId, userId),
+    });
+
+    // Fetch user details for these items
+    const itemsWithUser = await Promise.all(
+      userItems.map(async (item) => ({
+        ...item,
+        user: await getUserById(item.userId),
+      }))
+    );
+
+    return { ownedItems: itemsWithUser, error: null };
+  } catch (error) {
+    console.error(`Error fetching items for user ${userId}:`, error);
+    return {
+      ownedItems: [],
+      error: `Failed to fetch items for user ${userId}`,
+    };
+  }
+});
