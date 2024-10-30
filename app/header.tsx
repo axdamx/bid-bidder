@@ -3,9 +3,15 @@ import { SignOut } from "@/components/ui/sign-out";
 import Image from "next/image";
 import { auth } from "./auth";
 import Link from "next/link";
+import UserAvatar from "./components/userAvatar";
 
 export async function Header() {
   const session = await auth();
+  const user = session?.user;
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="bg-gray-50 py-4">
@@ -40,13 +46,13 @@ export async function Header() {
         </div>
 
         <div className="flex items-center gap-4">
-          <Link
-            href={`/profile/${session?.user?.id}`}
-            className="hover:underline flex items-center gap-1"
-          >
-            {session?.user?.name}
-          </Link>
-          <div>{session ? <SignOut /> : <SignIn />}</div>
+          <UserAvatar
+            name={user.name!}
+            imageUrl={user.image!}
+            email={user.email!}
+            userId={user.id!}
+          />
+          <div className="ml-2">{session ? <SignOut /> : <SignIn />}</div>
         </div>
       </div>
     </div>

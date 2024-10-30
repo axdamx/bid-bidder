@@ -22,7 +22,7 @@ export default async function MyAuctionPage() {
     // Handle error
   } else {
     // Use items
-    console.log("ownedItems", ownedItems);
+    // console.log("ownedItems", ownedItems);
   }
 
   const hasItems = ownedItems.length > 0;
