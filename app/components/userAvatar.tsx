@@ -115,7 +115,7 @@ export default function UserAvatar({
             <AvatarImage
               src={imageUrl}
               alt={"hey"}
-              className="w-10 h-10 rounded-full"
+              className="w-8 h-8 rounded-full"
             />
             <AvatarFallback>{initials}</AvatarFallback>
           </Avatar>
@@ -137,9 +137,18 @@ export default function UserAvatar({
             <span>Profile</span>
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => console.log("Go to Dashboard")}>
-          <Settings className="mr-2 h-4 w-4" />
-          Dashboard
+        <DropdownMenuItem
+          onClick={() => console.log("Go to Dashboard")}
+          asChild
+        >
+          <Link
+            href={"/dashboard"}
+            className="flex w-full cursor-pointer items-center"
+            onClick={handleLinkClick}
+          >
+            <Settings className="mr-2 h-4 w-4" />
+            <span>Dashboard</span>
+          </Link>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
