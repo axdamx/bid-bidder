@@ -9,10 +9,6 @@ export async function Header() {
   const session = await auth();
   const user = session?.user;
 
-  if (!user) {
-    return null;
-  }
-
   return (
     <div className="bg-gray-50 py-4">
       <div className="container flex justify-between">
@@ -46,12 +42,15 @@ export async function Header() {
         </div>
 
         <div className="flex items-center gap-4">
-          <UserAvatar
-            name={user.name!}
-            imageUrl={user.image!}
-            email={user.email!}
-            userId={user.id!}
-          />
+          {user && (
+            <UserAvatar
+              name={user.name!}
+              imageUrl={user.image!}
+              email={user.email!}
+              userId={user.id!}
+            />
+          )}
+
           <div className="ml-2">{session ? <SignOut /> : <SignIn />}</div>
         </div>
       </div>

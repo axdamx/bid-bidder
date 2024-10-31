@@ -28,6 +28,7 @@ import {
   NavigationMenuList,
   NavigationMenuItem,
 } from "@/components/ui/navigation-menu";
+import UserDetailsPage from "./userdetails/userDetails";
 
 type User = {
   name?: string;
@@ -100,7 +101,7 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
                   Manage your personal information
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              {/* <CardContent>
                 <div className="space-y-4">
                   <div className="grid gap-4">
                     <div className="flex items-center gap-4">
@@ -124,7 +125,8 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
                     </div>
                   </div>
                 </div>
-              </CardContent>
+              </CardContent> */}
+              <UserDetailsPage initialUser={initialUser} />
             </Card>
           </div>
         );
