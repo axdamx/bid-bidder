@@ -3,7 +3,6 @@ import ItemCard from "@/app/item-card";
 
 export async function LiveAuctions() {
   const items = await getLiveAuctions();
-  // console.log("🚀 ~ LiveAuctions ~ items:", items);
 
   return (
     <section className="bg-gray-100 py-10">
