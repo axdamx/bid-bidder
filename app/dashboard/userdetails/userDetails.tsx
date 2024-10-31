@@ -23,7 +23,6 @@ import { useToast } from "@/hooks/use-toast";
 import { updateUserField } from "./action";
 
 const UserDetailsPage = ({ initialUser }) => {
-  console.log("🚀 ~ UserDetailsPage ~ initialUser:", initialUser);
   const [userData, setUserData] = useState(initialUser);
   const [editingField, setEditingField] = useState("");
   const [editValue, setEditValue] = useState("");
