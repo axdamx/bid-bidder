@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/navigation-menu";
 import UserDetailsPage from "./userdetails/userDetails";
 import Addresses from "./address/addressDetails";
+import PaymentsAndPayouts from "./payment/paymentDetails";
 
 type User = {
   name?: string;
@@ -101,47 +102,12 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
                   Manage your personal information
                 </CardDescription>
               </CardHeader>
-              {/* <CardContent>
-                <div className="space-y-4">
-                  <div className="grid gap-4">
-                    <div className="flex items-center gap-4">
-                      <Avatar className="h-16 w-16">
-                        <AvatarImage
-                          src={initialUser?.image || "/api/placeholder/64/64"}
-                          alt={initialUser?.name || "User"}
-                        />
-                        <AvatarFallback>
-                          {initialUser?.name?.charAt(0) || "U"}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <h3 className="font-medium">
-                          {initialUser?.name || "Guest"}
-                        </h3>
-                        <p className="text-sm text-gray-500">
-                          {initialUser?.email || "No email provided"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent> */}
               <UserDetailsPage initialUser={initialUser} />
             </Card>
           </div>
         );
       case "address":
         return (
-          //   <div className="p-6">
-          //     <h2 className="text-2xl font-bold mb-4">Address</h2>
-          //     <div className="space-y-4">
-          //       <div className="p-4 bg-white rounded-lg shadow">
-          //         <h3 className="font-medium">Shipping Addresses</h3>
-          //         <p className="text-gray-600">Manage your shipping addresses</p>
-          //         <Addresses />
-          //       </div>
-          //     </div>
-          //   </div>
           <div className="p-6">
             <Card>
               <CardHeader>
@@ -176,6 +142,18 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
                 </div>
               </CardContent> */}
               <Addresses />
+            </Card>
+          </div>
+        );
+      case "payment":
+        return (
+          <div className="p-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Payment Details</CardTitle>
+                <CardDescription>Manage your payment methods</CardDescription>
+              </CardHeader>
+              <PaymentsAndPayouts />
             </Card>
           </div>
         );

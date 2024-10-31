@@ -54,55 +54,115 @@ const AddressSection = ({ title, name, addressLines }) => {
 };
 
 const AddressForm = () => {
+  const [address, setAddress] = useState({
+    firstName: "",
+    lastName: "",
+    contactNumber: "",
+    addressLine1: "United Kingdom",
+    addressLine2: "",
+    city: "",
+    state: "",
+    postcode: "",
+    country: "United Kingdom",
+  });
+
+  const handleInputChange = (field, value) => {
+    setAddress((prevState) => ({
+      ...prevState,
+      [field]: value,
+    }));
+  };
+  const handleCountryChange = (value) => {
+    handleInputChange("country", value);
+  };
+
   return (
     <div className="space-y-4">
       <div>
         <Label htmlFor="firstName">First Name*</Label>
-        <Input id="firstName" placeholder="Mohd" />
+        <Input
+          id="firstName"
+          placeholder="Mohd"
+          value={address.firstName}
+          onChange={(e) => handleInputChange("firstName", e.target.value)}
+        />
       </div>
       <div>
         <Label htmlFor="lastName">Last Name*</Label>
-        <Input id="lastName" placeholder="Adam" />
+        <Input
+          id="lastName"
+          placeholder="Adam"
+          value={address.lastName}
+          onChange={(e) => handleInputChange("lastName", e.target.value)}
+        />
       </div>
       <div>
         <Label htmlFor="contactNumber">Contact Number*</Label>
         <Input
           id="contactNumber"
           placeholder="We'll only contact you regarding your order"
+          value={address.contactNumber}
+          onChange={(e) => handleInputChange("contactNumber", e.target.value)}
         />
       </div>
       <div>
         <Label htmlFor="addressLine1">Address Line 1*</Label>
-        <Input id="addressLine1" placeholder="Enter your address" />
+        <Input
+          id="addressLine1"
+          placeholder="Enter your address"
+          value={address.addressLine1}
+          onChange={(e) => handleInputChange("addressLine1", e.target.value)}
+        />
       </div>
       <div>
         <Label htmlFor="addressLine2">Address Line 2</Label>
-        <Input id="addressLine2" placeholder="Optional" />
+        <Input
+          id="addressLine2"
+          placeholder="Optional"
+          value={address.addressLine2}
+          onChange={(e) => handleInputChange("addressLine2", e.target.value)}
+        />
       </div>
       <div className="flex gap-4">
         <div className="flex-1">
           <Label htmlFor="city">Town / City*</Label>
-          <Input id="city" placeholder="Enter city" />
+          <Input
+            id="city"
+            placeholder="Enter city"
+            value={address.city}
+            onChange={(e) => handleInputChange("city", e.target.value)}
+          />
         </div>
         <div className="flex-1">
           <Label htmlFor="state">State / Province / County</Label>
-          <Input id="state" placeholder="Optional" />
+          <Input
+            id="state"
+            placeholder="Optional"
+            value={address.state}
+            onChange={(e) => handleInputChange("state", e.target.value)}
+          />
         </div>
       </div>
       <div className="flex gap-4">
         <div className="flex-1">
           <Label htmlFor="postcode">Postcode*</Label>
-          <Input id="postcode" placeholder="Enter postcode" />
+          <Input
+            id="postcode"
+            placeholder="Enter postcode"
+            value={address.postcode}
+            onChange={(e) => handleInputChange("postcode", e.target.value)}
+          />
         </div>
         <div className="flex-1">
           <Label htmlFor="country">Country*</Label>
-          <Select>
-            <SelectTrigger id="country">
-              <SelectContent>
-                <SelectItem value="Malaysia">Malaysia</SelectItem>
-                {/* Add more countries as needed */}
-              </SelectContent>
-            </SelectTrigger>
+          <Select onValueChange={handleCountryChange}>
+            <SelectTrigger id="country">{address.country}</SelectTrigger>
+            <SelectContent>
+              <SelectItem value="United Kingdom">United Kingdom</SelectItem>
+              <SelectItem value="United States">United States</SelectItem>
+              <SelectItem value="Canada">Canada</SelectItem>
+              <SelectItem value="Malaysia">Malaysia</SelectItem>
+            </SelectContent>
           </Select>
         </div>
       </div>
