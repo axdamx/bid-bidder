@@ -29,6 +29,8 @@ export async function createItemAction(formData: FormData) {
     endDate: new Date(formData.get("endDate") as string),
     description: formData.get("description") as string,
   });
+  // Revalidate the home page
+  revalidatePath("/");
   // action after user clicked the button
   redirect("/");
 }

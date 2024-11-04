@@ -23,12 +23,12 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={cn(
-          "min-h-screen bg-background font-sans antialiased",
+          "min-h-screen text-large md:text-xl font-serif tracking-wide",
           fontSans.variable
         )}
       >
         <Header />
-        <div className="container mx-auto py12">{children}</div>
+        <div className="mx-auto">{children}</div>
       </body>
     </html>
   );
