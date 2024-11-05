@@ -11,7 +11,7 @@ export async function Header() {
 
   return (
     <div className="bg-gray-50 py-4">
-      <div className="container flex justify-between">
+      <div className="mx-4 flex justify-between">
         <div className="flex items-center gap-8">
           <Link href="/" className="hover:underline flex items-center gap-1">
             <Image

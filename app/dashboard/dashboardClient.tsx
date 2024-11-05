@@ -31,6 +31,8 @@ import {
 import UserDetailsPage from "./userdetails/userDetails";
 import Addresses from "./address/addressDetails";
 import PaymentsAndPayouts from "./payment/paymentDetails";
+import OrderDetails from "./orders/ordersDetails";
+import HelpDetails from "./help/helpDetails";
 
 type User = {
   name?: string;
@@ -157,6 +159,30 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
             </Card>
           </div>
         );
+      case "orders":
+        return (
+          <div className="p-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Order Details</CardTitle>
+                <CardDescription>Manage your payment methods</CardDescription>
+              </CardHeader>
+              <OrderDetails />
+            </Card>
+          </div>
+        );
+      case "help":
+        return (
+          <div className="p-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Order Details</CardTitle>
+                <CardDescription>Manage your payment methods</CardDescription>
+              </CardHeader>
+              <HelpDetails />
+            </Card>
+          </div>
+        );
       // Similar content sections for other navigation items
       default:
         return (
@@ -171,7 +197,7 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
       <div className="p-1 border-b">
-        <div className="flex items-center gap-4 mb-4">
+        <div className="flex items-center gap-4 mb-4 justify-center">
           <Avatar>
             <AvatarImage src={initialUser.image} alt="User" />
             <AvatarFallback>{initials}</AvatarFallback>

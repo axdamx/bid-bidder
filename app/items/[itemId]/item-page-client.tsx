@@ -666,7 +666,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Card,
   CardContent,
@@ -701,7 +701,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { Toaster } from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import ItemImage from "./image-component";
@@ -750,9 +750,14 @@ export default function AuctionItem({
     item.imageId,
   ];
 
+  const prevUserCountRef = useRef(0);
+
   const handleNewBid = useCallback((newBid: any) => {
     setHighestBid(newBid.newBid);
     setBids((prevBids) => [newBid.bidInfo, ...prevBids]);
+    toast(
+      `New bid: ${formatCurrency(newBid.newBid)} by ${newBid.bidInfo.user.name}`
+    );
   }, []);
 
   const handleAuctionEnd = useCallback(() => {
@@ -780,6 +785,14 @@ export default function AuctionItem({
     socket.on("userCount", (count) => {
       console.log("Connected users count:", count);
       setUserCount(count);
+      // Show toast notification when a new user enters
+      // if (count > prevUserCountRef.current) {
+      //   toast("A new user has joined the auction");
+      // }
+
+      // // Update the ref and state
+      // prevUserCountRef.current = count;
+      // setUserCount(count);
     });
 
     socket.on("disconnect", () => {
