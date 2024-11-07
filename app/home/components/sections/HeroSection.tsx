@@ -35,19 +35,19 @@ const HeroSection = () => {
         <div className="flex-1 space-y-8">
           <div className="space-y-2">
             <h1 className="text-4xl md:text-6xl font-serif tracking-tight">
-              The{" "}
+              Discover the{" "}
               <span className="relative">
                 largest
                 <span className="absolute bottom-1 left-0 w-full h-[0.2em] bg-red-200 -z-10"></span>
               </span>{" "}
-              ecoommerce market
+              auction marketplace
               <br />
-              with exceptional items
+              with exclusive, rare finds
               <br />
-              on the bid
+              waiting for your bid
             </h1>
             <p className="text-gray-600 text-lg">
-              Collectible and non-fungible tokens in your hands
+              Unique collectibles and digital assets, all just a bid away
             </p>
           </div>
 

@@ -111,11 +111,11 @@ export default function UserAvatar({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button className="flex items-center space-x-3 focus:outline-none">
-          <Avatar className="h-8 w-8">
+          <Avatar className="h-12 w-12">
             <AvatarImage
               src={imageUrl}
               alt={"hey"}
-              className="w-8 h-8 rounded-full"
+              className="w-12 h-12 rounded-full"
             />
             <AvatarFallback>{initials}</AvatarFallback>
           </Avatar>
