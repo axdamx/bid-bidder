@@ -14,6 +14,10 @@ export default async function ItemPage({
 
   const item = await database.query.items.findFirst({
     where: eq(items.id, parseInt(itemId)),
+    with: {
+      images: true, // Include the images relation
+      // ... other relations ...
+    },
   });
 
   const itemWithUser =

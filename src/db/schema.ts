@@ -8,6 +8,8 @@ import {
   timestamp,
 } from "drizzle-orm/pg-core";
 import { AdapterAccountType } from "next-auth/adapters";
+import { z } from "zod";
+
 
 export const users = pgTable("user", {
   id: text("id")
@@ -103,25 +105,6 @@ export const usersRelations = relations(bids, ({ one }) => ({
   }),
 }));
 
-// // another table, follows
-// export const follows = pgTable(
-//   //   "follows",
-//   "bb_follows",
-//   {
-//     followerId: text("followerId")
-//       .notNull()
-//       .references(() => users.id, { onDelete: "cascade" }),
-//     followingId: text("followingId")
-//       .notNull()
-//       .references(() => users.id, { onDelete: "cascade" }),
-//   },
-//   (follows) => ({
-//     compositePk: primaryKey({
-//       columns: [follows.followerId, follows.followingId],
-//     }),
-//   })
-// )
-
 export const follows = pgTable(
   "follows",
   {
@@ -140,4 +123,40 @@ export const follows = pgTable(
     }),
   })
 );
+
+export const images = pgTable("images", {
+  id: serial("id").primaryKey(),
+  itemId: integer("item_id").references(() => items.id, { onDelete: "cascade" }),
+  publicId: text("public_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const createItemSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  startingPrice: z.number().min(0, "Price must be positive"),
+  bidInterval: z.number().min(0, "Bid interval must be positive"),
+  endDate: z.string().refine((date) => new Date(date) > new Date(), {
+    message: "End date must be in the future",
+  }),
+  description: z.string().optional(),
+  images: z.array(z.string()).min(1, "At least one image is required").max(5, "Maximum 5 images allowed"),
+});
+
+// Define relations
+export const itemsRelations = relations(items, ({ many }) => ({
+  images: many(images),
+}));
+
+export const imagesRelations = relations(images, ({ one }) => ({
+  item: one(items, {
+    fields: [images.itemId],
+    references: [items.id],
+  }),
+}));
+
+// Types
+export type NewItem = typeof items.$inferInsert;
+export type Image = typeof images.$inferSelect;
+export type NewImage = typeof images.$inferInsert;
+export type CreateItemFormData = z.infer<typeof createItemSchema>;
 export type Item = typeof items.$inferSelect;
