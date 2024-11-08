@@ -1,5 +1,6 @@
 import { relations } from "drizzle-orm";
 import {
+  boolean,
   integer,
   pgTable,
   primaryKey,
@@ -150,6 +151,29 @@ export const itemsRelations = relations(items, ({ many }) => ({
 export const imagesRelations = relations(images, ({ one }) => ({
   item: one(items, {
     fields: [images.itemId],
+    references: [items.id],
+  }),
+}));
+
+export const bidAcknowledgments = pgTable("bid_acknowledgments", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId: text("userId")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }), // Added reference
+  itemId: text("itemId")
+    .notNull()
+    .references(() => items.id, { onDelete: "cascade" }), // Added reference
+  acknowledgedAt: timestamp("acknowledgedAt").notNull().defaultNow(),
+});
+
+// Add relations
+export const bidAcknowledgmentsRelations = relations(bidAcknowledgments, ({ one }) => ({
+  user: one(users, {
+    fields: [bidAcknowledgments.userId],
+    references: [users.id],
+  }),
+  item: one(items, {
+    fields: [bidAcknowledgments.itemId],
     references: [items.id],
   }),
 }));

@@ -359,7 +359,7 @@ export default function CreatePage() {
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={open}
+                        onClick={(e) => open()}
                         disabled={imageIds.length >= 5}
                         className="flex items-center space-x-2"
                       >

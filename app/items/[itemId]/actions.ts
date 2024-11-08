@@ -2,8 +2,8 @@
 
 import { auth } from "@/app/auth";
 import { database } from "@/src/db/database";
-import { bids, items } from "@/src/db/schema";
-import { desc, eq } from "drizzle-orm";
+import { bidAcknowledgments, bids, items, users } from "@/src/db/schema";
+import { desc, eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -96,4 +96,31 @@ export async function updateItemStatus(itemId: number, userId: string) {
 
   // Redirect to the checkout page after updating the status
   redirect(`/checkout/${itemId}`);
+}
+export async function updateBidAcknowledgmentAction(itemId: string) {
+  const session = await auth();
+  if (!session?.user) throw new Error("Unauthorized");
+
+  await database.insert(bidAcknowledgments).values({
+    userId: session.user.id,
+    itemId: itemId,
+  });
+
+  return { success: true };
+}
+
+export async function checkBidAcknowledgmentAction(itemId: string) {
+  const session = await auth();
+  if (!session?.user) throw new Error("Unauthorized");
+
+  const acknowledgment = await database
+    .select()
+    .from(bidAcknowledgments)
+    .where(and(
+      eq(bidAcknowledgments.userId, session.user.id),
+      eq(bidAcknowledgments.itemId, itemId)
+    ))
+    .limit(1);
+
+  return acknowledgment.length > 0;
 }

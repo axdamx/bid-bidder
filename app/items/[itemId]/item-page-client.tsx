@@ -9,7 +9,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { createBidAction, updateItemStatus } from "./actions";
+import {
+  createBidAction,
+  updateBidAcknowledgmentAction,
+  updateItemStatus,
+} from "./actions";
 import { formatDistance } from "date-fns";
 import { io } from "socket.io-client";
 import {
@@ -25,6 +29,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -34,6 +39,7 @@ import {
   User,
   ChevronLeft,
   ChevronRight,
+  Loader2,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import Link from "next/link";
@@ -66,10 +72,12 @@ export default function AuctionItem({
   item,
   allBids,
   userId,
+  hasAcknowledgedBid,
 }: {
   item: any;
   allBids: any[];
   userId: string;
+  hasAcknowledgedBid: boolean;
 }) {
   const [highestBid, setHighestBid] = useState<number | null>(item.currentBid);
   const [bids, setBids] = useState(allBids);
@@ -77,7 +85,40 @@ export default function AuctionItem({
   const [showWinnerModal, setShowWinnerModal] = useState(false);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [showDisclaimerModal, setShowDisclaimerModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
+  console.log("item", item);
+
+  const handleBidSubmit = async () => {
+    if (!hasAcknowledgedBid) {
+      setShowDisclaimerModal(true);
+      return;
+    }
+    await submitBid();
+  };
+
+  const handleDisclaimerConfirm = async () => {
+    try {
+      setIsSubmitting(true);
+      await updateBidAcknowledgmentAction(item.id);
+      await submitBid();
+      setShowDisclaimerModal(false);
+    } catch (error) {
+      toast.error("Failed to place bid");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const submitBid = async () => {
+    try {
+      await createBidAction(item.id);
+    } catch (error) {
+      console.error("Error placing bid:", error);
+      toast.error("Failed to place bid. Please try again.");
+    }
+  };
   const images = item.images.map((img: { publicId: string }) => img.publicId);
   const nextImage = () => {
     setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
@@ -103,7 +144,7 @@ export default function AuctionItem({
   const handleNewBid = useCallback((newBid: any) => {
     setHighestBid(newBid.newBid);
     setBids((prevBids) => [newBid.bidInfo, ...prevBids]);
-    toast(
+    toast.success(
       `New bid: ${formatCurrency(newBid.newBid)} by ${newBid.bidInfo.user.name}`
     );
   }, []);
@@ -362,7 +403,7 @@ export default function AuctionItem({
                 endDate={item.endDate}
                 onExpire={handleAuctionEnd}
               /> */}
-              {!isBidOver && (
+              {/* {!isBidOver && (
                 <form action={createBidAction.bind(null, item.id)}>
                   <Button className="w-full" disabled={isWinner}>
                     {isWinner
@@ -370,11 +411,57 @@ export default function AuctionItem({
                       : "Place Bid"}
                   </Button>
                 </form>
+              )} */}
+              {!isBidOver && (
+                <Button
+                  className="w-full"
+                  disabled={isWinner || isSubmitting}
+                  onClick={handleBidSubmit}
+                >
+                  {isWinner
+                    ? "You are currently winning this bid!"
+                    : isSubmitting
+                    ? "Processing..."
+                    : "Place Bid"}
+                </Button>
               )}
             </CardContent>
           </Card>
         </div>
       </div>
+
+      <Dialog open={showDisclaimerModal} onOpenChange={setShowDisclaimerModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Important Notice About Bidding</DialogTitle>
+            <DialogDescription className="pt-4">
+              By placing a bid, you are entering into a binding commitment to
+              purchase the item if you win. Your bid represents a legal
+              obligation to buy the item at the bid price if you are the winning
+              bidder.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowDisclaimerModal(false)}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleDisclaimerConfirm} disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                "I Understand"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Bid History Table */}
       <Card className="mt-8">

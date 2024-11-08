@@ -3,6 +3,7 @@ import { items, bids, users } from "@/src/db/schema";
 import { eq, desc } from "drizzle-orm";
 import ItemPageClient from "./item-page-client";
 import { auth } from "@/app/auth";
+import { checkBidAcknowledgmentAction } from "./actions";
 
 export default async function ItemPage({
   params: { itemId },
@@ -52,9 +53,16 @@ export default async function ItemPage({
     itemWithUser,
   };
 
+  const hasAcknowledgedBid = await checkBidAcknowledgmentAction(itemId);
+
   return (
     <>
-      <ItemPageClient item={itemWithOwner} allBids={allBids} userId={userId!} />
+      <ItemPageClient
+        item={itemWithOwner}
+        allBids={allBids}
+        userId={userId!}
+        hasAcknowledgedBid={hasAcknowledgedBid}
+      />
     </>
   );
 }
