@@ -198,7 +198,7 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
     <div className="flex flex-col h-full">
       <div className="p-1 border-b">
         <div className="flex items-center gap-4 mb-4 justify-center">
-          <Avatar>
+          <Avatar className="h-12 w-12">
             <AvatarImage src={initialUser.image} alt="User" />
             <AvatarFallback>{initials}</AvatarFallback>
           </Avatar>

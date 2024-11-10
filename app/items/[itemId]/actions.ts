@@ -100,9 +100,8 @@ export async function updateItemStatus(itemId: number, userId: string) {
 export async function updateBidAcknowledgmentAction(itemId: string) {
   const session = await auth();
   if (!session?.user) throw new Error("Unauthorized");
-
   await database.insert(bidAcknowledgments).values({
-    userId: session.user.id,
+    userId: session.user.id!,
     itemId: itemId,
   });
 
@@ -117,7 +116,7 @@ export async function checkBidAcknowledgmentAction(itemId: string) {
     .select()
     .from(bidAcknowledgments)
     .where(and(
-      eq(bidAcknowledgments.userId, session.user.id),
+      eq(bidAcknowledgments.userId, session.user.id!),
       eq(bidAcknowledgments.itemId, itemId)
     ))
     .limit(1);

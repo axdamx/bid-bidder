@@ -1,10 +1,10 @@
 "use server";
 
 import { database } from "@/src/db/database";
-import { users } from "@/src/db/schema";
-import { eq } from "drizzle-orm";
+import { items, users } from "@/src/db/schema";
+import { eq, ilike } from "drizzle-orm";
 
-export async function getUserById(userId) {
+export async function getUserById(userId: string) {
   if (!userId) return null;
 
   return await database.query.users.findFirst({
@@ -45,3 +45,33 @@ export const getUpcomingAuctions = cache(async (limit: number = 2) => {
   const { items } = await getItemsWithUsers();
   return items.slice(0, limit);
 });
+
+
+export async function searchItems(query: string) {
+  if (!query) {
+    return [];
+  }
+
+  try {
+    const searchResults = await database.query.items.findMany({
+      where: ilike(items.name, `%${query}%`),
+      limit: 5,
+      columns: {
+        id: true,
+        name: true,
+        imageId: true,
+        currentBid: true,
+      },
+    });
+
+    return searchResults.map(item => ({
+      id: item.id.toString(), // Convert to string since id is serial
+      name: item.name,
+      imageUrl: item.imageId, // You might want to transform this to a full URL if needed
+      currentBid: item.currentBid
+    }));
+  } catch (error) {
+    console.error('Search error:', error);
+    return [];
+  }
+}

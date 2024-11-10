@@ -4,6 +4,7 @@ import Image from "next/image";
 import { auth } from "./auth";
 import Link from "next/link";
 import UserAvatar from "./components/userAvatar";
+import SearchCommand from "./components/headerSearch";
 
 export async function Header() {
   const session = await auth();
@@ -40,6 +41,8 @@ export async function Header() {
             </div>
           )}
         </div>
+
+        <SearchCommand />
 
         <div className="flex items-center gap-4">
           {user && (
