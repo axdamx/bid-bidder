@@ -10,6 +10,8 @@ import {
   ShoppingBag,
   HelpCircle,
   LogOut,
+  LayoutGridIcon,
+  List,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -93,19 +95,30 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
   ];
 
   const renderContent = () => {
+    // TODO: fix or enhance this button on all the content
     switch (activeContent) {
       case "userDetails":
         return (
           <div className="p-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>User Details</CardTitle>
-                <CardDescription>
-                  Manage your personal information
-                </CardDescription>
-              </CardHeader>
-              <UserDetailsPage initialUser={initialUser} />
-            </Card>
+            <div className="relative">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute -top-2 -left-2 z-10 md:hidden bg-gray-100 rounded-full hover:bg-gray-200 border border-black" // Added black border
+                onClick={() => setIsMobileOpen(!isMobileOpen)}
+              >
+                <List className="h-4 w-4" />
+              </Button>
+              <Card>
+                <CardHeader>
+                  <CardTitle>User Details</CardTitle>
+                  <CardDescription>
+                    Manage your personal information
+                  </CardDescription>
+                </CardHeader>
+                <UserDetailsPage initialUser={initialUser} />
+              </Card>
+            </div>
           </div>
         );
       case "address":
@@ -197,15 +210,17 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
       <div className="p-1 border-b">
-        <div className="flex items-center gap-4 mb-4 justify-center">
+        <div className="flex items-center gap-4 mb-4 justify-center relative">
           <Avatar className="h-12 w-12">
             <AvatarImage src={initialUser.image} alt="User" />
             <AvatarFallback>{initials}</AvatarFallback>
           </Avatar>
           {isSidebarOpen && (
-            <div>
-              <p className="font-medium">{initialUser?.name}</p>
-              <p className="text-sm text-gray-500">{initialUser?.email}</p>
+            <div className="flex items-center gap-2">
+              <div>
+                <p className="font-medium">{initialUser?.name}</p>
+                <p className="text-sm text-gray-500">{initialUser?.email}</p>
+              </div>
             </div>
           )}
         </div>

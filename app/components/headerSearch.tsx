@@ -13,7 +13,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { searchItems } from "../action";
 import { CldImage } from "next-cloudinary";
-import { DialogTitle } from "@/components/ui/dialog";
+import { DialogContent, DialogTitle } from "@/components/ui/dialog";
 
 interface SearchResult {
   id: string;
