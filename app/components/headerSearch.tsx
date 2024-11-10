@@ -13,6 +13,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { searchItems } from "../action";
 import { CldImage } from "next-cloudinary";
+import { DialogTitle } from "@/components/ui/dialog";
 
 interface SearchResult {
   id: string;
@@ -81,7 +82,8 @@ export default function SearchCommand() {
           value={query}
           onValueChange={setQuery}
         />
-        <CommandList>
+        <DialogTitle className="sr-only">Search items</DialogTitle>
+        <CommandList className="max-h-[300px] overflow-y-auto">
           {results.length === 0 ? (
             <CommandEmpty>No results found.</CommandEmpty>
           ) : (
@@ -89,7 +91,7 @@ export default function SearchCommand() {
               {results.map((item) => (
                 <CommandItem
                   key={item.id}
-                  value={item.name}
+                  value={`${item.name}-${item.id}`} // Combine name and id for uniqueness while maintaining searchability
                   onSelect={() => {
                     router.push(`/items/${item.id}`);
                     setOpen(false);
@@ -98,15 +100,24 @@ export default function SearchCommand() {
                 >
                   <div className="flex items-center gap-3">
                     <div className="flex-shrink-0">
-                      <CldImage
-                        width="40"
-                        height="40"
-                        src={item.imageUrl!}
-                        alt={item.name}
-                        className="rounded-md object-cover"
-                      />
+                      {item.imageUrl ? (
+                        <CldImage
+                          width="64"
+                          height="64"
+                          src={item.imageUrl}
+                          alt={item.name}
+                          className="rounded-md object-cover"
+                        />
+                      ) : (
+                        // Fallback for when there's no image
+                        <div className="h-16 w-16 bg-muted rounded-md flex items-center justify-center">
+                          <Search className="h-6 w-6 text-muted-foreground" />
+                        </div>
+                      )}
                     </div>
-                    <span className="flex-grow truncate">{item.name}</span>
+                    <span className="flex-grow truncate font-medium">
+                      {item.name}
+                    </span>
                   </div>
                   <span className="flex-shrink-0 text-sm text-muted-foreground">
                     Current bid: ${item.currentBid}

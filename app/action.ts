@@ -67,7 +67,7 @@ export async function searchItems(query: string) {
     return searchResults.map(item => ({
       id: item.id.toString(), // Convert to string since id is serial
       name: item.name,
-      imageUrl: item.imageId, // You might want to transform this to a full URL if needed
+      imageUrl: item.imageId ||  null, // You might want to transform this to a full URL if needed
       currentBid: item.currentBid
     }));
   } catch (error) {
