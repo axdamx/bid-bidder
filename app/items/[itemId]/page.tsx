@@ -4,6 +4,7 @@ import { eq, desc } from "drizzle-orm";
 import ItemPageClient from "./item-page-client";
 import { auth } from "@/app/auth";
 import { checkBidAcknowledgmentAction } from "./actions";
+import { MotionGrid } from "@/app/components/motionGrid";
 
 export default async function ItemPage({
   params: { itemId },
@@ -56,13 +57,17 @@ export default async function ItemPage({
   const hasAcknowledgedBid = await checkBidAcknowledgmentAction(itemId);
 
   return (
-    <>
+    <MotionGrid
+      initial={{ opacity: 0, x: -50 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.8 }}
+    >
       <ItemPageClient
         item={itemWithOwner}
         allBids={allBids}
         userId={userId!}
         hasAcknowledgedBid={hasAcknowledgedBid}
       />
-    </>
+    </MotionGrid>
   );
 }

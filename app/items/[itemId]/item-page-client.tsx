@@ -87,6 +87,7 @@ export default function AuctionItem({
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showDisclaimerModal, setShowDisclaimerModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
   console.log("item", item);
 
@@ -392,7 +393,28 @@ export default function AuctionItem({
               </div>
               <div>
                 <h3 className="text-lg font-semibold mb-2">Description</h3>
-                <p className="text-muted-foreground">{item.description}</p>
+                <div
+                  className={cn(
+                    "text-muted-foreground relative",
+                    !isDescriptionExpanded && "max-h-[150px] overflow-hidden"
+                  )}
+                >
+                  <p>{item.description}</p>
+                  {!isDescriptionExpanded && (
+                    <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-background to-transparent" />
+                  )}
+                </div>
+                {item.description.length > 300 && (
+                  <Button
+                    variant="link"
+                    onClick={() =>
+                      setIsDescriptionExpanded(!isDescriptionExpanded)
+                    }
+                    className="p-0 h-auto mt-2"
+                  >
+                    {isDescriptionExpanded ? "Show Less" : "Read More"}
+                  </Button>
+                )}
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">

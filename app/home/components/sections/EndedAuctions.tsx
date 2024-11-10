@@ -2,6 +2,7 @@
 // import ItemCard from "@/app/item-card";
 
 import { getEndedAuctions } from "@/app/action";
+import { MotionGrid } from "@/app/components/motionGrid";
 import ItemCard from "@/app/item-card";
 
 // export async function EndedAuctions({ limit = 3 }: { limit?: number }) {
@@ -34,8 +35,15 @@ export async function EndedAuctions({ limit = 3 }: { limit?: number }) {
           </a>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {items.map((item) => (
-            <ItemCard key={item.id} item={item} />
+          {items.map((item, index) => (
+            <MotionGrid
+              key={item.id}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: index * 0.2 }}
+            >
+              <ItemCard key={item.id} item={item} />
+            </MotionGrid>
           ))}
         </div>
       </div>

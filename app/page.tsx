@@ -4,6 +4,8 @@ import { UpcomingAuctions } from "./home/components/sections/UpcomingAuctions";
 import { EndedAuctions } from "./home/components/sections/EndedAuctions";
 import HeroSection from "./home/components/sections/HeroSection";
 import { Footer } from "./footer";
+import { getEndedAuctions } from "./action";
+import { TopBidsClient } from "./home/components/sections/TopSection";
 
 function LoadingSection({ message }: { message: string }) {
   return (
@@ -22,12 +24,22 @@ function LoadingSection({ message }: { message: string }) {
   );
 }
 
+export async function TopBids() {
+  const items = (await getEndedAuctions()).slice(0, 3);
+
+  return <TopBidsClient initialItems={items} />;
+}
+
 export default function Home() {
   return (
     <>
       <main className="flex flex-col gap-8 pb-20">
         {/* Hero Section */}
         <HeroSection />
+        {/* Top Bids Section */}
+        {/* <Suspense fallback={<LoadingSection message="Loading top bids..." />}>
+          <TopBids />
+        </Suspense> */}
 
         {/* Live Auctions - Featured Section */}
         <section className="container px-4 md:px-6">

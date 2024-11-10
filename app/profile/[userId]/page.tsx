@@ -46,7 +46,7 @@ export default async function ProfilePage({
   // console.log("numberOfItems", numberOfItems);
 
   return (
-    <>
+    <MotionGrid>
       <div className="container mx-auto p-4">
         <ProfileHeader user={user} />
         <div className="flex flex-col md:flex-row mt-6 gap-6">
@@ -65,7 +65,7 @@ export default async function ProfilePage({
           <PostFeed ownedItems={ownedItems} />
         </div>
       </div>
-    </>
+    </MotionGrid>
   );
 }
 // ProfilePage.tsx
@@ -75,6 +75,7 @@ import { Button } from "@/components/ui/button";
 import { FollowButton } from "./components/follow-button";
 import { auth } from "@/app/auth";
 import { getFollowCounts, getFollowStatus, getItemsByUserId } from "./action";
+import { MotionGrid } from "@/app/components/motionGrid";
 
 export function ProfileHeader({ user }) {
   console.log("user", user);
@@ -180,8 +181,15 @@ function PostFeed({ ownedItems }) {
     <>
       {hasItems ? (
         <div className="md:w-3/4 grid grid-cols-1 md:grid-cols-2 gap-4">
-          {ownedItems.map((item) => (
-            <ItemCard key={item.id} item={item} />
+          {ownedItems.map((item, index) => (
+            <MotionGrid
+              key={item.id}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: index * 0.2 }}
+            >
+              <ItemCard key={item.id} item={item} />
+            </MotionGrid>
           ))}
         </div>
       ) : (

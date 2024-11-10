@@ -5,6 +5,7 @@ import { items } from "@/src/db/schema";
 import { auth } from "../auth";
 import { EmptyState } from "./empty-state";
 import { getItemsByUserId } from "../profile/[userId]/action";
+import { MotionGrid } from "../components/motionGrid";
 
 export default async function MyAuctionPage() {
   const session = await auth();
@@ -32,8 +33,15 @@ export default async function MyAuctionPage() {
       <h2 className="text-2xl font-bold mb-4">My Current Auctions</h2>
       {hasItems ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-8">
-          {ownedItems.map((item) => (
-            <ItemCard key={item.id} item={item} />
+          {ownedItems.map((item, index) => (
+            <MotionGrid
+              key={item.id}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: index * 0.2 }}
+            >
+              <ItemCard key={item.id} item={item} />
+            </MotionGrid>
           ))}
         </div>
       ) : (
