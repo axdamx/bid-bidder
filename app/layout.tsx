@@ -4,6 +4,7 @@ import { Inter as FontSans } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { Header } from "./header";
 import { auth } from "./auth";
+import { Footer } from "./footer";
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -32,7 +33,9 @@ export default async function RootLayout({
       >
         <Header session={session} />
         <main className="mx-auto">
-          <div className="px-4 sm:px-6 w-full">{children}</div>
+          <div className="px-4 sm:px-6 w-full">
+            {children} <Footer />
+          </div>
         </main>
       </body>
     </html>

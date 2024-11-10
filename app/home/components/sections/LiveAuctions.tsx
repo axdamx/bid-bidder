@@ -5,12 +5,22 @@ export async function LiveAuctions() {
   const items = await getLiveAuctions();
 
   return (
-    <section className="bg-gray-100 py-10">
-      <h2 className="text-center text-3xl font-bold mb-6">Live Auction</h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-6">
-        {items.map((item) => (
-          <ItemCard key={item.id} item={item} />
-        ))}
+    <section className="w-full">
+      <div className="max-w-screen-2xl mx-auto px-4 md:px-6">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-2xl font-bold md:text-3xl">Live Auctions</h2>
+            <p className="text-muted-foreground mt-1">Bid on active auctions</p>
+          </div>
+          <a href="/auctions" className="text-primary hover:text-primary/80">
+            View all →
+          </a>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {items.map((item) => (
+            <ItemCard key={item.id} item={item} />
+          ))}
+        </div>
       </div>
     </section>
   );
