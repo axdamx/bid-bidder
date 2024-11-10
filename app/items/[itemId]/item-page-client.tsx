@@ -396,15 +396,17 @@ export default function AuctionItem({
                 <div
                   className={cn(
                     "text-muted-foreground relative",
-                    !isDescriptionExpanded && "max-h-[150px] overflow-hidden"
+                    !isDescriptionExpanded &&
+                      item.description.length > 500 &&
+                      "max-h-[240px] overflow-hidden" // ~10 lines at ~50 chars per line
                   )}
                 >
                   <p>{item.description}</p>
-                  {!isDescriptionExpanded && (
+                  {!isDescriptionExpanded && item.description.length > 500 && (
                     <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-background to-transparent" />
                   )}
                 </div>
-                {item.description.length > 300 && (
+                {item.description.length > 500 && (
                   <Button
                     variant="link"
                     onClick={() =>
