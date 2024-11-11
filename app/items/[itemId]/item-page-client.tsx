@@ -455,7 +455,7 @@ export default function AuctionItem({
       </div>
 
       <Dialog open={showDisclaimerModal} onOpenChange={setShowDisclaimerModal}>
-        <DialogContent>
+        <DialogContent className="[&>button]:hidden">
           <DialogHeader>
             <DialogTitle>Important Notice About Bidding</DialogTitle>
             <DialogDescription className="pt-4">
