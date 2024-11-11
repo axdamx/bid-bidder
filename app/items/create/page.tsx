@@ -88,7 +88,7 @@ export default function CreatePage() {
   };
 
   return (
-    <>
+    <main className="container mx-auto py-12">
       <Dialog open={showSuccessModal} onOpenChange={setShowSuccessModal}>
         <DialogContent className="[&>button]:hidden">
           <DialogHeader>
@@ -322,6 +322,6 @@ export default function CreatePage() {
           </div>
         </div>
       </MotionGrid>
-    </>
+    </main>
   );
 }

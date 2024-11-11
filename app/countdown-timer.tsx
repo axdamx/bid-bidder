@@ -66,7 +66,7 @@ export default function CountdownTimer({
         if (newTimeLeft) {
           setTimeLeft(newTimeLeft);
         } else {
-          clearInterval(timer);
+          clearInterval(timer as NodeJS.Timeout);
         }
       }, 1000);
 
