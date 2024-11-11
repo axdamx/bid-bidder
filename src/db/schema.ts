@@ -85,6 +85,7 @@ export const items = pgTable("bb_item", {
   description: text("description"),
   status: text("status"),
   winnerId: text("winnerId"),
+  createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(), // Add this line
 });
 
 export const bids = pgTable("bb_bids", {

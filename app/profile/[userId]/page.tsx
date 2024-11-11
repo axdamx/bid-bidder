@@ -50,7 +50,7 @@ export default async function ProfilePage({
       <div className="container mx-auto p-4">
         <ProfileHeader user={user} />
         <div className="flex flex-col md:flex-row mt-6 gap-6">
-          <div className="md:w-1/4 space-y-4">
+          <div className="md:w-1/4 space-y-4 mb-6">
             <Stats
               itemsCount={allItems.length}
               followersCount={followersCount}
@@ -76,6 +76,9 @@ import { FollowButton } from "./components/follow-button";
 import { auth } from "@/app/auth";
 import { getFollowCounts, getFollowStatus, getItemsByUserId } from "./action";
 import { MotionGrid } from "@/app/components/motionGrid";
+import ProfileTable from "./components/profileTable";
+import { useState } from "react";
+import PostFeed from "./components/PostFeed";
 
 export function ProfileHeader({ user }) {
   console.log("user", user);
@@ -113,25 +116,19 @@ function Stats({
 }) {
   // const numberOfItems = items.length;
   return (
-    <Card className="p-4 text-center space-y-2">
+    <Card className="p-4 text-center">
       <div className="grid grid-cols-3 gap-4">
         <div>
-          <h1 variant="h6">{itemsCount}</h1>
-          <h1 variant="body2" className="text-gray-500">
-            Posts
-          </h1>
+          <h1 className="text-xl font-semibold">{itemsCount}</h1>
+          <h1 className="text-gray-500 text-sm">Posts</h1>
         </div>
         <div>
-          <h1 variant="h6">{followersCount}</h1>
-          <h1 variant="body2" className="text-gray-500">
-            Followers
-          </h1>
+          <h1 className="text-xl font-semibold">{followersCount}</h1>
+          <h1 className="text-gray-500 text-sm">Followers</h1>
         </div>
         <div>
-          <h1 variant="h6">{followingCount}</h1>
-          <h1 variant="body2" className="text-gray-500">
-            Following
-          </h1>
+          <h1 className="text-xl font-semibold">{followingCount}</h1>
+          <h1 className="text-gray-500 text-sm">Following</h1>
         </div>
         <div className="col-span-3">
           <FollowButton
@@ -148,13 +145,11 @@ function Stats({
 function About() {
   return (
     <Card className="p-4">
-      <h1 variant="h6">About me</h1>
-      <h1 variant="body2" className="text-gray-700 mt-2">
-        "Bla Bla Bla Bla Bla Bla Bla"
-      </h1>
-      <h1 variant="body2" className="text-gray-500 mt-4">
-        Lives in KL, Malaysia
-      </h1>
+      <h2 className="text-lg font-semibold">About me</h2>
+      <p className="text-gray-700 mt-2">
+        &ldquo;Bla Bla Bla Bla Bla Bla Bla&rdquo;
+      </p>
+      <p className="text-gray-500 mt-4">Lives in KL, Malaysia</p>
     </Card>
   );
 }
@@ -162,7 +157,7 @@ function About() {
 function SocialLinks() {
   return (
     <Card className="p-4">
-      <h1 variant="h6">Social Links</h1>
+      <h1 className="text-lg font-semibold">Social Links</h1>
       <div className="flex space-x-4 mt-2">
         {/* <Icon name="dribbble" />
         <Icon name="instagram" />
@@ -174,44 +169,3 @@ function SocialLinks() {
     </Card>
   );
 }
-
-function PostFeed({ ownedItems }) {
-  const hasItems = ownedItems.length > 0;
-  return (
-    <>
-      {hasItems ? (
-        <div className="md:w-3/4 grid grid-cols-1 md:grid-cols-2 gap-4">
-          {ownedItems.map((item, index) => (
-            <MotionGrid
-              key={item.id}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: index * 0.2 }}
-            >
-              <ItemCard key={item.id} item={item} />
-            </MotionGrid>
-          ))}
-        </div>
-      ) : (
-        <div className="flex-1 flex items-center justify-center">
-          <EmptyState />
-        </div>
-      )}
-    </>
-    // <div className="md:w-3/4 grid grid-cols-1 md:grid-cols-2 gap-4">
-    //   {allItems.map((item) => (
-    //     <ItemCard key={item.id} item={item} />
-    //   ))}
-    // </div>
-  );
-}
-
-// {hasItems ? (
-//   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-8">
-//     {allItems.map((item) => (
-//       <ItemCard key={item.id} item={item} />
-//     ))}
-//   </div>
-// ) : (
-//   <EmptyState />
-// )}

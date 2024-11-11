@@ -49,7 +49,7 @@ import { CldImage } from "next-cloudinary";
 import Lightbox from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
 
-function formatTimestamp(timestamp: Date) {
+export function formatTimestamp(timestamp: Date) {
   return formatDistance(new Date(timestamp), new Date(), { addSuffix: true });
 }
 
@@ -349,11 +349,6 @@ export default function AuctionItem({
                 <CardTitle className="text-2xl font-bold">
                   {item.name}
                 </CardTitle>
-                <CountdownTimer
-                  endDate={item.endDate}
-                  onExpire={handleAuctionEnd}
-                  className="text-sm"
-                />
               </div>
               <CardDescription className="text-lg">
                 Created by:{" "}
@@ -423,6 +418,11 @@ export default function AuctionItem({
                   Connected users: {userCount}
                 </p>
               </div>
+              <CountdownTimer
+                endDate={item.endDate}
+                onExpire={handleAuctionEnd}
+                className="text-sm"
+              />
               {/* <CountdownTimer
                 endDate={item.endDate}
                 onExpire={handleAuctionEnd}
