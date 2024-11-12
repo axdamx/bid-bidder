@@ -61,8 +61,6 @@ export default function SearchCommand() {
     return () => document.removeEventListener("keydown", down);
   }, []);
 
-  console.log("res", results);
-
   return (
     <>
       <button

@@ -96,13 +96,13 @@ export const getItemsWithUsers = cache(async () => {
 export const getLiveAuctions = cache(async () => {
   const { items } = await getItemsWithUsers();
   return items
-    .filter((item) => new Date(item.endDate) > new Date())
+    .filter((item) => new Date(item.endDate + "Z") > new Date())
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 });
 
 export const getEndedAuctions = cache(async () => {
   const { items } = await getItemsWithUsers();
-  return items.filter((item) => new Date(item.endDate) < new Date());
+  return items.filter((item) => new Date(item.endDate + "Z") < new Date());
 });
 
 export const getUpcomingAuctions = cache(async (limit: number = 2) => {

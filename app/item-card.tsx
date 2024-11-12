@@ -25,11 +25,9 @@ interface ItemCardProps {
 }
 
 const ItemCard: React.FC<ItemCardProps> = ({ item, user }) => {
-  console.log("item", item);
-
   const isItemEnded = isBidOver(item.endDate);
   function isBidOver(endDate: Date) {
-    return new Date(endDate) < new Date();
+    return new Date(endDate + "Z") < new Date();
   }
 
   function formatCurrency(value: number) {

@@ -31,7 +31,7 @@ export default function CountdownTimer({
 
   const calculateTimeLeft = useCallback(() => {
     const now = new Date().getTime();
-    const targetDate = new Date(endDate).getTime();
+    const targetDate = new Date(endDate + "Z").getTime();
     const difference = targetDate - now;
 
     if (difference <= 0) {

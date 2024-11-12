@@ -92,7 +92,6 @@ import {
 } from "lucide-react";
 
 export function ProfileHeader({ user }) {
-  console.log("user", user);
   return (
     <div
       className="relative w-full h-64 bg-cover bg-center rounded-lg overflow-hidden"

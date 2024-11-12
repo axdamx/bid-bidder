@@ -117,8 +117,6 @@ export async function createBidAction(itemId: number) {
     throw new Error("Item not found!");
   }
 
-  console.log("Item data:", item); // Debug log
-
     const latestBidValue = item.currentBid
     ? item.currentBid + item.bidInterval
     : item.startingPrice + item.bidInterval;
@@ -185,13 +183,15 @@ export async function createBidAction(itemId: number) {
 }
 
 export async function updateItemStatus(itemId: number, userId: string) {
-  "use server"; // Directive for server action
-
   // Update the item status to "checkout" and associate with the winning user
-  await database
-    .update(items)
-    .set({ status: "checkout", winnerId: userId }) // Assuming you have a winnerId field
-    .where(eq(items.id, itemId));
+  const { error: updateError } = await supabase
+    .from('items')
+    .update({ status: "CHECKOUT", winnerId: userId }) // Assuming you have a winnerId field
+    .eq('id', itemId);
+
+  if (updateError) {
+    throw new Error("Failed to update item status");
+  }
 
   // Optionally revalidate the page to reflect changes
   revalidatePath("/");
@@ -199,13 +199,21 @@ export async function updateItemStatus(itemId: number, userId: string) {
   // Redirect to the checkout page after updating the status
   redirect(`/checkout/${itemId}`);
 }
+
 export async function updateBidAcknowledgmentAction(itemId: string) {
   const session = await auth();
   if (!session?.user) throw new Error("Unauthorized");
-  await database.insert(bidAcknowledgments).values({
-    userId: session.user.id!,
-    itemId: itemId,
-  });
+
+  const { error: insertError } = await supabase
+    .from('bid_acknowledgments')
+    .insert({
+      userId: session.user.id!,
+      itemId: itemId,
+    });
+
+  if (insertError) {
+    throw new Error("Failed to update bid acknowledgment");
+  }
 
   return { success: true };
 }
@@ -214,14 +222,16 @@ export async function checkBidAcknowledgmentAction(itemId: string) {
   const session = await auth();
   if (!session?.user) throw new Error("Unauthorized");
 
-  const acknowledgment = await database
-    .select()
-    .from(bidAcknowledgments)
-    .where(and(
-      eq(bidAcknowledgments.userId, session.user.id!),
-      eq(bidAcknowledgments.itemId, itemId)
-    ))
+  const { data: acknowledgment, error: selectError } = await supabase
+    .from('bid_acknowledgments')
+    .select('*')
+    .eq('userId', session.user.id!)
+    .eq('itemId', itemId)
     .limit(1);
+
+  if (selectError) {
+    throw new Error("Failed to check bid acknowledgment");
+  }
 
   return acknowledgment.length > 0;
 }

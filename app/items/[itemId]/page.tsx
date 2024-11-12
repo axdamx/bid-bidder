@@ -39,9 +39,6 @@ export default async function ItemPage({
     );
   }
 
-  console.log("item baemon", item);
-  console.log("itemWituUser baemon", itemUser);
-
   const { data: bids = [] } = await supabase
     // .from("bids")
     // .select("*, users (*)")
@@ -60,8 +57,6 @@ export default async function ItemPage({
   // 4. User A go back to home page
   // 5. User A go back to the same item page
   // 6. User A still seeing the old price, only hard refresh will fix this
-  const bestBid = await getLatestBidWithUser(itemId);
-  console.log("best bid", bestBid);
 
   const allBids = bids || [];
 
@@ -72,7 +67,6 @@ export default async function ItemPage({
 
   const hasAcknowledgedBid = await checkBidAcknowledgmentAction(itemId);
 
-  console.log("allbids yo heay", allBids);
   return (
     <MotionGrid
       initial={{ opacity: 0, x: -50 }}

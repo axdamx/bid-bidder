@@ -104,9 +104,6 @@ export default function AuctionItem({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
-  console.log("item", item);
-  console.log("allBids", allBids);
-
   const handleBidSubmit = async () => {
     if (!hasAcknowledgedBid) {
       setShowDisclaimerModal(true);
@@ -413,6 +410,7 @@ export default function AuctionItem({
                       item.description.length > 500 &&
                       "max-h-[240px] overflow-hidden" // ~10 lines at ~50 chars per line
                   )}
+                  style={{ overflowWrap: "break-word" }}
                 >
                   <p>{item.description}</p>
                   {!isDescriptionExpanded && item.description.length > 500 && (

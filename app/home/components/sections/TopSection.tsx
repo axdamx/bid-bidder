@@ -17,7 +17,6 @@ export function TopBidsClient({ initialItems }: { initialItems: TopBid[] }) {
   const [backgroundColor, setBackgroundColor] = useState("rgb(243, 244, 246)");
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  console.log("initial", initialItems);
   // Example data - replace with your actual data
   //   const topBids: TopBid[] =
 
