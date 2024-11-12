@@ -79,7 +79,7 @@ export default function Home() {
           <Suspense
             fallback={<LoadingSection message="Loading ended auctions..." />}
           >
-            <EndedAuctions />
+            <EndedAuctions limit={3} />
           </Suspense>
         </section>
       </main>

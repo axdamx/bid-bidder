@@ -9,10 +9,10 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Company Info */}
           <div className="space-y-4">
-            <h3 className="font-bold text-lg">Marketplace</h3>
+            <h3 className="font-bold text-lg">Renown</h3>
             <p className="text-sm text-muted-foreground">
-              The world's first and largest digital marketplace for crypto
-              collectibles and non-fungible tokens (NFTs).
+              Discover the largest auction marketplace with exclusive, rare
+              finds waiting for your bid.
             </p>
           </div>
 
@@ -137,7 +137,7 @@ export function Footer() {
         {/* Bottom Bar */}
         <div className="flex flex-col md:flex-row justify-between items-center pt-8 mt-8 border-t border-border">
           <p className="text-sm text-muted-foreground">
-            © {currentYear} Your Marketplace. All rights reserved.
+            © {currentYear} Renown. All rights reserved.
           </p>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <Link href="#" className="text-muted-foreground hover:text-primary">

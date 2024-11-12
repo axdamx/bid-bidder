@@ -36,12 +36,12 @@ export function Header({ session }: { session: any }) {
                   >
                     Create Auction
                   </Link>
-                  <Link
+                  {/* <Link
                     href="/auctions"
                     className="hover:underline flex items-center gap-1"
                   >
                     My Auction
-                  </Link>
+                  </Link> */}
                 </>
               )}
             </div>

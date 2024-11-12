@@ -49,8 +49,23 @@ import { CldImage } from "next-cloudinary";
 import Lightbox from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
 
-export function formatTimestamp(timestamp: Date) {
-  return formatDistance(new Date(timestamp), new Date(), { addSuffix: true });
+// export function formatTimestamp(timestamp: string) {
+//   return formatDistance(new Date(), timestamp, { addSuffix: true });
+// }
+export function formatTimestamp(timestamp: string) {
+  const now = new Date();
+  // Convert timestamp to local timezone by explicitly creating a UTC date
+  const date = new Date(timestamp + "Z"); // Adding 'Z' to indicate UTC
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+  if (diffInSeconds < 60) {
+    return `${diffInSeconds} seconds ago`;
+  }
+
+  return formatDistance(date, now, {
+    addSuffix: true,
+    includeSeconds: true,
+  });
 }
 
 function formatCurrency(value: number) {
@@ -90,6 +105,7 @@ export default function AuctionItem({
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
   console.log("item", item);
+  console.log("allBids", allBids);
 
   const handleBidSubmit = async () => {
     if (!hasAcknowledgedBid) {
@@ -146,7 +162,9 @@ export default function AuctionItem({
     setHighestBid(newBid.newBid);
     setBids((prevBids) => [newBid.bidInfo, ...prevBids]);
     toast.success(
-      `New bid: ${formatCurrency(newBid.newBid)} by ${newBid.bidInfo.user.name}`
+      `New bid: ${formatCurrency(newBid.newBid)} by ${
+        newBid.bidInfo.users.name
+      }`
     );
   }, []);
 
@@ -154,7 +172,7 @@ export default function AuctionItem({
     setShowWinnerModal(true);
   }, []);
 
-  const latestBidderName = bids.length > 0 && bids[0].user.name;
+  const latestBidderName = bids.length > 0 && bids[0].users.name;
   const isWinner = bids.length > 0 && bids[0].userId === userId;
   const slides = images.map((publicId: string) => ({
     src: `https://res.cloudinary.com/dmqhabag1/image/upload/${publicId}`,
@@ -353,11 +371,11 @@ export default function AuctionItem({
               <CardDescription className="text-lg">
                 Created by:{" "}
                 <Link
-                  href={`/profile/${item.itemWithUser.id}`}
+                  href={`/profile/${item.itemUser.id}`}
                   className="hover:underline flex items-center gap-1"
                 >
                   <User className="h-4 w-4" />
-                  {item.itemWithUser.name}
+                  {item.itemUser.name}
                 </Link>
               </CardDescription>
             </CardHeader>
@@ -506,7 +524,7 @@ export default function AuctionItem({
                 <TableBody>
                   {bids.slice(0, 10).map((bid) => (
                     <TableRow key={bid.id}>
-                      <TableCell>{bid.user.name}</TableCell>
+                      <TableCell>{bid.users.name}</TableCell>
                       <TableCell>{formatCurrency(bid.amount)}</TableCell>
                       <TableCell>{formatTimestamp(bid.timestamp)}</TableCell>
                     </TableRow>

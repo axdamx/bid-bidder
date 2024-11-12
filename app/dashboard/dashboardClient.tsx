@@ -35,6 +35,7 @@ import Addresses from "./address/addressDetails";
 import PaymentsAndPayouts from "./payment/paymentDetails";
 import OrderDetails from "./orders/ordersDetails";
 import HelpDetails from "./help/helpDetails";
+import { MotionGrid } from "../components/motionGrid";
 
 type User = {
   name?: string;
@@ -99,39 +100,42 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
     switch (activeContent) {
       case "userDetails":
         return (
-          <div className="p-6">
-            <div className="relative">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute -top-2 -left-2 z-10 md:hidden bg-gray-100 rounded-full hover:bg-gray-200 border border-black" // Added black border
-                onClick={() => setIsMobileOpen(!isMobileOpen)}
-              >
-                <List className="h-4 w-4" />
-              </Button>
-              <Card>
-                <CardHeader>
-                  <CardTitle>User Details</CardTitle>
-                  <CardDescription>
-                    Manage your personal information
-                  </CardDescription>
-                </CardHeader>
-                <UserDetailsPage initialUser={initialUser} />
-              </Card>
+          <MotionGrid>
+            <div className="p-6">
+              <div className="relative">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute -top-2 -left-2 z-10 md:hidden bg-gray-100 rounded-full hover:bg-gray-200 border border-black" // Added black border
+                  onClick={() => setIsMobileOpen(!isMobileOpen)}
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>User Details</CardTitle>
+                    <CardDescription>
+                      Manage your personal information
+                    </CardDescription>
+                  </CardHeader>
+                  <UserDetailsPage initialUser={initialUser} />
+                </Card>
+              </div>
             </div>
-          </div>
+          </MotionGrid>
         );
       case "address":
         return (
-          <div className="p-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Address</CardTitle>
-                <CardDescription>
-                  Manage your shipping addresses
-                </CardDescription>
-              </CardHeader>
-              {/* <CardContent>
+          <MotionGrid>
+            <div className="p-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Address</CardTitle>
+                  <CardDescription>
+                    Manage your shipping addresses
+                  </CardDescription>
+                </CardHeader>
+                {/* <CardContent>
                 <div className="space-y-4">
                   <div className="grid gap-4">
                     <div className="flex items-center gap-4">
@@ -156,45 +160,52 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
                   </div>
                 </div>
               </CardContent> */}
-              <Addresses />
-            </Card>
-          </div>
+                <Addresses />
+              </Card>
+            </div>
+          </MotionGrid>
         );
       case "payment":
         return (
-          <div className="p-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Payment Details</CardTitle>
-                <CardDescription>Manage your payment methods</CardDescription>
-              </CardHeader>
-              <PaymentsAndPayouts />
-            </Card>
-          </div>
+          <MotionGrid>
+            <div className="p-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Payment Details</CardTitle>
+                  <CardDescription>Manage your payment methods</CardDescription>
+                </CardHeader>
+                <PaymentsAndPayouts />
+              </Card>
+            </div>
+          </MotionGrid>
         );
       case "orders":
         return (
-          <div className="p-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Order Details</CardTitle>
-                <CardDescription>Manage your payment methods</CardDescription>
-              </CardHeader>
-              <OrderDetails />
-            </Card>
-          </div>
+          <MotionGrid>
+            <div className="p-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Order Details</CardTitle>
+                  <CardDescription>Manage your payment methods</CardDescription>
+                </CardHeader>
+                <OrderDetails />
+              </Card>
+            </div>
+          </MotionGrid>
         );
       case "help":
         return (
-          <div className="p-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Order Details</CardTitle>
-                <CardDescription>Manage your payment methods</CardDescription>
-              </CardHeader>
-              <HelpDetails />
-            </Card>
-          </div>
+          <MotionGrid>
+            <div className="p-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Order Details</CardTitle>
+                  <CardDescription>Manage your payment methods</CardDescription>
+                </CardHeader>
+                <HelpDetails />
+              </Card>
+            </div>
+          </MotionGrid>
         );
       // Similar content sections for other navigation items
       default:

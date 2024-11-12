@@ -1,9 +1,10 @@
 // import { getEndedAuctions } from "@/app/action";
 // import ItemCard from "@/app/item-card";
-
+"use client";
 import { getEndedAuctions } from "@/app/action";
 import { MotionGrid } from "@/app/components/motionGrid";
 import ItemCard from "@/app/item-card";
+import { useState, useEffect } from "react";
 
 // export async function EndedAuctions({ limit = 3 }: { limit?: number }) {
 //   const items = (await getEndedAuctions()).slice(0, limit);
@@ -19,15 +20,27 @@ import ItemCard from "@/app/item-card";
 //     </section>
 //   );
 // }
-export async function EndedAuctions({ limit = 3 }: { limit?: number }) {
-  const items = (await getEndedAuctions()).slice(0, limit);
+export function EndedAuctions({ limit }: { limit?: number }) {
+  const [items, setItems] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
+  useEffect(() => {
+    getEndedAuctions(3)
+      .then((data) => {
+        setItems(data);
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        console.error("Error fetching ended auctions:", error);
+        setIsLoading(false);
+      });
+  }, []);
   return (
     <section className="w-full">
       <div className="max-w-screen-2xl mx-auto px-4 md:px-6">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-2xl font-bold md:text-3xl">Past Auctions</h2>
+            <h2 className="text-2xl font-bold md:text-3xl">Ended Auctions</h2>
             <p className="text-muted-foreground mt-1">Recently sold items</p>
           </div>
           <a href="/ended" className="text-primary hover:text-primary/80">

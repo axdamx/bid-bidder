@@ -52,7 +52,7 @@ export default async function ProfilePage({
         <div className="flex flex-col md:flex-row mt-6 gap-6">
           <div className="md:w-1/4 space-y-4 mb-6">
             <Stats
-              itemsCount={allItems.length}
+              itemsCount={ownedItems.length}
               followersCount={followersCount}
               followingCount={followingCount}
               userId={userId}
@@ -60,6 +60,7 @@ export default async function ProfilePage({
               isFollowing={isFollowing}
             />
             <About />
+            <Location />
             <SocialLinks />
           </div>
           <PostFeed ownedItems={ownedItems} />
@@ -79,6 +80,16 @@ import { MotionGrid } from "@/app/components/motionGrid";
 import ProfileTable from "./components/profileTable";
 import { useState } from "react";
 import PostFeed from "./components/PostFeed";
+import {
+  Facebook,
+  Instagram,
+  LinkedinIcon,
+  MapPin,
+  Share2,
+  Twitter,
+  User,
+  Youtube,
+} from "lucide-react";
 
 export function ProfileHeader({ user }) {
   console.log("user", user);
@@ -94,12 +105,8 @@ export function ProfileHeader({ user }) {
           <AvatarFallback>CN</AvatarFallback>
         </Avatar>{" "}
         <div>
-          <h1 variant="h5" className="text-white">
-            {user.name}
-          </h1>
-          <h1 variant="subtitle2" className="text-gray-200">
-            {user.email}
-          </h1>
+          <h1 className="text-xl font-semibold text-white">{user.name}</h1>
+          <h1 className="text-sm text-gray-200">{user.email}</h1>
         </div>
       </div>
     </div>
@@ -145,11 +152,25 @@ function Stats({
 function About() {
   return (
     <Card className="p-4">
-      <h2 className="text-lg font-semibold">About me</h2>
+      <div className="flex items-center gap-2">
+        {/* <User className="h-5 w-5 text-gray-500" /> */}
+        <h2 className="text-lg font-semibold">About me</h2>
+      </div>
       <p className="text-gray-700 mt-2">
-        &ldquo;Bla Bla Bla Bla Bla Bla Bla&rdquo;
+        Big Boy is a big boy from KL. He is a big boy from KL.
       </p>
-      <p className="text-gray-500 mt-4">Lives in KL, Malaysia</p>
+    </Card>
+  );
+}
+
+function Location() {
+  return (
+    <Card className="p-4">
+      <div className="flex items-center gap-2">
+        {/* <MapPin className="h-5 w-5 text-gray-500" /> */}
+        <h2 className="text-lg font-semibold">Location</h2>
+      </div>
+      <p className="text-gray-700 mt-2">KL, Malaysia</p>
     </Card>
   );
 }
@@ -157,14 +178,16 @@ function About() {
 function SocialLinks() {
   return (
     <Card className="p-4">
-      <h1 className="text-lg font-semibold">Social Links</h1>
+      <div className="flex items-center gap-4">
+        {/* <Share2 className="h-5 w-5 text-gray-500" /> */}
+        <h1 className="text-lg font-semibold">Social Links</h1>
+      </div>
       <div className="flex space-x-4 mt-2">
-        {/* <Icon name="dribbble" />
-        <Icon name="instagram" />
-        <Icon name="facebook" /> */}
-        <h1> Facebook </h1>
-        <h1> Instagram </h1>
-        <h1> Tiktok </h1>
+        <Facebook className="h-5 w-5 text-gray-500 hover:text-blue-600 cursor-pointer" />
+        <Instagram className="h-5 w-5 text-gray-500 hover:text-pink-600 cursor-pointer" />
+        <Twitter className="h-5 w-5 text-gray-500 hover:text-blue-400 cursor-pointer" />
+        <Youtube className="h-5 w-5 text-gray-500 hover:text-red-600 cursor-pointer" />
+        <LinkedinIcon className="h-5 w-5 text-gray-500 hover:text-blue-700 cursor-pointer" />
       </div>
     </Card>
   );

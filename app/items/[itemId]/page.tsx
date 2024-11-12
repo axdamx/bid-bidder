@@ -3,8 +3,10 @@ import { items, bids, users } from "@/src/db/schema";
 import { eq, desc } from "drizzle-orm";
 import ItemPageClient from "./item-page-client";
 import { auth } from "@/app/auth";
-import { checkBidAcknowledgmentAction } from "./actions";
+import { checkBidAcknowledgmentAction, getLatestBidWithUser } from "./actions";
 import { MotionGrid } from "@/app/components/motionGrid";
+import { supabase } from "@/lib/utils";
+import { get } from "http";
 
 export default async function ItemPage({
   params: { itemId },
@@ -14,19 +16,20 @@ export default async function ItemPage({
   const session = await auth();
   const userId = session?.user?.id;
 
-  const item = await database.query.items.findFirst({
-    where: eq(items.id, parseInt(itemId)),
-    with: {
-      images: true, // Include the images relation
-      // ... other relations ...
-    },
-  });
+  const { data: item } = await supabase
+    .from("items")
+    .select(
+      `
+      *,
+      images (*)
+    `
+    )
+    .eq("id", parseInt(itemId))
+    .single();
 
-  const itemWithUser =
+  const { data: itemUser } =
     item &&
-    (await database.query.users.findFirst({
-      where: eq(users.id, item.userId),
-    }));
+    (await supabase.from("users").select("*").eq("id", item.userId).single());
 
   if (!item) {
     return (
@@ -36,26 +39,40 @@ export default async function ItemPage({
     );
   }
 
-  const allBids = await database.query.bids.findMany({
-    where: eq(bids.itemId, parseInt(itemId)),
-    orderBy: desc(bids.id),
-    with: {
-      user: {
-        columns: {
-          image: true,
-          name: true,
-        },
-      },
-    },
-  });
+  console.log("item baemon", item);
+  console.log("itemWituUser baemon", itemUser);
+
+  const { data: bids = [] } = await supabase
+    // .from("bids")
+    // .select("*, users (*)")
+    // .eq("itemId", parseInt(itemId))
+    // .order("id", { ascending: false });
+
+    .from("bids")
+    .select("*, users (*)")
+    .eq("itemId", itemId)
+    .order("id", { ascending: false });
+
+  // TODO fix the delay on bidding
+  // 1. Open 2 accounts that is bidding on the same item
+  // 2. User A bid on the item
+  // 3. User B bid on the item
+  // 4. User A go back to home page
+  // 5. User A go back to the same item page
+  // 6. User A still seeing the old price, only hard refresh will fix this
+  const bestBid = await getLatestBidWithUser(itemId);
+  console.log("best bid", bestBid);
+
+  const allBids = bids || [];
 
   const itemWithOwner = {
     ...item,
-    itemWithUser,
+    itemUser,
   };
 
   const hasAcknowledgedBid = await checkBidAcknowledgmentAction(itemId);
 
+  console.log("allbids yo heay", allBids);
   return (
     <MotionGrid
       initial={{ opacity: 0, x: -50 }}

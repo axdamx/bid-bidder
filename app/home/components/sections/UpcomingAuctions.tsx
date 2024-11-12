@@ -1,10 +1,25 @@
+"use client";
+
 import { getUpcomingAuctions } from "@/app/action";
 import { MotionGrid } from "@/app/components/motionGrid";
 import ItemCard from "@/app/item-card";
+import { useState, useEffect } from "react";
 
-export async function UpcomingAuctions() {
-  const items = await getUpcomingAuctions();
+export function UpcomingAuctions() {
+  const [items, setItems] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
+  useEffect(() => {
+    getUpcomingAuctions()
+      .then((data) => {
+        setItems(data);
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        console.error("Error fetching upcoming auctions:", error);
+        setIsLoading(false);
+      });
+  }, []);
   return (
     <section className="w-full">
       {/* <h2 className="text-center text-3xl font-bold mb-6">Upcoming Auctions</h2> */}

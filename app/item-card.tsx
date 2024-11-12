@@ -25,8 +25,11 @@ interface ItemCardProps {
 }
 
 const ItemCard: React.FC<ItemCardProps> = ({ item, user }) => {
+  console.log("item", item);
+
+  const isItemEnded = isBidOver(item.endDate);
   function isBidOver(endDate: Date) {
-    return endDate < new Date();
+    return new Date(endDate) < new Date();
   }
 
   function formatCurrency(value: number) {
@@ -58,10 +61,10 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, user }) => {
             />
           )}
           <Badge
-            variant={isBidOver(item.endDate) ? "destructive" : "default"}
+            variant={isItemEnded ? "destructive" : "default"}
             className="absolute top-2 right-2"
           >
-            {isBidOver(item.endDate) ? "Ended" : "Active"}
+            {isItemEnded ? "Ended" : "Active"}
           </Badge>
         </div>
       </CardHeader>
@@ -78,7 +81,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, user }) => {
         <div className="flex items-center justify-between mt-3">
           <div>
             <p className="text-sm text-muted-foreground">
-              {isBidOver(item.endDate) ? "Final Bid" : "Current Bid"}
+              {isItemEnded ? "Final Bid" : "Current Bid"}
             </p>
             <p className="text-lg font-bold">
               {formatCurrency(item.currentBid)}
@@ -86,7 +89,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, user }) => {
           </div>
         </div>
         <div className="mt-4 text-center">
-          {!isBidOver(item.endDate) && (
+          {!isItemEnded && (
             <p className="text-sm text-muted-foreground mb-1">Ends in</p>
           )}
           <CountdownTimer endDate={item.endDate} />
@@ -96,10 +99,10 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, user }) => {
         <Button
           asChild
           className="w-full"
-          variant={isBidOver(item.endDate) ? "secondary" : "default"}
+          variant={isItemEnded ? "secondary" : "default"}
         >
           <Link href={`/items/${item.id}`}>
-            {isBidOver(item.endDate) ? "View Details" : "Place Bid"}
+            {isItemEnded ? "View Details" : "Place Bid"}
           </Link>
         </Button>
       </CardFooter>

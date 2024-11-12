@@ -6,7 +6,7 @@ import DashboardClient from "./dashboardClient";
 
 export default async function DashboardPage() {
   const { user, error } = await getUserData();
-  const initialUser = await getUserById(user?.id);
+  const initialUser = await getUserById(user?.id || "");
 
   return <DashboardClient initialUser={initialUser} />;
 }
