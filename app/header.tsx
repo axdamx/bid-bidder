@@ -1,5 +1,4 @@
 import SignIn from "@/components/ui/sign-in";
-import { SignOut } from "@/components/ui/sign-out";
 import Image from "next/image";
 import Link from "next/link";
 import UserAvatar from "./components/userAvatar";
@@ -7,6 +6,7 @@ import SearchCommand from "./components/headerSearch";
 import { Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { MotionGrid } from "./components/motionGrid";
+import { SignOut } from "@/components/ui/sign-out";
 
 export function Header({ session }: { session: any }) {
   const user = session?.user;

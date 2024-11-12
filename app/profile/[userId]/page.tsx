@@ -9,13 +9,16 @@ export default async function ProfilePage({
 }: {
   params: { userId: string };
 }) {
-  const allItems = await database.query.items.findMany({
-    where: eq(items.userId, userId),
-  });
+  const { data: user, error } = await supabase
+    .from("users")
+    .select("*")
+    .eq("id", userId)
+    .single();
 
-  const user = await database.query.users.findFirst({
-    where: eq(users.id, userId),
-  });
+  if (error) {
+    console.error("Error fetching user:", error);
+    // Handle error
+  }
 
   const session = await auth(); // Your auth implementation
   const currentUserId = session?.user?.id;
@@ -23,13 +26,7 @@ export default async function ProfilePage({
   const { isFollowing } = await getFollowStatus(currentUserId!, userId);
   const { followersCount, followingCount } = await getFollowCounts(userId);
 
-  const { ownedItems, error } = await getItemsByUserId(userId);
-  if (error) {
-    // Handle error
-  } else {
-    // Use items
-    // console.log("ownedItems", ownedItems);
-  }
+  const { ownedItems } = await getItemsByUserId(userId);
 
   // console.log("followersCount", followersCount);
   // console.log("followingCount", followingCount);
@@ -90,6 +87,7 @@ import {
   User,
   Youtube,
 } from "lucide-react";
+import { supabase } from "@/lib/utils";
 
 export function ProfileHeader({ user }) {
   return (

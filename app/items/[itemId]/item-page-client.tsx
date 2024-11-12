@@ -219,8 +219,33 @@ export default function AuctionItem({
   }, [item.currentBid, allBids]);
 
   const hasBids = bids.length > 0;
-  const isBidOver = item.endDate < new Date();
+  const isBidOver = new Date(item.endDate + "Z") < new Date();
 
+  useEffect(() => {
+    if (isBidOver && !hasBids) {
+      setShowWinnerModal(true);
+    }
+  }, [isBidOver, hasBids]);
+
+  const NoWinnerDialog = () => (
+    <>
+      <DialogTitle className="flex items-center gap-2">
+        <AlertCircle className="w-6 h-6 text-red-500" />
+        Auction Ended
+      </DialogTitle>
+      <DialogDescription className="space-y-4">
+        <div className="p-4 bg-red-50 rounded-lg mt-4 text-center">
+          <h1 className="font-medium text-red-700">No bids were placed</h1>
+          <h1 className="text-sm text-red-600 mt-2">
+            Unfortunately, this auction ended without any bids.
+          </h1>
+          <h1 className="text-sm text-red-600 mt-2">
+            Please check out our other active auctions.
+          </h1>
+        </div>
+      </DialogDescription>
+    </>
+  );
   const WinnerDialog = () => (
     <>
       <DialogTitle className="flex items-center gap-2">
@@ -540,7 +565,13 @@ export default function AuctionItem({
       <Dialog open={showWinnerModal} onOpenChange={setShowWinnerModal}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            {isWinner ? <WinnerDialog /> : <LoserDialog />}
+            {isWinner ? (
+              <WinnerDialog />
+            ) : hasBids ? (
+              <LoserDialog />
+            ) : (
+              <NoWinnerDialog />
+            )}
           </DialogHeader>
           <div className="flex justify-end mt-4">
             <Button onClick={() => setShowWinnerModal(false)} className="mt-2">

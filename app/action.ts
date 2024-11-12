@@ -16,6 +16,7 @@ import { eq, ilike } from "drizzle-orm";
 
 // import { database } from "@/src/db/database";
 import { cache } from "react";
+import { signIn, signOut } from "./auth";
 export async function getUserById(userId: string) {
   if (!userId) return null;
 
@@ -206,4 +207,14 @@ export async function searchItems(query: string) {
     console.error('Unexpected error:', error);
     return [];
   }
+}
+
+
+// Sign In
+export async function signInWithGoogle() {
+  await signIn("google");
+}
+
+export async function signOutWithGoogle() {
+  await signOut({ redirectTo: "/" });
 }

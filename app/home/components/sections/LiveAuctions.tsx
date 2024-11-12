@@ -2,6 +2,7 @@
 
 import { getLiveAuctions } from "@/app/action";
 import { MotionGrid } from "@/app/components/motionGrid";
+import Spinner from "@/app/components/Spinner";
 import ItemCard from "@/app/item-card";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
@@ -36,19 +37,25 @@ export function LiveAuctions() {
             View all →
           </a>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {items.map((item, index) => (
-            <MotionGrid
-              key={item.id}
-              // className="w-full min-w-[300px] md:min-w-[400px] rounded-xl overflow-hidden"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: index * 0.2 }}
-            >
-              <ItemCard key={item.id} item={item} />
-            </MotionGrid>
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="flex justify-center items-center">
+            <Spinner /> {/* Render the Spinner component while loading */}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {items.map((item, index) => (
+              <MotionGrid
+                key={item.id}
+                // className="w-full min-w-[300px] md:min-w-[400px] rounded-xl overflow-hidden"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: index * 0.2 }}
+              >
+                <ItemCard key={item.id} item={item} />
+              </MotionGrid>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
