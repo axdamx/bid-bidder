@@ -70,7 +70,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, user }) => {
       </CardHeader>
       <CardContent className="p-4">
         <div className="flex items-center justify-between gap-2">
-          <CardTitle className="text-lg font-semibold line-clamp-1">
+          <CardTitle className="text-lg font-semibold break-words">
             {item.name}
           </CardTitle>
           <div className="flex items-center text-sm text-muted-foreground shrink-0">
