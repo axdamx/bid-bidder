@@ -18,6 +18,7 @@ import CountdownTimer from "./countdown-timer";
 import { Clock, User } from "lucide-react";
 import { ItemWithUser, User as UserType } from "./items";
 import { Badge } from "@/components/ui/badge";
+import { formatCurrency } from "@/lib/utils";
 
 interface ItemCardProps {
   item: ItemWithUser;
@@ -28,21 +29,6 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, user }) => {
   const isItemEnded = isBidOver(item.endDate);
   function isBidOver(endDate: Date) {
     return new Date(endDate + "Z") < new Date();
-  }
-
-  function formatCurrency(value: number) {
-    const absValue = Math.abs(value);
-    let formattedValue;
-
-    if (absValue >= 1e6) {
-      formattedValue = (value / 1e6).toFixed(2) + "M";
-    } else if (absValue >= 1e3) {
-      formattedValue = (value / 1e3).toFixed(2) + "K";
-    } else {
-      formattedValue = value.toFixed(2);
-    }
-
-    return `RM${formattedValue}`;
   }
 
   return (

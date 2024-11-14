@@ -67,6 +67,7 @@ export const getItemsWithUsers = cache(async () => {
       console.error("Error fetching items with users:", error);
       return { items: [], error: "Failed to fetch items" };
     }
+    // console.log("itemsWithUsers", itemsWithUsers);
 
     return { items: itemsWithUsers, error: null };
   } catch (error) {
@@ -96,6 +97,7 @@ export const getItemsWithUsers = cache(async () => {
 
 export const getLiveAuctions = cache(async () => {
   const { items } = await getItemsWithUsers();
+  // console.log('items', items)
   return items
     .filter((item) => new Date(item.endDate + "Z") > new Date())
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -217,4 +219,15 @@ export async function signInWithGoogle() {
 
 export async function signOutWithGoogle() {
   await signOut({ redirectTo: "/" });
+}
+
+export const handleSignOut = async () => {
+  const { error } = await supabase.auth.signOut();
+  if (error) {
+    console.error("Error signing out:", error.message);
+  } else {
+    console.log("Sign-out successful");
+    // Optionally redirect the user after sign-out
+    window.location.href = "/";
+  }
 }

@@ -62,7 +62,7 @@ export async function updateUserField(
       };
     }
 
-    revalidatePath("/profile");
+    revalidatePath("/dashboard");
     return { success: true };
   } catch (error) {
     console.error(`Unexpected error updating user ${field}:`, error);

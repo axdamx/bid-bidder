@@ -1,15 +1,26 @@
-import { signIn } from "@/app/auth";
-import { Button } from "./button";
+"use client";
 
-export default function SignIn() {
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import AuthModals from "@/app/components/AuthModal";
+
+type ModalView = "log-in" | "sign-up" | "forgot-password";
+
+export default function SignInButton() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [view, setView] = useState<ModalView>("log-in");
+
   return (
-    <form
-      action={async () => {
-        "use server";
-        await signIn("google");
-      }}
-    >
-      <Button type="submit">Sign In with Google</Button>
-    </form>
+    <>
+      <Button variant="outline" onClick={() => setIsOpen(true)}>
+        Login / Sign Up
+      </Button>
+      <AuthModals
+        isOpen={isOpen}
+        setIsOpen={setIsOpen}
+        view={view}
+        setView={setView}
+      />
+    </>
   );
 }

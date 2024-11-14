@@ -52,6 +52,8 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
   const [activeContent, setActiveContent] = useState("userDetails");
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
+  console.log("initialUser", initialUser);
+
   if (!initialUser) {
     return null;
   }

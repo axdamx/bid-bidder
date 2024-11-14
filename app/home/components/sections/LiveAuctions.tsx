@@ -6,6 +6,7 @@ import Spinner from "@/app/components/Spinner";
 import ItemCard from "@/app/item-card";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { SkeletonCard } from "../SkeletonLoader";
 
 export function LiveAuctions() {
   // Remove async
@@ -38,8 +39,10 @@ export function LiveAuctions() {
           </a>
         </div>
         {isLoading ? (
-          <div className="flex justify-center items-center">
-            <Spinner /> {/* Render the Spinner component while loading */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[...Array(3)].map((_, index) => (
+              <SkeletonCard key={index} />
+            ))}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

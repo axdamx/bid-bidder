@@ -6,6 +6,7 @@ import { database } from "@/src/db/database";
 import { auth } from "@/app/auth";
 import { redirect } from "next/navigation";
 import { supabase } from "@/lib/utils";
+import { useSupabase } from "@/app/context/SupabaseContext";
 
 type CreateItemResponse = {
   success: boolean;
@@ -14,26 +15,29 @@ type CreateItemResponse = {
 };
 
 export async function createItemAction(
-  formData: FormData
+  formData: FormData,
+  userId: string
 ): Promise<CreateItemResponse> {
   try {
-    const session = await auth();
+    // const { session, supabase } = useSupabase();
 
-    if (!session || !session.user) {
-      return {
-        success: false,
-        error: "Unauthorized",
-      };
-    }
+    // console.log("data", data.session);
 
-    const user = session.user;
+    // if (error || !data || !data.session?.user) {
+    //   return {
+    //     success: false,
+    //     error: "Unauthorized",
+    //   };
+    // }
+
+    // const user = userId;
     const imageIds = formData.getAll("images[]") as string[];
 
     // Create the item object WITHOUT any id field
     const itemData = {
       name: formData.get("name") as string,
       startingPrice: parseFloat(formData.get("startingPrice") as string),
-      userId: user.id,
+      userId: userId,
       bidInterval: parseFloat(formData.get("bidInterval") as string),
       endDate: new Date(formData.get("endDate") as string).toISOString(),
       description: formData.get("description") as string,

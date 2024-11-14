@@ -1,6 +1,7 @@
 "use server";
 
 import { auth } from "@/app/auth";
+import { useSupabase } from "@/app/context/SupabaseContext";
 import { supabase } from "@/lib/utils";
 import { database } from "@/src/db/database";
 import { bidAcknowledgments, bids, items, users } from "@/src/db/schema";
@@ -99,13 +100,7 @@ export async function getLatestBidWithUser(itemId: number) {
 
   return latestBid;
 }
-export async function createBidAction(itemId: number) {
-  const session = await auth();
-
-  if (!session || !session.user || !session.user.id) {
-    throw new Error("You must be logged in");
-  }
-
+export async function createBidAction(itemId: number, userId: string) {
   // Get item
   const { data: item, error: itemError } = await supabase
     .from('items')
@@ -127,7 +122,7 @@ export async function createBidAction(itemId: number) {
     .insert({
       amount: latestBidValue,
       itemId: itemId,
-      userId: session.user.id,
+      userId: userId,
       timestamp: new Date(),
 });
 
@@ -200,14 +195,11 @@ export async function updateItemStatus(itemId: number, userId: string) {
   redirect(`/checkout/${itemId}`);
 }
 
-export async function updateBidAcknowledgmentAction(itemId: string) {
-  const session = await auth();
-  if (!session?.user) throw new Error("Unauthorized");
-
+export async function updateBidAcknowledgmentAction(itemId: string, userId: string) {
   const { error: insertError } = await supabase
     .from('bid_acknowledgments')
     .insert({
-      userId: session.user.id!,
+      userId: userId,
       itemId: itemId,
     });
 
@@ -218,20 +210,56 @@ export async function updateBidAcknowledgmentAction(itemId: string) {
   return { success: true };
 }
 
-export async function checkBidAcknowledgmentAction(itemId: string) {
-  const session = await auth();
-  if (!session?.user) throw new Error("Unauthorized");
+export async function checkBidAcknowledgmentAction(itemId: string, userId: string | null) {
+  try {
+    // console.log('checkBidAcknowledgmentAction', userId, itemId);
+    const query = supabase
+      .from('bid_acknowledgments')
+      .select('*')
+      .eq('itemId', itemId)
+      .limit(1);
 
-  const { data: acknowledgment, error: selectError } = await supabase
-    .from('bid_acknowledgments')
-    .select('*')
-    .eq('userId', session.user.id!)
-    .eq('itemId', itemId)
-    .limit(1);
+    if (userId) {
+      query.eq('userId', userId);
+    }
 
-  if (selectError) {
-    throw new Error("Failed to check bid acknowledgment");
+    const { data: acknowledgment, error: selectError } = await query;
+
+    if (selectError) {
+      console.error("Supabase error:", selectError);
+      throw new Error("Failed to check bid acknowledgment");
+    }
+
+    return acknowledgment.length > 0;
+  } catch (error) {
+    console.error("Error in checkBidAcknowledgmentAction:", error);
+    throw error;
   }
+}
 
-  return acknowledgment.length > 0;
+export async function fetchItem(itemId: string) {
+  const { data: item } = await supabase
+    .from("items")
+    .select("*, images (*)")
+    .eq("id", parseInt(itemId))
+    .single();
+  return item;
+}
+
+export async function fetchItemUser(userId: string) {
+  const { data: itemUser } = await supabase
+    .from("users")
+    .select("*")
+    .eq("id", userId)
+    .single();
+  return itemUser;
+}
+
+export async function fetchBids(itemId: string) {
+  const { data: bids = [] } = await supabase
+    .from("bids")
+    .select("*, users (*)")
+    .eq("itemId", itemId)
+    .order("id", { ascending: false });
+  return bids;
 }

@@ -1,3 +1,4 @@
+// disabled typescript for this file
 "use client";
 
 import { EmptyState } from "@/app/auctions/empty-state";
@@ -5,6 +6,7 @@ import MainItemCard from "@/app/components/MainItemCard";
 import { MotionGrid } from "@/app/components/motionGrid";
 import ItemCard from "@/app/item-card";
 import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 
 export default function PostFeed({ ownedItems }) {
@@ -40,7 +42,7 @@ export default function PostFeed({ ownedItems }) {
               onClick={() => setPage(page - 1)}
               disabled={page === 1}
             >
-              Previous
+              <ChevronLeft className="mr-2" /> Previous
             </Button>
             <span className="flex items-center">
               Page {page} of {totalPages}
@@ -50,7 +52,7 @@ export default function PostFeed({ ownedItems }) {
               onClick={() => setPage(page + 1)}
               disabled={page === totalPages}
             >
-              Next
+              Next <ChevronRight className="ml-2" />
             </Button>
           </div>
         </>

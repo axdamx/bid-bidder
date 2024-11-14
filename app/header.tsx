@@ -1,3 +1,4 @@
+"use client";
 import SignIn from "@/components/ui/sign-in";
 import Image from "next/image";
 import Link from "next/link";
@@ -7,9 +8,31 @@ import { Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { MotionGrid } from "./components/motionGrid";
 import { SignOut } from "@/components/ui/sign-out";
+import { supabase } from "@/lib/utils";
+import { useEffect, useState } from "react";
+import { useSupabase } from "./context/SupabaseContext";
+import { getUserById } from "./action";
 
-export function Header({ session }: { session: any }) {
-  const user = session?.user;
+export function Header({}: {}) {
+  const { session } = useSupabase(); // Use the hook to get session data
+  const userId = session?.user?.id || ""; // Extract user ID from session
+  const [initialUser, setInitialUser] = useState(null);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    async function fetchUserData() {
+      try {
+        const fetchedUser = await getUserById(userId);
+        setInitialUser(fetchedUser);
+      } catch (err) {
+        setError(err);
+      }
+    }
+
+    if (userId) {
+      fetchUserData();
+    }
+  }, [userId]);
 
   return (
     <div className="sticky top-0 z-50 bg-gray-50/80 backdrop-blur-sm py-4 shadow-sm">
@@ -53,20 +76,18 @@ export function Header({ session }: { session: any }) {
           </div>
 
           {/* Right Section: User Controls */}
-          <div className="flex items-center gap-4 flex-shrink-0">
-            {user && (
+          <div className="flex items-center gap-8 flex-shrink-0">
+            {initialUser && (
               <UserAvatar
-                name={user.name!}
-                imageUrl={user.image!}
-                email={user.email!}
-                userId={user.id!}
+                name={initialUser.name!}
+                imageUrl={initialUser.image!}
+                email={initialUser.email!}
+                userId={initialUser.id!}
               />
             )}
 
             {/* Desktop Sign In/Out */}
-            <div className="hidden md:block">
-              {session ? <SignOut /> : <SignIn />}
-            </div>
+            <div className="hidden md:block">{!session && <SignIn />}</div>
 
             {/* Mobile Menu */}
             <Sheet>

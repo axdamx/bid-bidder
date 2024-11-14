@@ -4,6 +4,7 @@ import { getUpcomingAuctions } from "@/app/action";
 import { MotionGrid } from "@/app/components/motionGrid";
 import ItemCard from "@/app/item-card";
 import { useState, useEffect } from "react";
+import { SkeletonCard } from "../SkeletonLoader";
 
 export function UpcomingAuctions() {
   const [items, setItems] = useState([]);
@@ -37,18 +38,27 @@ export function UpcomingAuctions() {
             View all →
           </a>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 px-6">
-          {items.map((item, index) => (
-            <MotionGrid
-              key={item.id}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: index * 0.2 }}
-            >
-              <ItemCard key={item.id} item={item} />
-            </MotionGrid>
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[...Array(2)].map((_, index) => (
+              <SkeletonCard key={index} />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {items.map((item, index) => (
+              <MotionGrid
+                key={item.id}
+                // className="w-full min-w-[300px] md:min-w-[400px] rounded-xl overflow-hidden"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: index * 0.2 }}
+              >
+                <ItemCard key={item.id} item={item} />
+              </MotionGrid>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

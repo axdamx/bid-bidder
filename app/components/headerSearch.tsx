@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import { searchItems } from "../action";
 import { CldImage } from "next-cloudinary";
 import { DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { formatCurrency } from "@/lib/utils";
 
 interface SearchResult {
   id: string;
@@ -22,31 +23,52 @@ interface SearchResult {
   currentBid: number;
 }
 
+export function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
 export default function SearchCommand() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
+  const [loading, setLoading] = useState(false); // New state for loading
   const router = useRouter();
+  const debouncedQuery = useDebounce(query, 500); // Use the debounced query
 
   useEffect(() => {
     const handleSearch = async () => {
-      if (query.length === 0) {
+      if (debouncedQuery.length === 0) {
         setResults([]);
+        setLoading(false);
         return;
       }
 
+      setLoading(true);
       try {
-        const items = await searchItems(query);
+        const items = await searchItems(debouncedQuery);
         setResults(items);
       } catch (error) {
         console.error("Search error:", error);
         setResults([]);
+      } finally {
+        setLoading(false);
       }
     };
 
-    const timeoutId = setTimeout(handleSearch, 300);
-    return () => clearTimeout(timeoutId);
-  }, [query]);
+    handleSearch();
+  }, [debouncedQuery]);
 
   // Add keyboard shortcut
   useEffect(() => {
@@ -82,47 +104,61 @@ export default function SearchCommand() {
         />
         <DialogTitle className="sr-only">Search items</DialogTitle>
         <CommandList className="max-h-[300px] overflow-y-auto">
-          {results.length === 0 ? (
+          {loading ? (
+            <div className="flex justify-center py-4">
+              <div
+                className="spinner-border animate-spin inline-block w-8 h-8 border-4 rounded-full"
+                role="status"
+              >
+                <span className="sr-only">Loading...</span>
+              </div>
+            </div>
+          ) : results.length === 0 ? (
             <CommandEmpty>No results found.</CommandEmpty>
           ) : (
-            <CommandGroup>
-              {results.map((item) => (
-                <CommandItem
-                  key={item.id}
-                  value={`${item.name}-${item.id}`} // Combine name and id for uniqueness while maintaining searchability
-                  onSelect={() => {
-                    router.push(`/items/${item.id}`);
-                    setOpen(false);
-                  }}
-                  className="flex items-center justify-between py-2"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="flex-shrink-0">
-                      {item.imageUrl ? (
-                        <CldImage
-                          width="64"
-                          height="64"
-                          src={item.imageUrl}
-                          alt={item.name}
-                          className="rounded-md object-cover"
-                        />
-                      ) : (
-                        // Fallback for when there's no image
-                        <div className="h-16 w-16 bg-muted rounded-md flex items-center justify-center">
-                          <Search className="h-6 w-6 text-muted-foreground" />
-                        </div>
-                      )}
+            <>
+              <div className="px-4 py-2 text-sm text-gray-500">
+                {results.length} item{results.length > 1 ? "s" : ""} found
+              </div>
+              <CommandGroup>
+                {results.map((item) => (
+                  <CommandItem
+                    key={item.id}
+                    value={`${item.name}-${item.id}`} // Combine name and id for uniqueness while maintaining searchability
+                    onSelect={() => {
+                      router.push(`/items/${item.id}`);
+                      setOpen(false);
+                    }}
+                    className="flex items-center justify-between py-2"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex-shrink-0">
+                        {item.imageUrl ? (
+                          <CldImage
+                            width="64"
+                            height="64"
+                            src={item.imageUrl}
+                            alt={item.name}
+                            className="rounded-md object-cover"
+                          />
+                        ) : (
+                          // Fallback for when there's no image
+                          <div className="h-16 w-16 bg-muted rounded-md flex items-center justify-center">
+                            <Search className="h-6 w-6 text-muted-foreground" />
+                          </div>
+                        )}
+                      </div>
+                      <span className="flex-grow truncate font-medium">
+                        {item.name}
+                      </span>
                     </div>
-                    <span className="flex-grow truncate font-medium">
-                      {item.name}
+                    <span className="flex-shrink-0 text-sm text-muted-foreground">
+                      Current bid: {formatCurrency(item.currentBid)}
                     </span>
-                  </div>
-                  <span className="flex-shrink-0 text-sm text-muted-foreground">
-                    Current bid: ${item.currentBid}
-                  </span>
-                </CommandItem>
-              ))}
-            </CommandGroup>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </>
           )}
         </CommandList>
       </CommandDialog>

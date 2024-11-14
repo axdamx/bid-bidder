@@ -1,7 +1,6 @@
-// app/components/FollowButton.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { followUser, unfollowUser } from "../action";
 
@@ -14,20 +13,57 @@ export function FollowButton({
   currentUserId: string | null;
   initialIsFollowing: boolean;
 }) {
-  const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
+  // Initialize the state with the initialIsFollowing prop
+  const [isFollowing, setIsFollowing] = useState<boolean>(initialIsFollowing);
   const [isPending, setIsPending] = useState(false);
 
+  useEffect(() => {
+    console.log("Initial isFollowing:", initialIsFollowing);
+    console.log("Current isFollowing state:", isFollowing);
+  }, [initialIsFollowing, isFollowing]);
+
+  // const handleFollow = async () => {
+  //   if (!currentUserId) return;
+
+  //   setIsPending(true);
+
+  //   // Simulate follow/unfollow action
+  //   try {
+  //     if (isFollowing) {
+  //       // Simulate unfollow action
+  //       console.log(`Unfollowing user: ${targetUserId}`);
+  //       setIsFollowing(false);
+  //     } else {
+  //       // Simulate follow action
+  //       console.log(`Following user: ${targetUserId}`);
+  //       setIsFollowing(true);
+  //     }
+  //   } catch (error) {
+  //     console.error("Follow action failed:", error);
+  //   } finally {
+  //     setIsPending(false);
+  //   }
+  // };
   const handleFollow = async () => {
     if (!currentUserId) return;
 
     setIsPending(true);
+
     try {
       if (isFollowing) {
-        await unfollowUser(currentUserId, targetUserId);
-        setIsFollowing(false);
+        const response = await unfollowUser(currentUserId, targetUserId);
+        if (response.success) {
+          setIsFollowing(false);
+        } else {
+          console.error("Unfollow failed:", response.error);
+        }
       } else {
-        await followUser(currentUserId, targetUserId);
-        setIsFollowing(true);
+        const response = await followUser(currentUserId, targetUserId);
+        if (response.success) {
+          setIsFollowing(true);
+        } else {
+          console.error("Follow failed:", response.error);
+        }
       }
     } catch (error) {
       console.error("Follow action failed:", error);

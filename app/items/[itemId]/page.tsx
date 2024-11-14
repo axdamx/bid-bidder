@@ -1,35 +1,112 @@
-import { database } from "@/src/db/database";
-import { items, bids, users } from "@/src/db/schema";
-import { eq, desc } from "drizzle-orm";
-import ItemPageClient from "./item-page-client";
-import { auth } from "@/app/auth";
-import { checkBidAcknowledgmentAction, getLatestBidWithUser } from "./actions";
-import { MotionGrid } from "@/app/components/motionGrid";
-import { supabase } from "@/lib/utils";
-import { get } from "http";
+"use client";
 
-export default async function ItemPage({
+import { useEffect, useState, useCallback } from "react";
+import {
+  fetchItem,
+  fetchItemUser,
+  fetchBids,
+  checkBidAcknowledgmentAction,
+} from "./actions";
+import ItemPageClient from "./item-page-client";
+import { MotionGrid } from "@/app/components/motionGrid";
+import { useSupabase } from "@/app/context/SupabaseContext";
+import Spinner from "@/app/components/Spinner";
+
+export default function ItemPage({
   params: { itemId },
 }: {
   params: { itemId: string };
 }) {
-  const session = await auth();
-  const userId = session?.user?.id;
+  const { session } = useSupabase();
+  const user = session?.user;
 
-  const { data: item } = await supabase
-    .from("items")
-    .select(
-      `
-      *,
-      images (*)
-    `
-    )
-    .eq("id", parseInt(itemId))
-    .single();
+  const [item, setItem] = useState(null);
+  const [itemUser, setItemUser] = useState(null);
+  const [bids, setBids] = useState([]);
+  const [hasAcknowledgedBid, setHasAcknowledgedBid] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const { data: itemUser } =
-    item &&
-    (await supabase.from("users").select("*").eq("id", item.userId).single());
+  const fetchData = useCallback(async () => {
+    setIsLoading(true);
+
+    try {
+      const [fetchedItem, fetchedBids, acknowledged] = await Promise.all([
+        fetchItem(itemId),
+        fetchBids(itemId),
+        checkBidAcknowledgmentAction(itemId, user?.id),
+      ]);
+
+      setItem(fetchedItem);
+      setBids(fetchedBids);
+      setHasAcknowledgedBid(acknowledged);
+
+      if (fetchedItem) {
+        const fetchedItemUser = await fetchItemUser(fetchedItem.userId);
+        setItemUser(fetchedItemUser);
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [itemId, user?.id]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Image Gallery Skeleton */}
+          <div className="space-y-4">
+            <div className="relative aspect-square bg-gray-300 animate-pulse rounded-lg"></div>
+            <div className="grid grid-cols-5 gap-2">
+              {Array.from({ length: 5 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="aspect-square bg-gray-300 animate-pulse rounded-md"
+                ></div>
+              ))}
+            </div>
+          </div>
+
+          {/* Auction Details Skeleton */}
+          <div className="space-y-6">
+            <div className="bg-white p-6 rounded-lg shadow-md space-y-4">
+              <div className="h-8 bg-gray-300 animate-pulse rounded"></div>
+              <div className="h-6 bg-gray-300 animate-pulse rounded w-1/2"></div>
+              <div className="grid grid-cols-2 gap-8 w-full">
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <div key={index} className="space-y-2">
+                    <div className="h-4 bg-gray-300 animate-pulse rounded w-3/4"></div>
+                    <div className="h-6 bg-gray-300 animate-pulse rounded"></div>
+                  </div>
+                ))}
+              </div>
+              <div className="h-32 bg-gray-300 animate-pulse rounded"></div>
+              <div className="h-10 bg-gray-300 animate-pulse rounded w-full"></div>
+            </div>
+          </div>
+
+          {/* Table Skeleton */}
+          <div className="mt-8 bg-white p-6 rounded-lg shadow-md space-y-4">
+            <div className="h-8 bg-gray-300 animate-pulse rounded w-1/4"></div>
+            <div className="space-y-2">
+              {Array.from({ length: 2 }).map((_, index) => (
+                <div key={index} className="flex space-x-4">
+                  <div className="h-6 bg-gray-300 animate-pulse rounded w-full"></div>
+                  <div className="h-6 bg-gray-300 animate-pulse rounded w-full"></div>
+                  <div className="h-6 bg-gray-300 animate-pulse rounded w-full"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!item) {
     return (
@@ -39,33 +116,10 @@ export default async function ItemPage({
     );
   }
 
-  const { data: bids = [] } = await supabase
-    // .from("bids")
-    // .select("*, users (*)")
-    // .eq("itemId", parseInt(itemId))
-    // .order("id", { ascending: false });
-
-    .from("bids")
-    .select("*, users (*)")
-    .eq("itemId", itemId)
-    .order("id", { ascending: false });
-
-  // TODO fix the delay on bidding
-  // 1. Open 2 accounts that is bidding on the same item
-  // 2. User A bid on the item
-  // 3. User B bid on the item
-  // 4. User A go back to home page
-  // 5. User A go back to the same item page
-  // 6. User A still seeing the old price, only hard refresh will fix this
-
-  const allBids = bids || [];
-
   const itemWithOwner = {
-    ...item,
+    ...(item || {}),
     itemUser,
   };
-
-  const hasAcknowledgedBid = await checkBidAcknowledgmentAction(itemId);
 
   return (
     <MotionGrid
@@ -75,8 +129,8 @@ export default async function ItemPage({
     >
       <ItemPageClient
         item={itemWithOwner}
-        allBids={allBids}
-        userId={userId!}
+        allBids={bids}
+        userId={user?.id!}
         hasAcknowledgedBid={hasAcknowledgedBid}
       />
     </MotionGrid>

@@ -8,7 +8,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { CldUploadWidget, CldImage } from "next-cloudinary";
 import { createItemAction } from "./actions";
-import { Camera, DollarSign, Clock, Calendar, FileText } from "lucide-react";
+import {
+  Camera,
+  DollarSign,
+  Clock,
+  Calendar,
+  FileText,
+  Loader2,
+} from "lucide-react";
 import { useForm } from "react-hook-form";
 import { CreateItemFormData, createItemSchema } from "@/src/db/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -20,6 +27,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { MotionGrid } from "@/app/components/motionGrid";
+import { useSupabase } from "@/app/context/SupabaseContext";
 
 type UploadResult = {
   info: { public_id: string };
@@ -33,6 +41,11 @@ export default function CreatePage() {
   const [newItemId, setNewItemId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { session } = useSupabase();
+
+  if (!session) {
+    return null;
+  }
 
   const form = useForm<CreateItemFormData>({
     resolver: zodResolver(createItemSchema),
@@ -107,7 +120,7 @@ export default function CreatePage() {
     imageIds.forEach((id) => formData.append("images[]", id));
 
     try {
-      const response = await createItemAction(formData);
+      const response = await createItemAction(formData, session?.user.id);
 
       if (!response.success) {
         setError(response.error || "Failed to create item");
@@ -354,7 +367,14 @@ export default function CreatePage() {
                       type="submit"
                       disabled={!isValid || imageIds.length === 0}
                     >
-                      Submit Listing
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        "Submit Listing"
+                      )}
                     </Button>
                     {/* <Button
                       type="button"

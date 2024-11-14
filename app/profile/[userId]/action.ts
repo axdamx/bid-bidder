@@ -418,3 +418,30 @@ export const getItemsByUserId = cache(async (userId: string) => {
     };
   }
 });
+
+export async function fetchUser(userId: string) {
+  const { data: user, error } = await supabase
+    .from("users")
+    .select("*")
+    .eq("id", userId)
+    .single();
+
+  if (error) {
+    console.error("Error fetching user:", error);
+    return null;
+  }
+
+  return user;
+}
+
+export async function fetchFollowData(currentUserId: string, userId: string) {
+  const { isFollowing } = await getFollowStatus(currentUserId, userId);
+  const { followersCount, followingCount } = await getFollowCounts(userId);
+
+  return { isFollowing, followersCount, followingCount };
+}
+
+export async function fetchOwnedItems(userId: string) {
+  const { ownedItems } = await getItemsByUserId(userId);
+  return ownedItems;
+}

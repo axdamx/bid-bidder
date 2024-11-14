@@ -6,6 +6,7 @@ import HeroSection from "./home/components/sections/HeroSection";
 import { Footer } from "./footer";
 import { getEndedAuctions } from "./action";
 import { TopBidsClient } from "./home/components/sections/TopSection";
+import { supabase } from "@/lib/utils";
 
 function LoadingSection({ message }: { message: string }) {
   return (

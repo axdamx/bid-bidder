@@ -48,6 +48,7 @@ import ItemImage from "./image-component";
 import { CldImage } from "next-cloudinary";
 import Lightbox from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
+import AuthModals from "@/app/components/AuthModal";
 
 // export function formatTimestamp(timestamp: string) {
 //   return formatDistance(new Date(), timestamp, { addSuffix: true });
@@ -69,20 +70,16 @@ export function formatTimestamp(timestamp: string) {
 }
 
 function formatCurrency(value: number) {
-  const absValue = Math.abs(value);
-  let formattedValue;
+  const formattedValue = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "MYR",
+    minimumFractionDigits: value % 1 === 0 ? 0 : 2,
+    maximumFractionDigits: 2,
+  }).format(value);
 
-  if (absValue >= 1e6) {
-    formattedValue = (value / 1e6).toFixed(2) + "M";
-  } else if (absValue >= 1e3) {
-    formattedValue = (value / 1e3).toFixed(2) + "K";
-  } else {
-    formattedValue = value.toFixed(2);
-  }
-
-  return `${formattedValue} MYR`;
+  return formattedValue;
 }
-
+type ModalView = "log-in" | "sign-up" | "forgot-password";
 export default function AuctionItem({
   item,
   allBids,
@@ -103,8 +100,15 @@ export default function AuctionItem({
   const [showDisclaimerModal, setShowDisclaimerModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const [isAuthModalsOpen, setIsAuthModalsOpen] = useState(false); // State to control AuthModals
+  const [authModalView, setAuthModalView] = useState<ModalView>("log-in");
 
   const handleBidSubmit = async () => {
+    if (!userId) {
+      setIsAuthModalsOpen(true); // Open the AuthModals
+      return;
+    }
+
     if (!hasAcknowledgedBid) {
       setShowDisclaimerModal(true);
       return;
@@ -115,7 +119,7 @@ export default function AuctionItem({
   const handleDisclaimerConfirm = async () => {
     try {
       setIsSubmitting(true);
-      await updateBidAcknowledgmentAction(item.id);
+      await updateBidAcknowledgmentAction(item.id, userId);
       await submitBid();
       setShowDisclaimerModal(false);
     } catch (error) {
@@ -127,7 +131,7 @@ export default function AuctionItem({
 
   const submitBid = async () => {
     try {
-      await createBidAction(item.id);
+      await createBidAction(item.id, userId);
     } catch (error) {
       console.error("Error placing bid:", error);
       toast.error("Failed to place bid. Please try again.");
@@ -144,22 +148,11 @@ export default function AuctionItem({
     );
   };
 
-  // Mock multiple images for the gallery
-  const mockImages = [
-    item.imageId,
-    item.imageId,
-    item.imageId,
-    item.imageId,
-    item.imageId,
-  ];
-
-  const prevUserCountRef = useRef(0);
-
   const handleNewBid = useCallback((newBid: any) => {
     setHighestBid(newBid.newBid);
     setBids((prevBids) => [newBid.bidInfo, ...prevBids]);
     toast.success(
-      `New bid: ${formatCurrency(newBid.newBid)} by ${
+      `New bid received: ${formatCurrency(newBid.newBid)} by ${
         newBid.bidInfo.users.name
       }`
     );
@@ -297,7 +290,11 @@ export default function AuctionItem({
 
   return (
     <div className="container mx-auto py-12">
-      <Toaster position="bottom-right" reverseOrder={false} />
+      <Toaster
+        toastOptions={{ duration: 3000 }}
+        position="bottom-right"
+        reverseOrder={false}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Image Gallery Section */}
@@ -402,7 +399,7 @@ export default function AuctionItem({
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-8 w-full">
                 <div>
                   <p className="text-sm text-muted-foreground">Current Bid</p>
                   <p className="text-2xl font-bold">
@@ -483,11 +480,16 @@ export default function AuctionItem({
                   disabled={isWinner || isSubmitting}
                   onClick={handleBidSubmit}
                 >
-                  {isWinner
-                    ? "You are currently winning this bid!"
-                    : isSubmitting
-                    ? "Processing..."
-                    : "Place Bid"}
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : isWinner ? (
+                    "You are currently winning this bid!"
+                  ) : (
+                    "Place Bid"
+                  )}
                 </Button>
               )}
             </CardContent>
@@ -580,6 +582,14 @@ export default function AuctionItem({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Auth Modal */}
+      <AuthModals
+        isOpen={isAuthModalsOpen}
+        setIsOpen={setIsAuthModalsOpen}
+        view={authModalView}
+        setView={setAuthModalView}
+      />
     </div>
   );
 }

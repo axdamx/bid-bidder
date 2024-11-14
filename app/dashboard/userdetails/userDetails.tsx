@@ -217,8 +217,10 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Pencil, User, Mail, Phone, Calendar, Users } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import toast, { Toaster } from "react-hot-toast";
 import { updateUserField } from "./action";
+import { useRouter } from "next/navigation";
+import LoadingButton from "@/app/components/LoadingButton";
 
 const UserDetailsPage = ({ initialUser }) => {
   const [userData, setUserData] = useState(initialUser);
@@ -226,7 +228,7 @@ const UserDetailsPage = ({ initialUser }) => {
   const [editValue, setEditValue] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
+  const router = useRouter(); // Initialize useRouter
 
   const handleEdit = (field) => {
     setEditingField(field);
@@ -248,24 +250,15 @@ const UserDetailsPage = ({ initialUser }) => {
           ...prev,
           [editingField]: editValue,
         }));
-        toast({
-          title: "Success",
-          description: `${editingField} updated successfully`,
-        });
+        toast.success(`${editingField} updated successfully`);
         setIsDialogOpen(false);
+        router.refresh();
+        // window.location.reload(); // Replace router.refresh() with this
       } else {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: result.error || "Failed to update",
-        });
+        toast.error(result.error || "Failed to update");
       }
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "An unexpected error occurred",
-      });
+      toast.error("An unexpected error occurred");
     } finally {
       setIsLoading(false);
     }
@@ -319,63 +312,78 @@ const UserDetailsPage = ({ initialUser }) => {
     if (!config) return null;
 
     return (
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Edit {config.label}</DialogTitle>
-            <DialogDescription>
-              Make changes to your {config.label.toLowerCase()}. Click save when
-              you're done.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-field" className="text-right">
-                {config.label}
-              </Label>
-              {config.type === "select" ? (
-                <Select
-                  value={editValue}
-                  onValueChange={setEditValue}
-                  disabled={isLoading}
-                >
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue
-                      placeholder={`Select ${config.label.toLowerCase()}`}
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="male">Male</SelectItem>
-                    <SelectItem value="female">Female</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              ) : (
-                <Input
-                  id="edit-field"
-                  type={config.type}
-                  value={editValue}
-                  onChange={(e) => setEditValue(e.target.value)}
-                  className="col-span-3"
-                  disabled={isLoading}
-                />
-              )}
+      <>
+        <Toaster
+          toastOptions={{ duration: 3000 }}
+          position="bottom-right"
+          reverseOrder={false}
+        />
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Edit {config.label}</DialogTitle>
+              <DialogDescription>
+                Make changes to your {config.label.toLowerCase()}. Click save
+                when you're done.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-field" className="text-right">
+                  {config.label}
+                </Label>
+                {config.type === "select" ? (
+                  <Select
+                    value={editValue}
+                    onValueChange={setEditValue}
+                    disabled={isLoading}
+                  >
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue
+                        placeholder={`Select ${config.label.toLowerCase()}`}
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="male">Male</SelectItem>
+                      <SelectItem value="female">Female</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input
+                    id="edit-field"
+                    type={config.type}
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value)}
+                    className="col-span-3"
+                    disabled={isLoading}
+                  />
+                )}
+              </div>
             </div>
-          </div>
-          <div className="flex justify-end space-x-2">
-            <Button
-              variant="outline"
-              onClick={() => setIsDialogOpen(false)}
-              disabled={isLoading}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleSave} disabled={isLoading}>
-              {isLoading ? "Saving..." : "Save"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+            <div className="flex justify-end space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => setIsDialogOpen(false)}
+                disabled={isLoading}
+              >
+                Cancel
+              </Button>
+              {/* <Button onClick={handleSave} disabled={isLoading}>
+                {isLoading ? "Saving..." : "Save"}
+              </Button> */}
+              <LoadingButton
+                isLoading={isLoading}
+                onClick={handleSave}
+                loadingText={"Saving..."}
+                winnerText={"Done"}
+                defaultText={"Save"}
+                className="w-fit"
+              />
+            </div>
+          </DialogContent>
+        </Dialog>
+      </>
     );
   };
 
