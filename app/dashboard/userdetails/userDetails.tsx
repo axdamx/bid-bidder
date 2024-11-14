@@ -400,14 +400,16 @@ const UserDetailsPage = ({ initialUser }) => {
           <div className="font-medium">{userData[field] || "Not set"}</div>
         </div>
       </div>
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => handleEdit(field)}
-        className="hover:bg-primary/10"
-      >
-        <Pencil className="h-4 w-4" />
-      </Button>
+      {field !== "email" && (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => handleEdit(field)}
+          className="hover:bg-primary/10"
+        >
+          <Pencil className="h-4 w-4" />
+        </Button>
+      )}
     </div>
   );
 

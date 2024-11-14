@@ -58,6 +58,8 @@ export default function ProfilePage({ params: { userId: ownerId } }) {
     );
   }
 
+  console.log("profileUser", profileUser);
+
   return (
     <MotionGrid>
       <div className="container mx-auto p-4">

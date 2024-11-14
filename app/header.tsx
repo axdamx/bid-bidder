@@ -12,6 +12,7 @@ import { supabase } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { useSupabase } from "./context/SupabaseContext";
 import { getUserById } from "./action";
+import { fetchUser } from "./profile/[userId]/action";
 
 export function Header({}: {}) {
   const { session } = useSupabase(); // Use the hook to get session data
@@ -22,7 +23,9 @@ export function Header({}: {}) {
   useEffect(() => {
     async function fetchUserData() {
       try {
-        const fetchedUser = await getUserById(userId);
+        const fetchedUser = await fetchUser(userId);
+        // const fetchedUser = await fetchUser(ownerId);
+
         setInitialUser(fetchedUser);
       } catch (err) {
         setError(err);

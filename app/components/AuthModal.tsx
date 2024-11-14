@@ -72,9 +72,9 @@ export default function AuthModals({
 }) {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter(); // Add this line to use the router
-  const pathname = usePathname(); // Get the current path
-  console.log("router", router);
-  console.log("pathname", pathname);
+  //   const pathname = usePathname(); // Get the current path
+  //   console.log("router", router);
+  //   console.log("pathname", pathname);
 
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange(
@@ -105,11 +105,11 @@ export default function AuthModals({
         // Redirect the user to the OAuth provider's login page
         window.location.href = data.url;
       } else {
-        console.log("path", pathname);
+        // console.log("path", pathname);
         // If OAuth sign-in is successful and returns to the app
         toast.success("Sign in with Google successful");
         handleClose();
-        router.replace(pathname); // Redirect and revalidate the original path
+        // router.replace(pathname); // Redirect and revalidate the original path
         // router.replace(pathname); // Use pathname for redirection
       }
     } catch (error) {
@@ -139,30 +139,24 @@ export default function AuthModals({
         email: user.email,
         name: user.user_metadata.full_name || user.email,
         image: user.user_metadata.avatar_url,
-        // Add any additional fields here
       });
 
       if (insertError) {
         console.error("Error inserting user:", insertError.message);
-      } else {
-        console.log("User inserted successfully");
       }
     } else {
-      // Update existing user
+      // Only update email and image, preserve existing name
       const { error: updateError } = await supabase
         .from("users")
         .update({
           email: user.email,
-          name: user.user_metadata.full_name || user.email,
           image: user.user_metadata.avatar_url,
-          // Add any additional fields here
+          // Remove the name field from here to preserve existing name
         })
         .eq("id", user.id);
 
       if (updateError) {
         console.error("Error updating user:", updateError.message);
-      } else {
-        console.log("User updated successfully");
       }
     }
   }
@@ -211,7 +205,7 @@ export default function AuthModals({
       toast.success("Sign in successful");
       handleClose();
       //   window.location.href = "/";
-      router.replace(pathname); // Redirect and revalidate the original path
+      router.refresh(); // Redirect and revalidate the original path
     } catch (error) {
       signInForm.setError("password", { message: "Invalid email or password" });
       console.error("Error signing in:", error);
@@ -264,7 +258,7 @@ export default function AuthModals({
       }
       toast.success("Sign up successful");
       handleClose();
-      router.replace(pathname); // Redirect and revalidate the original path
+      router.refresh(); // Redirect and revalidate the original path
     } catch (error) {
       console.error("Error signing up:", error);
       toast.error("Sign up failed. Please check your email and password.");
@@ -282,7 +276,7 @@ export default function AuthModals({
         "Password reset email sent successfully. Please check your email."
       );
       handleClose();
-      router.replace(pathname); // Redirect and revalidate the original path
+      router.refresh(); // Redirect and revalidate the original path
     } catch (error) {
       console.error("Error resetting password:", error);
       toast.error("Password reset failed. Please check your email.");
