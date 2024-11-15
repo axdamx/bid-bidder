@@ -257,6 +257,8 @@ export default function AuctionItem({
           <h1 className="text-sm text-green-600 mt-2">
             The seller will contact you soon with payment and delivery details.
           </h1>
+        </div>
+        <div className="text-center justify-center">
           <form action={async () => await updateItemStatus(item.id, userId)}>
             <Button type="submit" className="mt-8">
               Proceed to Checkout

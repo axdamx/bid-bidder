@@ -101,5 +101,3 @@ export default function UserAvatar({
     </DropdownMenu>
   );
 }
-
-// export default UserAvatarDropdown;
