@@ -291,14 +291,14 @@ export default function AuctionItem({
   );
 
   return (
-    <div className="container mx-auto py-12">
+    <div className="container w-full px-4 py-8 md:py-12 overflow-x-hidden">
       <Toaster
         toastOptions={{ duration: 3000 }}
         position="bottom-right"
         reverseOrder={false}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
         {/* Image Gallery Section */}
         <div className="space-y-4">
           <div className="relative aspect-square">
@@ -370,9 +370,9 @@ export default function AuctionItem({
         </div>
 
         {/* Auction Details */}
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
+        <div className="space-y-4 w-full">
+          <Card className="w-full">
+            <CardHeader className="space-y-2">
               {/* <CardTitle className="text-2xl font-bold">{item.name}</CardTitle>
               <CardDescription className="text-lg">
                 Created by:{" "}
@@ -385,11 +385,11 @@ export default function AuctionItem({
                 </Link>
               </CardDescription> */}
               <div className="flex justify-between items-center">
-                <CardTitle className="text-2xl font-bold">
+                <CardTitle className="text-xl md:text-2xl font-bold break-words">
                   {item.name}
                 </CardTitle>
               </div>
-              <CardDescription className="text-lg">
+              <CardDescription className="text-base md:text-lg">
                 Created by:{" "}
                 <Link
                   href={`/profile/${item.itemUser.id}`}
@@ -400,19 +400,19 @@ export default function AuctionItem({
                 </Link>
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-12">
               <div className="grid grid-cols-2 gap-8 w-full">
-                <div>
+                <div className="break-words">
                   <p className="text-sm text-muted-foreground">Current Bid</p>
                   <p className="text-2xl font-bold">
                     {formatCurrency(highestBid ?? 0)}
                   </p>
                 </div>
-                <div>
+                <div className="break-words">
                   <p className="text-sm text-muted-foreground">Bid Interval</p>
                   <p className="text-lg">{formatCurrency(item.bidInterval)}</p>
                 </div>
-                <div>
+                <div className="break-words">
                   <p className="text-sm text-muted-foreground">
                     Starting Price
                   </p>
@@ -420,7 +420,7 @@ export default function AuctionItem({
                     {formatCurrency(item.startingPrice)}
                   </p>
                 </div>
-                <div>
+                <div className="break-words">
                   <p className="text-sm text-muted-foreground">Total Bids</p>
                   <p className="text-lg">{bids.length}</p>
                 </div>

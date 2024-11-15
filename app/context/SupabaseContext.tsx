@@ -8,10 +8,25 @@ import React, {
 } from "react";
 import { Session, createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+// Create singleton Supabase client
+const createSupabaseClient = () => {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+  if (typeof window === "undefined") {
+    return createClient(supabaseUrl, supabaseAnonKey);
+  }
+
+  // @ts-ignore - globalThis works in modern browsers
+  if (!globalThis.supabase) {
+    // @ts-ignore
+    globalThis.supabase = createClient(supabaseUrl, supabaseAnonKey);
+  }
+  // @ts-ignore
+  return globalThis.supabase;
+};
+
+const supabase = createSupabaseClient();
 
 type SupabaseContextType = {
   session: Session | null;

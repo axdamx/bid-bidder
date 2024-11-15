@@ -79,7 +79,7 @@ export default function UserAvatar({
             <span>Dashboard</span>
           </Link>
         </DropdownMenuItem>
-        <form
+        {/* <form
           onSubmit={async (e) => {
             e.preventDefault();
             const { error } = await supabase.auth.signOut();
@@ -96,7 +96,23 @@ export default function UserAvatar({
               <span>Sign Out</span>
             </button>
           </DropdownMenuItem>
-        </form>
+        </form> */}
+        <DropdownMenuItem asChild>
+          <button
+            onClick={async () => {
+              const { error } = await supabase.auth.signOut();
+              if (error) {
+                console.error("Error signing out:", error);
+              } else {
+                window.location.href = "/"; // Redirect to homepage
+              }
+            }}
+            className="flex w-full cursor-pointer items-center"
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            <span>Sign Out</span>
+          </button>
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

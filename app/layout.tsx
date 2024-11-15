@@ -25,14 +25,14 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={cn(
-          "min-h-screen text-large md:text-xl font-serif tracking-wide",
+          "min-h-screen text-large md:text-xl font-serif tracking-wide overflow-x-hidden",
           fontSans.variable
         )}
       >
         <SupabaseProvider>
           <Header />
-          <main className="mx-auto">
-            <div className="px-4 sm:px-6 w-full">
+          <main className="mx-auto max-w-full">
+            <div className="px-4 sm:px-6 w-full max-w-full">
               {children}
               <Footer />
             </div>
