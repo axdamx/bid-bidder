@@ -137,6 +137,7 @@ export default function AuctionItem({
     queryKey: ["user", currentSessionUserId],
     queryFn: () => getUserById(currentSessionUserId!),
     enabled: !!currentSessionUserId,
+    staleTime: Infinity,
   });
 
   console.log("current User Id", currentUserData);

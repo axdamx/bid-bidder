@@ -60,6 +60,7 @@ export default function ItemPage({
   const itemQuery = useQuery({
     queryKey: ["item", itemId],
     queryFn: () => fetchItem(itemId),
+    staleTime: Infinity,
   });
 
   // Item user query - depends on item data
@@ -67,12 +68,14 @@ export default function ItemPage({
     queryKey: ["itemUser", itemQuery.data?.userId],
     queryFn: () => fetchItemUser(itemQuery.data?.userId),
     enabled: !!itemQuery.data?.userId,
+    staleTime: Infinity,
   });
 
   // Bids query
   const bidsQuery = useQuery({
     queryKey: ["bids", itemId],
     queryFn: () => fetchBids(itemId),
+    staleTime: Infinity,
   });
 
   // Bid acknowledgment query
@@ -80,6 +83,7 @@ export default function ItemPage({
     queryKey: ["bidAcknowledgment", itemId, user?.id],
     queryFn: () => checkBidAcknowledgmentAction(itemId, user?.id),
     enabled: !!user?.id,
+    staleTime: Infinity,
   });
 
   const isLoading =
