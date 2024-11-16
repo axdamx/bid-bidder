@@ -1,6 +1,6 @@
 "use server";
 
-import { supabase } from "@/lib/utils";
+// import { supabase } from "@/lib/utils";
 import { database } from "@/src/db/database";
 import { items, users } from "@/src/db/schema";
 import { createClient } from "@supabase/supabase-js";
@@ -17,8 +17,13 @@ import { eq, ilike } from "drizzle-orm";
 // import { database } from "@/src/db/database";
 import { cache } from "react";
 import { signIn, signOut } from "./auth";
+import { createServerSupabase } from "@/lib/supabase/server";
+import { createClientSupabase } from "@/lib/supabase/client";
+import { supabase } from "@/lib/utils";
 export async function getUserById(userId: string) {
   if (!userId) return null;
+
+  // const supabase = createServerSupabase(); // Create Supabase client
 
   try {
     const { data: user, error } = await supabase
@@ -55,6 +60,8 @@ export async function getUserById(userId: string) {
 //   }
 // });
 export const getItemsWithUsers = cache(async () => {
+  // const supabase = createServerSupabase(); // Create Supabase client
+
   try {
     const { data: itemsWithUsers, error } = await supabase
       .from('items')
@@ -187,6 +194,8 @@ export async function searchItems(query: string) {
     return [];
   }
 
+  // const supabase = createServerSupabase(); // Create Supabase client
+
   try {
     const { data: searchResults, error } = await supabase
       .from('items')
@@ -222,6 +231,8 @@ export async function signOutWithGoogle() {
 }
 
 export const handleSignOut = async () => {
+  // const supabase = createClientSupabase(); // Use client-side Supabase
+
   const { error } = await supabase.auth.signOut();
   if (error) {
     console.error("Error signing out:", error.message);
@@ -230,4 +241,4 @@ export const handleSignOut = async () => {
     // Optionally redirect the user after sign-out
     window.location.href = "/";
   }
-}
+};

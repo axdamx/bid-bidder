@@ -11,6 +11,7 @@ import ItemPageClient from "./item-page-client";
 import { MotionGrid } from "@/app/components/motionGrid";
 import { useSupabase } from "@/app/context/SupabaseContext";
 import Spinner from "@/app/components/Spinner";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export default function ItemPage({
   params: { itemId },
@@ -19,41 +20,73 @@ export default function ItemPage({
 }) {
   const { session } = useSupabase();
   const user = session?.user;
+  const queryClient = useQueryClient();
 
-  const [item, setItem] = useState(null);
-  const [itemUser, setItemUser] = useState(null);
-  const [bids, setBids] = useState([]);
-  const [hasAcknowledgedBid, setHasAcknowledgedBid] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  // const [item, setItem] = useState(null);
+  // const [itemUser, setItemUser] = useState(null);
+  // const [bids, setBids] = useState([]);
+  // const [hasAcknowledgedBid, setHasAcknowledgedBid] = useState(false);
+  // const [isLoading, setIsLoading] = useState(true);
 
-  const fetchData = useCallback(async () => {
-    setIsLoading(true);
+  // const fetchData = useCallback(async () => {
+  //   setIsLoading(true);
 
-    try {
-      const [fetchedItem, fetchedBids, acknowledged] = await Promise.all([
-        fetchItem(itemId),
-        fetchBids(itemId),
-        checkBidAcknowledgmentAction(itemId, user?.id),
-      ]);
+  //   try {
+  //     const [fetchedItem, fetchedBids, acknowledged] = await Promise.all([
+  //       fetchItem(itemId),
+  //       fetchBids(itemId),
+  //       checkBidAcknowledgmentAction(itemId, user?.id),
+  //     ]);
 
-      setItem(fetchedItem);
-      setBids(fetchedBids);
-      setHasAcknowledgedBid(acknowledged);
+  //     setItem(fetchedItem);
+  //     setBids(fetchedBids);
+  //     setHasAcknowledgedBid(acknowledged);
 
-      if (fetchedItem) {
-        const fetchedItemUser = await fetchItemUser(fetchedItem.userId);
-        setItemUser(fetchedItemUser);
-      }
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [itemId, user?.id]);
+  //     if (fetchedItem) {
+  //       const fetchedItemUser = await fetchItemUser(fetchedItem.userId);
+  //       setItemUser(fetchedItemUser);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching data:", error);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // }, [itemId, user?.id]);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  // useEffect(() => {
+  //   fetchData();
+  // }, [fetchData]);
+  // Main item query
+  const itemQuery = useQuery({
+    queryKey: ["item", itemId],
+    queryFn: () => fetchItem(itemId),
+  });
+
+  // Item user query - depends on item data
+  const itemUserQuery = useQuery({
+    queryKey: ["itemUser", itemQuery.data?.userId],
+    queryFn: () => fetchItemUser(itemQuery.data?.userId),
+    enabled: !!itemQuery.data?.userId,
+  });
+
+  // Bids query
+  const bidsQuery = useQuery({
+    queryKey: ["bids", itemId],
+    queryFn: () => fetchBids(itemId),
+  });
+
+  // Bid acknowledgment query
+  const bidAckQuery = useQuery({
+    queryKey: ["bidAcknowledgment", itemId, user?.id],
+    queryFn: () => checkBidAcknowledgmentAction(itemId, user?.id),
+    enabled: !!user?.id,
+  });
+
+  const isLoading =
+    itemQuery.isLoading ||
+    bidsQuery.isLoading ||
+    bidAckQuery.isLoading ||
+    (itemQuery.data && itemUserQuery.isLoading);
 
   if (isLoading) {
     return (
@@ -108,7 +141,7 @@ export default function ItemPage({
     );
   }
 
-  if (!item) {
+  if (!itemQuery) {
     return (
       <div className="space-y-4 justify-center flex items-center flex-col mt-8">
         <h1 className="text-2xl font-bold"> Item Not Found! </h1>
@@ -117,8 +150,8 @@ export default function ItemPage({
   }
 
   const itemWithOwner = {
-    ...(item || {}),
-    itemUser,
+    ...(itemQuery.data || {}),
+    itemUser: itemUserQuery.data,
   };
 
   return (
@@ -129,9 +162,16 @@ export default function ItemPage({
     >
       <ItemPageClient
         item={itemWithOwner}
-        allBids={bids}
+        allBids={bidsQuery.data || []}
         userId={user?.id!}
-        hasAcknowledgedBid={hasAcknowledgedBid}
+        hasAcknowledgedBid={bidAckQuery.data || false}
+        onBidAcknowledge={() => {
+          // Invalidate both bids and bid acknowledgment queries
+          queryClient.invalidateQueries({
+            queryKey: ["bidAcknowledgment", itemId, user?.id],
+          });
+          queryClient.invalidateQueries({ queryKey: ["bids", itemId] });
+        }}
       />
     </MotionGrid>
   );

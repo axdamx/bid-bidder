@@ -49,6 +49,13 @@ import { CldImage } from "next-cloudinary";
 import Lightbox from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
 import AuthModals from "@/app/components/AuthModal";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import ChatComponent from "./components/ChatComponents";
+import { useSupabase } from "@/app/context/SupabaseContext";
+import { getUserById } from "@/app/action";
+import ChatComponentV2 from "./components/ChatComponentsV2";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { createClientSupabase } from "@/lib/supabase/client";
 
 // export function formatTimestamp(timestamp: string) {
 //   return formatDistance(new Date(), timestamp, { addSuffix: true });
@@ -85,11 +92,13 @@ export default function AuctionItem({
   allBids,
   userId,
   hasAcknowledgedBid,
+  onBidAcknowledge,
 }: {
   item: any;
   allBids: any[];
   userId: string;
   hasAcknowledgedBid: boolean;
+  onBidAcknowledge: () => void;
 }) {
   const [highestBid, setHighestBid] = useState<number | null>(item.currentBid);
   const [bids, setBids] = useState(allBids);
@@ -102,6 +111,35 @@ export default function AuctionItem({
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [isAuthModalsOpen, setIsAuthModalsOpen] = useState(false); // State to control AuthModals
   const [authModalView, setAuthModalView] = useState<ModalView>("log-in");
+  // const [currentUserData, setCurrentUserData] = useState(null);
+
+  const { session } = useSupabase();
+  const currentSessionUserId = session?.user?.id;
+
+  // const supabase = createClientSupabase();
+  // console.log("whats good, supabase", supabase);
+
+  // useEffect(() => {
+  //   async function fetchUserData() {
+  //     try {
+  //       const fetchedUser = await getUserById(currentSessionUserId);
+  //       setCurrentUserData(fetchedUser);
+  //     } catch (err) {
+  //       // setError(err);
+  //     }
+  //   }
+
+  //   if (currentSessionUserId) {
+  //     fetchUserData();
+  //   }
+  // }, [currentSessionUserId]);
+  const { data: currentUserData } = useQuery({
+    queryKey: ["user", currentSessionUserId],
+    queryFn: () => getUserById(currentSessionUserId!),
+    enabled: !!currentSessionUserId,
+  });
+
+  console.log("current User Id", currentUserData);
 
   const handleBidSubmit = async () => {
     if (!userId) {
@@ -113,30 +151,44 @@ export default function AuctionItem({
       setShowDisclaimerModal(true);
       return;
     }
-    await submitBid();
+    submitBid();
   };
 
-  const handleDisclaimerConfirm = async () => {
-    try {
-      setIsSubmitting(true);
-      await updateBidAcknowledgmentAction(item.id, userId);
-      await submitBid();
+  // const { mutate: updateBidAcknowledgment } = useMutation({
+  //   mutationFn: () => updateBidAcknowledgmentAction(item.id, userId),
+  //   onError: () => {
+  //     toast.error("Failed to acknowledge bid");
+  //   },
+  // });
+  const { mutate: updateBidAcknowledgment } = useMutation({
+    mutationFn: () => updateBidAcknowledgmentAction(item.id, userId),
+    onSuccess: () => {
+      // Parent will handle query invalidation via onBidAcknowledge
+      onBidAcknowledge();
+
+      // Continue with bid submission and UI updates
+      submitBid();
       setShowDisclaimerModal(false);
-    } catch (error) {
-      toast.error("Failed to place bid");
-    } finally {
-      setIsSubmitting(false);
-    }
+    },
+    onError: () => {
+      toast.error("Failed to acknowledge bid");
+    },
+  });
+
+  const handleDisclaimerConfirm = () => {
+    updateBidAcknowledgment();
   };
 
-  const submitBid = async () => {
-    try {
+  const { mutate: submitBid } = useMutation({
+    mutationFn: async () => {
       await createBidAction(item.id, userId);
-    } catch (error) {
+    },
+    onError: (error) => {
       console.error("Error placing bid:", error);
       toast.error("Failed to place bid. Please try again.");
-    }
-  };
+    },
+  });
+
   const images = item.images.map((img: { publicId: string }) => img.publicId);
   const nextImage = () => {
     setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
@@ -535,34 +587,69 @@ export default function AuctionItem({
       {/* Bid History Table */}
       <Card className="mt-8">
         <CardHeader>
-          <CardTitle>Bid History</CardTitle>
+          <Tabs defaultValue="history" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="history">Bid History</TabsTrigger>
+              <TabsTrigger value="chat" disabled={isBidOver}>
+                Live Chat
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="history">
+              <div className="overflow-x-auto">
+                {hasBids ? (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Bidder Name</TableHead>
+                          <TableHead>Bid Amount</TableHead>
+                          <TableHead>Time</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {bids.slice(0, 10).map((bid) => (
+                          <TableRow key={bid.id}>
+                            <TableCell>{bid.users.name}</TableCell>
+                            <TableCell>{formatCurrency(bid.amount)}</TableCell>
+                            <TableCell>
+                              {formatTimestamp(bid.timestamp)}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                ) : (
+                  <p className="p-4">No bids yet.</p>
+                )}
+              </div>
+            </TabsContent>
+            <TabsContent value="chat">
+              {userId ? (
+                <ChatComponent
+                  itemId={item.id}
+                  userId={userId}
+                  userName={currentUserData?.name} // Or however you get the current user's name
+                />
+              ) : (
+                // <ChatComponentV2
+                //   itemId={item.id}
+                //   userId={userId}
+                //   userName={currentUserData?.name} // Or however you get the current user's name
+                // />
+                <div className="text-center py-4">
+                  <p>Please log in to participate in the chat</p>
+                  <Button
+                    onClick={() => setIsAuthModalsOpen(true)}
+                    className="mt-2"
+                  >
+                    Log In
+                  </Button>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
         </CardHeader>
-        <CardContent>
-          {hasBids ? (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Bidder Name</TableHead>
-                    <TableHead>Bid Amount</TableHead>
-                    <TableHead>Time</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {bids.slice(0, 10).map((bid) => (
-                    <TableRow key={bid.id}>
-                      <TableCell>{bid.users.name}</TableCell>
-                      <TableCell>{formatCurrency(bid.amount)}</TableCell>
-                      <TableCell>{formatTimestamp(bid.timestamp)}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          ) : (
-            <p>No bids yet.</p>
-          )}
-        </CardContent>
       </Card>
 
       {/* Winner/Loser Dialog */}

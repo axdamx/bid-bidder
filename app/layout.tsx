@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { Header } from "./header";
 import { Footer } from "./footer";
 import { SupabaseProvider } from "./context/SupabaseContext";
+import QueryProvider from "@/lib/QueryClientComponentWrapper";
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -29,15 +30,17 @@ export default function RootLayout({
           fontSans.variable
         )}
       >
-        <SupabaseProvider>
-          <Header />
-          <main className="mx-auto max-w-full">
-            <div className="px-4 sm:px-6 w-full max-w-full">
-              {children}
-              <Footer />
-            </div>
-          </main>
-        </SupabaseProvider>
+        <QueryProvider>
+          <SupabaseProvider>
+            <Header />
+            <main className="mx-auto max-w-full">
+              <div className="px-4 sm:px-6 w-full max-w-full">
+                {children}
+                <Footer />
+              </div>
+            </main>
+          </SupabaseProvider>
+        </QueryProvider>
       </body>
     </html>
   );

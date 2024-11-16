@@ -11,6 +11,8 @@ import { LogOut, Settings, User } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { handleSignOut, signOutWithGoogle } from "../action";
+import { createClientSupabase } from "@/lib/supabase/client";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/utils";
 
 export default function UserAvatar({
@@ -24,6 +26,8 @@ export default function UserAvatar({
   email?: string;
   userId?: string;
 }) {
+  // const supabase = createClientSupabase();
+
   const [isOpen, setIsOpen] = useState(false);
 
   const initials = name
@@ -79,7 +83,7 @@ export default function UserAvatar({
             <span>Dashboard</span>
           </Link>
         </DropdownMenuItem>
-        {/* <form
+        <form
           onSubmit={async (e) => {
             e.preventDefault();
             const { error } = await supabase.auth.signOut();
@@ -96,9 +100,9 @@ export default function UserAvatar({
               <span>Sign Out</span>
             </button>
           </DropdownMenuItem>
-        </form> */}
-        <DropdownMenuItem asChild>
-          <button
+        </form>
+        {/* <DropdownMenuItem asChild>
+          <Button
             onClick={async () => {
               const { error } = await supabase.auth.signOut();
               if (error) {
@@ -111,8 +115,8 @@ export default function UserAvatar({
           >
             <LogOut className="mr-2 h-4 w-4" />
             <span>Sign Out</span>
-          </button>
-        </DropdownMenuItem>
+          </Button>
+        </DropdownMenuItem> */}
       </DropdownMenuContent>
     </DropdownMenu>
   );

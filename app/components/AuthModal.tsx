@@ -25,9 +25,10 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { supabase } from "@/lib/utils";
 import toast, { Toaster } from "react-hot-toast";
 import { usePathname, useRouter } from "next/navigation";
+import { createClientSupabase } from "@/lib/supabase/client";
+import { supabase } from "@/lib/utils";
 
 type ModalView = "log-in" | "sign-up" | "forgot-password";
 
@@ -75,6 +76,7 @@ export default function AuthModals({
   //   const pathname = usePathname(); // Get the current path
   //   console.log("router", router);
   //   console.log("pathname", pathname);
+  //   const supabase = createClientSupabase();
 
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange(

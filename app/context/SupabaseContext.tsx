@@ -7,6 +7,7 @@ import React, {
   ReactNode,
 } from "react";
 import { Session, createClient } from "@supabase/supabase-js";
+import { supabase } from "@/lib/utils";
 
 // Create singleton Supabase client
 const createSupabaseClient = () => {
@@ -26,30 +27,33 @@ const createSupabaseClient = () => {
   return globalThis.supabase;
 };
 
-const supabase = createSupabaseClient();
-
-type SupabaseContextType = {
-  session: Session | null;
-  supabase: typeof supabase;
-};
-
+// const supabase = createSupabaseClient();
 const SupabaseContext = createContext<SupabaseContextType | undefined>(
   undefined
 );
 
+type SupabaseContextType = {
+  session: Session | null;
+  supabase: typeof supabase;
+  isLoading: boolean;
+};
+
 export const SupabaseProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Check for an existing session first
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setIsLoading(false);
+    });
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
-    });
-
-    // Check for an existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
+      setIsLoading(false);
     });
 
     return () => {
@@ -58,7 +62,7 @@ export const SupabaseProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   return (
-    <SupabaseContext.Provider value={{ session, supabase }}>
+    <SupabaseContext.Provider value={{ session, supabase, isLoading }}>
       {children}
     </SupabaseContext.Provider>
   );
