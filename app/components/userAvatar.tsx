@@ -86,11 +86,17 @@ export default function UserAvatar({
         <form
           onSubmit={async (e) => {
             e.preventDefault();
-            const { error } = await supabase.auth.signOut();
-            if (error) {
+            try {
+              const { error } = await supabase.auth.signOut();
+              if (error) throw error;
+
+              // Clear any local storage items if needed
+              localStorage.removeItem("supabase.auth.token");
+
+              // Force reload to clear all state
+              window.location.href = "/";
+            } catch (error) {
               console.error("Error signing out:", error);
-            } else {
-              window.location.href = "/"; // Redirect to homepage
             }
           }}
         >

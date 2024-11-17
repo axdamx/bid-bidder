@@ -6,6 +6,7 @@ import { Header } from "./header";
 import { Footer } from "./footer";
 import { SupabaseProvider } from "./context/SupabaseContext";
 import QueryProvider from "@/lib/QueryClientComponentWrapper";
+import SessionProvider from "@/lib/supabase/SessionProvider";
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -32,13 +33,15 @@ export default function RootLayout({
       >
         <QueryProvider>
           <SupabaseProvider>
-            <Header />
-            <main className="mx-auto max-w-full">
-              <div className="px-4 sm:px-6 w-full max-w-full">
-                {children}
-                <Footer />
-              </div>
-            </main>
+            <SessionProvider>
+              <Header />
+              <main className="mx-auto max-w-full">
+                <div className="px-4 sm:px-6 w-full max-w-full">
+                  {children}
+                  <Footer />
+                </div>
+              </main>
+            </SessionProvider>
           </SupabaseProvider>
         </QueryProvider>
       </body>
