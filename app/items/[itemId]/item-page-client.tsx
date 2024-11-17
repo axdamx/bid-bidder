@@ -631,6 +631,7 @@ export default function AuctionItem({
                   itemId={item.id}
                   userId={userId}
                   userName={currentUserData?.name} // Or however you get the current user's name
+                  itemOwnerId={item.itemUser.id}
                 />
               ) : (
                 // <ChatComponentV2

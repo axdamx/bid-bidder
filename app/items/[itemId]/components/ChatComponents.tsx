@@ -464,7 +464,7 @@
 
 import * as React from "react";
 import { createClient, RealtimeChannel } from "@supabase/supabase-js";
-import { User2, ImageIcon, X, Loader2, Send } from "lucide-react";
+import { User2, ImageIcon, X, Loader2, Send, Crown } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 import Image from "next/image";
 
@@ -474,7 +474,6 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent } from "@/components/ui/card";
 import { createClientSupabase } from "@/lib/supabase/client";
-import { supabase } from "@/lib/utils";
 import { format, formatDistanceToNow } from "date-fns";
 // import { useSession } from "@/lib/supabase/SessionProvider";
 
@@ -493,6 +492,7 @@ interface ChatComponentProps {
   userId: string;
   userName: string;
   isActive?: boolean;
+  itemOwnerId: string;
 }
 
 export default function ChatComponent({
@@ -500,6 +500,7 @@ export default function ChatComponent({
   userId,
   userName,
   isActive = true,
+  itemOwnerId,
 }: ChatComponentProps) {
   const [messages, setMessages] = React.useState<Message[]>([]);
   const [newMessage, setNewMessage] = React.useState("");
@@ -515,6 +516,11 @@ export default function ChatComponent({
   const [isConnected, setIsConnected] = React.useState(false);
   const channelRef = React.useRef<RealtimeChannel | null>(null);
   //   const { sessionState, refreshSession } = useSession();
+  const supabase = createClientSupabase();
+
+  console.log("userId", userId);
+  console.log("itemOwnerId", itemOwnerId);
+  const isOwner = userId === itemOwnerId; // Add this check
 
   //   const verifySession = async () => {
   //     if (sessionState === "expired") {
@@ -772,7 +778,9 @@ export default function ChatComponent({
                     }`}
                   >
                     <div className="flex items-center gap-2 text-sm font-semibold mb-1">
-                      {/* <User2 className="h-4 w-4" /> */}
+                      {message.userId === itemOwnerId ? (
+                        <Crown className="h-4 w-4" />
+                      ) : null}
                       {message.userName}
                     </div>
                     {message.imageUrl && (

@@ -1,5 +1,7 @@
 "use server";
 import { getUserById } from "@/app/action";
+import { createClientSupabase } from "@/lib/supabase/client";
+import { createServerSupabase } from "@/lib/supabase/server";
 // import { getUserById } from "@/app/action";
 // import { database } from "@/src/db/database";
 // import { follows, items, users } from "@/src/db/schema";
@@ -7,7 +9,7 @@ import { getUserById } from "@/app/action";
 // import { revalidatePath } from "next/cache";
 // import { cache } from "react";
 
-import { supabase } from "@/lib/utils";
+// import { supabase } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
 import { cache } from "react";
 
@@ -253,6 +255,8 @@ export type NotificationFollower = {
 // Follow actions
 export async function followUser(followerId: string, followingId: string) {
   try {
+    // const supabase = createClientSupabase();
+    const supabase = createServerSupabase();
     const { error } = await supabase
       .from('follows')
       .insert([{ followerId, followingId }]);
@@ -268,6 +272,8 @@ export async function followUser(followerId: string, followingId: string) {
 
 export async function unfollowUser(followerId: string, followingId: string) {
   try {
+    // const supabase = createClientSupabase();
+    const supabase = createServerSupabase();
     const { error } = await supabase
       .from('follows')
       .delete()
@@ -289,6 +295,8 @@ export async function getFollowStatus(
   if (!followerId) return { isFollowing: false };
 
   try {
+    // const supabase = createClientSupabase();
+    const supabase = createServerSupabase();
     const { data, error } = await supabase
       .from('follows')
       .select('*')
@@ -304,6 +312,8 @@ export async function getFollowStatus(
 
 export async function getFollowCounts(userId: string) {
   try {
+    // const supabase = createClientSupabase();
+    const supabase = createServerSupabase();
     const { data: followers, error: followersError } = await supabase
       .from('follows')
       .select('*')
@@ -330,6 +340,8 @@ export async function getFollowersForNotification(
   authorId: string
 ): Promise<NotificationFollower[]> {
   try {
+    // const supabase = createClientSupabase();
+    const supabase = createServerSupabase();
     const { data, error } = await supabase
       .from('follows')
       .select('users(id, email, name)')
@@ -355,7 +367,9 @@ export async function createItemWithNotification(
   data: CreateItemData
 ) {
   try {
+    // const supabase = createClientSupabase();
     // 1. Create the item
+    const supabase = createServerSupabase();
     const { data: newItem, error: itemError } = await supabase
       .from('items')
       .insert([{
@@ -395,6 +409,8 @@ export async function createItemWithNotification(
 
 export const getItemsByUserId = cache(async (userId: string) => {
   try {
+    // const supabase = createClientSupabase();
+    const supabase = createServerSupabase();
     const { data: userItems, error } = await supabase
       .from('items')
       .select('*')
@@ -420,6 +436,8 @@ export const getItemsByUserId = cache(async (userId: string) => {
 });
 
 export async function fetchUser(userId: string) {
+  // const supabase = createClientSupabase();
+  const supabase = createServerSupabase();
   const { data: user, error } = await supabase
     .from("users")
     .select("*")

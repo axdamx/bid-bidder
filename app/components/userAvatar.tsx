@@ -13,7 +13,7 @@ import { useState } from "react";
 import { handleSignOut, signOutWithGoogle } from "../action";
 import { createClientSupabase } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/lib/utils";
+// import { supabase } from "@/lib/utils";
 
 export default function UserAvatar({
   name = "John Doe",
@@ -26,7 +26,8 @@ export default function UserAvatar({
   email?: string;
   userId?: string;
 }) {
-  // const supabase = createClientSupabase();
+  console.log("name", name);
+  const supabase = createClientSupabase();
 
   const [isOpen, setIsOpen] = useState(false);
 
@@ -91,7 +92,7 @@ export default function UserAvatar({
               if (error) throw error;
 
               // Clear any local storage items if needed
-              localStorage.removeItem("supabase.auth.token");
+              // localStorage.removeItem("supabase.auth.token");
 
               // Force reload to clear all state
               window.location.href = "/";

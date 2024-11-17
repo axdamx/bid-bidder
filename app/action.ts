@@ -18,9 +18,9 @@ import { eq, ilike } from "drizzle-orm";
 import { cache } from "react";
 import { signIn, signOut } from "./auth";
 import { createServerSupabase } from "@/lib/supabase/server";
-import { createClientSupabase } from "@/lib/supabase/client";
-import { supabase } from "@/lib/utils";
+// import { supabase } from "@/lib/utils";
 export async function getUserById(userId: string) {
+  const supabase = createServerSupabase();
   if (!userId) return null;
 
   // const supabase = createServerSupabase(); // Create Supabase client
@@ -61,6 +61,7 @@ export async function getUserById(userId: string) {
 // });
 export const getItemsWithUsers = cache(async () => {
   // const supabase = createServerSupabase(); // Create Supabase client
+  const supabase = createServerSupabase();
 
   try {
     const { data: itemsWithUsers, error } = await supabase
@@ -195,6 +196,7 @@ export async function searchItems(query: string) {
   }
 
   // const supabase = createServerSupabase(); // Create Supabase client
+  const supabase = createServerSupabase();
 
   try {
     const { data: searchResults, error } = await supabase
@@ -232,6 +234,7 @@ export async function signOutWithGoogle() {
 
 export const handleSignOut = async () => {
   // const supabase = createClientSupabase(); // Use client-side Supabase
+  const supabase = createServerSupabase();
 
   const { error } = await supabase.auth.signOut();
   if (error) {

@@ -28,7 +28,7 @@ import {
 import toast, { Toaster } from "react-hot-toast";
 import { usePathname, useRouter } from "next/navigation";
 import { createClientSupabase } from "@/lib/supabase/client";
-import { supabase } from "@/lib/utils";
+// import { supabase } from "@/lib/utils";
 
 type ModalView = "log-in" | "sign-up" | "forgot-password";
 
@@ -77,13 +77,14 @@ export default function AuthModals({
   //   console.log("router", router);
   //   console.log("pathname", pathname);
   //   const supabase = createClientSupabase();
+  const supabase = createClientSupabase();
 
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         if (session?.user) {
           console.log("User signed in:", session.user);
-          await upsertUser(session.user);
+          upsertUser(session.user);
         }
       }
     );
@@ -199,11 +200,14 @@ export default function AuthModals({
   const onSignInSubmit = async (data: SignInFormValues) => {
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: data.email,
-        password: data.password,
-      });
+      const { error, data: signInData } =
+        await supabase.auth.signInWithPassword({
+          email: data.email,
+          password: data.password,
+        });
       if (error) throw error;
+      const userSession = signInData;
+      console.log("user signin session", userSession);
       toast.success("Sign in successful");
       handleClose();
       //   window.location.href = "/";

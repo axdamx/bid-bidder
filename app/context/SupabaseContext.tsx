@@ -6,31 +6,8 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
-import { Session, createClient } from "@supabase/supabase-js";
-import { supabase } from "@/lib/utils";
-
-// Create singleton Supabase client
-const createSupabaseClient = () => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-  if (typeof window === "undefined") {
-    return createClient(supabaseUrl, supabaseAnonKey);
-  }
-
-  // @ts-ignore - globalThis works in modern browsers
-  if (!globalThis.supabase) {
-    // @ts-ignore
-    globalThis.supabase = createClient(supabaseUrl, supabaseAnonKey);
-  }
-  // @ts-ignore
-  return globalThis.supabase;
-};
-
-// const supabase = createSupabaseClient();
-const SupabaseContext = createContext<SupabaseContextType | undefined>(
-  undefined
-);
+import { Session } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabase/client"; // Import the singleton instance
 
 type SupabaseContextType = {
   session: Session | null;
@@ -38,25 +15,46 @@ type SupabaseContextType = {
   isLoading: boolean;
 };
 
+const SupabaseContext = createContext<SupabaseContextType | undefined>(
+  undefined
+);
+
 export const SupabaseProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check for an existing session first
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setIsLoading(false);
-    });
+    console.log("🔄 Setting up SupabaseProvider");
+
+    const setupAuth = async () => {
+      try {
+        const {
+          data: { session: initialSession },
+          error,
+        } = await supabase.auth.getSession();
+        if (error) throw error;
+
+        console.log("📱 Initial session:", initialSession?.user?.email);
+        setSession(initialSession);
+      } catch (error) {
+        console.error("Error getting session:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    setupAuth();
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      setSession(session);
+    } = supabase.auth.onAuthStateChange((event, newSession) => {
+      console.log("🔔 Auth state changed:", event, newSession?.user?.email);
+      setSession(newSession);
       setIsLoading(false);
     });
 
     return () => {
+      console.log("🧹 Cleaning up SupabaseProvider");
       subscription.unsubscribe();
     };
   }, []);

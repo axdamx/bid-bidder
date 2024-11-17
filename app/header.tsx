@@ -32,13 +32,23 @@ export function Header() {
     }
   }, [userId]);
 
+  console.log("initialUser:", initialUser);
+  console.log("sess", session);
+
   return (
     <header className="sticky top-0 z-50 w-full bg-gray-50/80 backdrop-blur-sm py-4 shadow-sm">
       <div className="container px-4 mx-auto">
         <nav className="flex items-center justify-between gap-2 sm:gap-4">
           {/* Left Section: Logo and Navigation */}
           <div className="flex items-center gap-4 sm:gap-8">
-            <Link href="/" className="flex-shrink-0">
+            <Link
+              href="/"
+              className="flex-shrink-0"
+              // onClick={(e) => {
+              //   e.preventDefault();
+              //   window.location.href = "/";
+              // }}
+            >
               <Image
                 src="/renown-high-resolution-logo-transparent.png"
                 width={50}
@@ -68,7 +78,7 @@ export function Header() {
 
           {/* Right Section: User Controls */}
           <div className="flex items-center gap-4">
-            {initialUser && (
+            {initialUser && session && (
               <UserAvatar
                 name={initialUser.name!}
                 imageUrl={initialUser.image!}
