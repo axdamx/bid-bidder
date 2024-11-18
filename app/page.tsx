@@ -7,6 +7,7 @@ import { Footer } from "./footer";
 import { getEndedAuctions } from "./action";
 import { TopBidsClient } from "./home/components/sections/TopSection";
 import { supabase } from "@/lib/utils";
+import CategoryCarousell from "./home/components/sections/CategoryCarousell";
 
 function LoadingSection({ message }: { message: string }) {
   return (
@@ -41,6 +42,8 @@ export default function Home() {
         {/* <Suspense fallback={<LoadingSection message="Loading top bids..." />}>
           <TopBids />
         </Suspense> */}
+
+        <CategoryCarousell />
 
         {/* Live Auctions - Featured Section */}
         <section className="container px-4 md:px-6">

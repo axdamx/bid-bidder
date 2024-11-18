@@ -51,10 +51,10 @@ export function Header() {
             >
               <Image
                 src="/renown-high-resolution-logo-transparent.png"
-                width={50}
-                height={50}
+                width={75}
+                height={75}
                 alt="Logo"
-                className="w-10 h-10 sm:w-12 sm:h-12"
+                className="w-20 h-20 sm:w-12 sm:h-12"
               />
             </Link>
 
@@ -72,7 +72,7 @@ export function Header() {
           </div>
 
           {/* Center Section: Search */}
-          <div className="flex-1 max-w-[300px] sm:max-w-xl mx-auto">
+          <div className="flex-1 max-w-[300px] sm:max-w-xl mx-auto flex justify-center">
             <SearchCommand />
           </div>
 
