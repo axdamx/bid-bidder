@@ -122,25 +122,15 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
         return (
           <MotionGrid>
             <div className="p-6">
-              <div className="relative">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute -top-2 -left-2 z-10 md:hidden bg-gray-100 rounded-full hover:bg-gray-200 border border-black" // Added black border
-                  onClick={() => setIsMobileOpen(!isMobileOpen)}
-                >
-                  <List className="h-4 w-4" />
-                </Button>
-                <Card>
-                  <CardHeader>
-                    <CardTitle>User Details</CardTitle>
-                    <CardDescription>
-                      Manage your personal information
-                    </CardDescription>
-                  </CardHeader>
-                  <UserDetailsPage initialUser={user} />
-                </Card>
-              </div>
+              <Card>
+                <CardHeader>
+                  <CardTitle>User Details</CardTitle>
+                  <CardDescription>
+                    Manage your personal information
+                  </CardDescription>
+                </CardHeader>
+                <UserDetailsPage initialUser={user} />
+              </Card>
             </div>
           </MotionGrid>
         );
@@ -240,44 +230,44 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
-      <div className="p-1 border-b">
-        <div className="flex items-center gap-4 mb-4 justify-center relative">
-          <Avatar className="h-12 w-12">
+      <div className="p-4 border-b">
+        <div className="flex items-center gap-4 mb-2">
+          <Avatar className="h-10 w-10">
             <AvatarImage src={user?.image} alt="User" />
             <AvatarFallback>{initials}</AvatarFallback>
           </Avatar>
           {isSidebarOpen && (
-            <div className="flex items-center gap-2">
-              <div>
-                <p className="font-medium">{user?.name}</p>
-                {/* <p className="font-medium">{user?.id}</p> */}
-                <p className="text-sm text-gray-500">{user?.email}</p>
-              </div>
+            <div>
+              <p className="font-semibold text-sm">{user?.name}</p>
+              <p className="text-xs text-muted-foreground">{user?.email}</p>
             </div>
           )}
         </div>
       </div>
 
-      <ScrollArea className="flex-1">
-        <div className="space-y-1 p-2">
+      <ScrollArea className="flex-1 px-3 py-2">
+        <div className="space-y-1">
           {navigation.map((item) => (
             <Button
               key={item.id}
               variant={activeContent === item.id ? "secondary" : "ghost"}
               className={cn(
-                "w-full justify-start",
-                !isSidebarOpen && "justify-center"
+                "w-full justify-start h-10",
+                !isSidebarOpen && "justify-center px-2"
               )}
-              onClick={() => handleTabChange(item.id)}
+              onClick={() => {
+                handleTabChange(item.id);
+                setIsMobileOpen(false); // Close mobile sidebar when clicking item
+              }}
             >
-              <item.icon className={cn("h-4 w-4", isSidebarOpen && "mr-2")} />
-              {isSidebarOpen && <span>{item.name}</span>}
+              <item.icon className={cn("h-4 w-4", isSidebarOpen && "mr-3")} />
+              {isSidebarOpen && <span className="text-sm">{item.name}</span>}
             </Button>
           ))}
         </div>
       </ScrollArea>
 
-      <div className="p-4 mt-auto border-t">
+      <div className="mt-auto p-4 border-t">
         <Button
           variant="ghost"
           className={cn(
@@ -285,26 +275,27 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
             !isSidebarOpen && "justify-center"
           )}
         >
-          <LogOut className={cn("h-4 w-4", isSidebarOpen && "mr-2")} />
-          {isSidebarOpen && <span>Sign out</span>}
+          <LogOut className={cn("h-4 w-4", isSidebarOpen && "mr-3")} />
+          {isSidebarOpen && <span className="text-sm">Sign out</span>}
         </Button>
       </div>
     </div>
   );
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex max-h-screen bg-gray-100">
       {/* Desktop Sidebar */}
-      <div
+      <aside
         className={cn(
-          "hidden md:flex flex-col border-r bg-white",
-          isSidebarOpen ? "w-80" : "w-20"
+          "hidden md:flex flex-col border-r bg-white overflow-hidden", // Added overflow-hidden
+          isSidebarOpen ? "w-64" : "w-16"
         )}
       >
-        <div className="flex justify-end p-2">
+        <div className="flex justify-end p-3">
           <Button
             variant="ghost"
             size="icon"
+            className="h-6 w-6"
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
           >
             {isSidebarOpen ? (
@@ -315,26 +306,32 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
           </Button>
         </div>
         <SidebarContent />
-      </div>
+      </aside>
 
       {/* Mobile Sidebar */}
       <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
-        <SheetTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden absolute top-4 left-4"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </SheetTrigger>
         <SheetContent side="left" className="p-0 w-64">
           <SidebarContent />
         </SheetContent>
       </Sheet>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto">{renderContent()}</main>
+      <main className="flex-1">
+        {" "}
+        {/* Removed overflow-auto */}
+        <div className="md:hidden flex items-center p-4 border-b bg-background">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="mr-2"
+            onClick={() => setIsMobileOpen(true)}
+          >
+            <List className="h-5 w-5" />
+          </Button>
+          <h1 className="font-semibold">Dashboard</h1>
+        </div>
+        {renderContent()}
+      </main>
     </div>
   );
 };

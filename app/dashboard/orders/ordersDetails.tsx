@@ -781,6 +781,8 @@ export default function OrderDetails() {
     queryKey: ["orders", user?.id],
     queryFn: () => getOrders(user?.id!),
     enabled: !!user?.id,
+    // refetchOnWindowFocus: false, // Prevent refetch on window focus
+    refetchOnMount: false, // Prevent refetch on component mount
   });
 
   // Mutation for updating order status
@@ -794,7 +796,7 @@ export default function OrderDetails() {
       setIsUpdating(false);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(["orders"]);
+      queryClient.invalidateQueries({ queryKey: ["orders", user?.id] });
       toast({
         title: "Status Updated",
         description: "Order status has been updated successfully",
@@ -895,7 +897,7 @@ export default function OrderDetails() {
               onValueChange={setActiveTab}
               className="w-full"
             >
-              <TabsList>
+              <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="winning">Winning Orders</TabsTrigger>
                 <TabsTrigger value="selling">Selling Orders</TabsTrigger>
               </TabsList>
