@@ -10,7 +10,9 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
+  checkExistingOrder,
   createBidAction,
+  createOrderAction,
   updateBidAcknowledgmentAction,
   updateItemStatus,
 } from "./actions";
@@ -58,6 +60,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createClientSupabase } from "@/lib/supabase/client";
 import { userAtom } from "@/app/atom/userAtom";
 import { useAtom } from "jotai";
+import { useRouter } from "next/navigation";
 
 // export function formatTimestamp(timestamp: string) {
 //   return formatDistance(new Date(), timestamp, { addSuffix: true });
@@ -114,10 +117,21 @@ export default function AuctionItem({
   const [isAuthModalsOpen, setIsAuthModalsOpen] = useState(false); // State to control AuthModals
   const [authModalView, setAuthModalView] = useState<ModalView>("log-in");
   // const [currentUserData, setCurrentUserData] = useState(null);
+  const router = useRouter();
 
   // const { session } = useSupabase();
   // const currentSessionUserId = session?.user?.id;
-  const [user] = useAtom(userAtom);
+  const [user] = useAtom(userAtom); // winner id
+
+  const images = item.images.map((img: { publicId: string }) => img.publicId);
+  const latestBidderName = bids.length > 0 && bids[0].users.name;
+  const isWinner = bids.length > 0 && bids[0].userId === userId;
+  const slides = images.map((publicId: string) => ({
+    src: `https://res.cloudinary.com/dmqhabag1/image/upload/${publicId}`,
+  }));
+
+  const hasBids = bids.length > 0;
+  const isBidOver = new Date(item.endDate + "Z") < new Date();
 
   // const supabase = createClientSupabase();
   // console.log("whats good, supabase", supabase);
@@ -179,6 +193,15 @@ export default function AuctionItem({
     },
   });
 
+  const { mutate: createOrder } = useMutation({
+    mutationFn: () =>
+      createOrderAction(item.id, userId, highestBid!, item.itemUser.id),
+    onError: (error) => {
+      console.error("Failed to create order:", error);
+      toast.error("Failed to create order. Please contact support.");
+    },
+  });
+
   const handleDisclaimerConfirm = () => {
     updateBidAcknowledgment();
   };
@@ -193,7 +216,6 @@ export default function AuctionItem({
     },
   });
 
-  const images = item.images.map((img: { publicId: string }) => img.publicId);
   const nextImage = () => {
     setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
   };
@@ -215,14 +237,20 @@ export default function AuctionItem({
   }, []);
 
   const handleAuctionEnd = useCallback(() => {
-    setShowWinnerModal(true);
-  }, []);
+    // Only attempt to create order if there are bids and current user is the winner
+    if (bids.length > 0 && bids[0].userId === userId) {
+      // Use React Query to handle the order creation
+      createOrder();
+    }
 
-  const latestBidderName = bids.length > 0 && bids[0].users.name;
-  const isWinner = bids.length > 0 && bids[0].userId === userId;
-  const slides = images.map((publicId: string) => ({
-    src: `https://res.cloudinary.com/dmqhabag1/image/upload/${publicId}`,
-  }));
+    setShowWinnerModal(true);
+  }, [bids, userId, item.id, highestBid]);
+
+  const { data: orderExists } = useQuery({
+    queryKey: ["order", item.id, userId],
+    queryFn: () => checkExistingOrder(item.id, userId),
+    enabled: !!userId && isBidOver && isWinner, // Only run query if user is winner and auction is over
+  });
 
   useEffect(() => {
     const socket = io("http://localhost:8082", {
@@ -266,9 +294,6 @@ export default function AuctionItem({
     setHighestBid(item.currentBid);
     setBids(allBids);
   }, [item.currentBid, allBids]);
-
-  const hasBids = bids.length > 0;
-  const isBidOver = new Date(item.endDate + "Z") < new Date();
 
   useEffect(() => {
     if (isBidOver && !hasBids) {
@@ -315,11 +340,24 @@ export default function AuctionItem({
           </h1>
         </div>
         <div className="text-center justify-center">
-          <form action={async () => await updateItemStatus(item.id, userId)}>
-            <Button type="submit" className="mt-8">
-              Proceed to Checkout
+          {orderExists ? (
+            <Button
+              type="button"
+              className="mt-8"
+              onClick={() => {
+                // Add navigation to order page or other action
+                router.push("/dashboard?tab=orders");
+              }}
+            >
+              View Order
             </Button>
-          </form>
+          ) : (
+            <form action={async () => await updateItemStatus(item.id, userId)}>
+              <Button type="submit" className="mt-8">
+                Proceed to Checkout
+              </Button>
+            </form>
+          )}
         </div>
       </DialogDescription>
     </>

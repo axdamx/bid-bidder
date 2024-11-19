@@ -86,10 +86,10 @@ import { redirect } from "next/navigation";
 
 export async function getLatestBidWithUser(itemId: number) {
   const { data: latestBid, error: latestBidError } = await supabase
-    .from('bids')
+    .from("bids")
     .select("*, users (*)")
-    .eq('itemId', itemId)
-    .order('id', { ascending: false })
+    .eq("itemId", itemId)
+    .order("id", { ascending: false })
     .limit(1)
     .single();
 
@@ -103,45 +103,43 @@ export async function getLatestBidWithUser(itemId: number) {
 export async function createBidAction(itemId: number, userId: string) {
   // Get item
   const { data: item, error: itemError } = await supabase
-    .from('items')
-    .select('*')
-    .eq('id', itemId)
+    .from("items")
+    .select("*")
+    .eq("id", itemId)
     .single();
 
   if (itemError || !item) {
     throw new Error("Item not found!");
   }
 
-    const latestBidValue = item.currentBid
+  const latestBidValue = item.currentBid
     ? item.currentBid + item.bidInterval
     : item.startingPrice + item.bidInterval;
 
   // Insert new bid
-  const { error: bidError } = await supabase
-    .from('bids')
-    .insert({
-      amount: latestBidValue,
-      itemId: itemId,
-      userId: userId,
-      timestamp: new Date(),
-});
+  const { error: bidError } = await supabase.from("bids").insert({
+    amount: latestBidValue,
+    itemId: itemId,
+    userId: userId,
+    timestamp: new Date(),
+  });
 
   if (bidError) throw new Error("Failed to create bid");
 
   // Update item's current bid
   const { error: updateError } = await supabase
-    .from('items')
+    .from("items")
     .update({ currentBid: latestBidValue })
-    .eq('id', itemId);
+    .eq("id", itemId);
 
   if (updateError) throw new Error("Failed to update item");
 
   // Fetch latest bid with user information
   const { data: latestBid, error: latestBidError } = await supabase
-    .from('bids')
+    .from("bids")
     .select("*, users (*)")
-    .eq('itemId', itemId)
-    .order('id', { ascending: false })
+    .eq("itemId", itemId)
+    .order("id", { ascending: false })
     .limit(1)
     .single();
 
@@ -180,9 +178,9 @@ export async function createBidAction(itemId: number, userId: string) {
 export async function updateItemStatus(itemId: number, userId: string) {
   // Update the item status to "checkout" and associate with the winning user
   const { error: updateError } = await supabase
-    .from('items')
+    .from("items")
     .update({ status: "CHECKOUT", winnerId: userId }) // Assuming you have a winnerId field
-    .eq('id', itemId);
+    .eq("id", itemId);
 
   if (updateError) {
     throw new Error("Failed to update item status");
@@ -195,9 +193,12 @@ export async function updateItemStatus(itemId: number, userId: string) {
   redirect(`/checkout/${itemId}`);
 }
 
-export async function updateBidAcknowledgmentAction(itemId: string, userId: string) {
+export async function updateBidAcknowledgmentAction(
+  itemId: string,
+  userId: string
+) {
   const { error: insertError } = await supabase
-    .from('bid_acknowledgments')
+    .from("bid_acknowledgments")
     .insert({
       userId: userId,
       itemId: itemId,
@@ -210,17 +211,20 @@ export async function updateBidAcknowledgmentAction(itemId: string, userId: stri
   return { success: true };
 }
 
-export async function checkBidAcknowledgmentAction(itemId: string, userId: string | null) {
+export async function checkBidAcknowledgmentAction(
+  itemId: string,
+  userId: string | null
+) {
   try {
     // console.log('checkBidAcknowledgmentAction', userId, itemId);
     const query = supabase
-      .from('bid_acknowledgments')
-      .select('*')
-      .eq('itemId', itemId)
+      .from("bid_acknowledgments")
+      .select("*")
+      .eq("itemId", itemId)
       .limit(1);
 
     if (userId) {
-      query.eq('userId', userId);
+      query.eq("userId", userId);
     }
 
     const { data: acknowledgment, error: selectError } = await query;
@@ -262,4 +266,61 @@ export async function fetchBids(itemId: string) {
     .eq("itemId", itemId)
     .order("id", { ascending: false });
   return bids;
+}
+
+// Add this check function
+export async function checkExistingOrder(itemId: string, buyerId: string) {
+  // const supabase = createServerSupabaseClient();
+
+  const { data, error } = await supabase
+    .from("orders")
+    .select()
+    .eq("itemId", itemId)
+    .eq("buyerId", buyerId)
+    .single();
+
+  if (error && error.code !== "PGRST116") {
+    // PGRST116 is the "no rows returned" error
+    throw error;
+  }
+
+  return !!data;
+}
+
+export async function createOrderAction(
+  itemId: string,
+  userId: string,
+  finalBidAmount: number,
+  sellerId: string
+) {
+  // const supabase = createServerSupabaseClient();
+
+  // First check if order already exists
+  const orderExists = await checkExistingOrder(itemId, userId);
+  if (orderExists) {
+    return null; // Order already exists, no need to create a new one
+  }
+
+  try {
+    const { data: order, error } = await supabase
+      .from("orders")
+      .insert({
+        itemId,
+        buyerId: userId,
+        sellerId,
+        amount: finalBidAmount,
+        orderStatus: "pending",
+        orderDate: new Date().toISOString(),
+        paymentStatus: "unpaid",
+        shippingStatus: "pending",
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return order;
+  } catch (error) {
+    console.error("Error creating order:", error);
+    throw error;
+  }
 }

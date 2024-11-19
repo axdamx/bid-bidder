@@ -38,6 +38,7 @@ import HelpDetails from "./help/helpDetails";
 import { MotionGrid } from "../components/motionGrid";
 import { userAtom } from "../atom/userAtom";
 import { useAtom } from "jotai";
+import { useRouter, useSearchParams } from "next/navigation";
 
 type User = {
   name?: string;
@@ -50,8 +51,11 @@ interface DashboardClientProps {
 }
 
 const DashboardClient = ({ initialUser }: DashboardClientProps) => {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [activeContent, setActiveContent] = useState("userDetails");
+  // const [activeContent, setActiveContent] = useState("userDetails");
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [user] = useAtom(userAtom);
 
@@ -60,6 +64,17 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
   if (!initialUser) {
     return null;
   }
+
+  // Get the tab from URL params or default to "userDetails"
+  const [activeContent, setActiveContent] = useState(
+    searchParams.get("tab") || "userDetails"
+  );
+
+  // Update URL when tab changes
+  const handleTabChange = (tabId: string) => {
+    setActiveContent(tabId);
+    router.push(`/dashboard?tab=${tabId}`);
+  };
 
   const initials = user?.name
     .split(" ")
@@ -235,7 +250,7 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
             <div className="flex items-center gap-2">
               <div>
                 <p className="font-medium">{user?.name}</p>
-                <p className="font-medium">{user?.id}</p>
+                {/* <p className="font-medium">{user?.id}</p> */}
                 <p className="text-sm text-gray-500">{user?.email}</p>
               </div>
             </div>
@@ -253,7 +268,7 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
                 "w-full justify-start",
                 !isSidebarOpen && "justify-center"
               )}
-              onClick={() => setActiveContent(item.id)}
+              onClick={() => handleTabChange(item.id)}
             >
               <item.icon className={cn("h-4 w-4", isSidebarOpen && "mr-2")} />
               {isSidebarOpen && <span>{item.name}</span>}
