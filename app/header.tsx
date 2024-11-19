@@ -10,30 +10,11 @@ import { SignOut } from "@/components/ui/sign-out";
 import { useEffect, useState } from "react";
 import { useSupabase } from "./context/SupabaseContext";
 import { fetchUser } from "./profile/[userId]/action";
+import { userAtom } from "./atom/userAtom";
+import { useAtom } from "jotai";
 
 export function Header() {
-  const { session } = useSupabase();
-  const userId = session?.user?.id || "";
-  const [initialUser, setInitialUser] = useState(null);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    async function fetchUserData() {
-      try {
-        const fetchedUser = await fetchUser(userId);
-        setInitialUser(fetchedUser);
-      } catch (err) {
-        setError(err);
-      }
-    }
-
-    if (userId) {
-      fetchUserData();
-    }
-  }, [userId]);
-
-  console.log("initialUser:", initialUser);
-  console.log("sess", session);
+  const [user] = useAtom(userAtom);
 
   return (
     <header className="sticky top-0 z-50 w-full bg-gray-50/80 backdrop-blur-sm py-4 shadow-sm">
@@ -60,7 +41,7 @@ export function Header() {
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-8">
-              {session && (
+              {user && (
                 <Link
                   href="/items/create"
                   className="hover:underline whitespace-nowrap"
@@ -78,17 +59,17 @@ export function Header() {
 
           {/* Right Section: User Controls */}
           <div className="flex items-center gap-4">
-            {initialUser && session && (
+            {user && (
               <UserAvatar
-                name={initialUser.name!}
-                imageUrl={initialUser.image!}
-                email={initialUser.email!}
-                userId={initialUser.id!}
+                name={user.name!}
+                imageUrl={user.image!}
+                email={user.email!}
+                userId={user.id!}
               />
             )}
 
             {/* Desktop Sign In/Out */}
-            <div className="hidden md:block">{!session && <SignIn />}</div>
+            <div className="hidden md:block">{!user && <SignIn />}</div>
 
             {/* Mobile Menu */}
             <Sheet>
@@ -97,7 +78,7 @@ export function Header() {
               </SheetTrigger>
               <SheetContent side="right" className="w-[300px]">
                 <div className="flex flex-col gap-4 mt-4">
-                  {session ? (
+                  {user ? (
                     <nav className="flex flex-col space-y-4">
                       <Link
                         href="/items/create"

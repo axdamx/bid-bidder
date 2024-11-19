@@ -7,24 +7,17 @@ import ItemCard from "@/app/item-card";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { SkeletonCard } from "../SkeletonLoader";
+import { useQuery } from "@tanstack/react-query";
 
 export function LiveAuctions() {
   // Remove async
   // Change to use client-side data fetching or pass data as props
-  const [items, setItems] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    getLiveAuctions()
-      .then((data) => {
-        setItems(data);
-        setIsLoading(false);
-      })
-      .catch((error) => {
-        console.error("Error fetching live auctions:", error);
-        setIsLoading(false);
-      });
-  }, []);
+  const { data: items = [], isLoading } = useQuery({
+    queryKey: ["liveAuctions"],
+    queryFn: () => getLiveAuctions(),
+    staleTime: 0, // Set to 0 to always check for updates
+    refetchOnMount: true, // Refetch when component mounts
+  });
 
   return (
     <section className="w-full">

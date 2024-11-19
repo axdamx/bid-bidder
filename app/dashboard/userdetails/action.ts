@@ -1,7 +1,8 @@
 // server-actions/user.ts
 "use server";
 
-import { supabase } from "@/lib/utils";
+import { createServerSupabase } from "@/lib/supabase/server";
+// import { supabase } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
 import { z } from "zod"; // If you want to add validation
 
@@ -32,6 +33,8 @@ export async function updateUserField(
   field: string,
   value: string
 ): Promise<ActionResponse> {
+  const supabase = createServerSupabase();
+
   try {
     if (!userId || !field || value === undefined) {
       return {
@@ -50,9 +53,9 @@ export async function updateUserField(
     }
 
     const { error } = await supabase
-      .from('users')
+      .from("users")
       .update({ [field]: value })
-      .eq('id', userId);
+      .eq("id", userId);
 
     if (error) {
       console.error(`Error updating user ${field}:`, error);

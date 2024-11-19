@@ -4,18 +4,15 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { ArrowLeft, Loader2, Zap } from "lucide-react";
-import Link from "next/link";
+import { Loader2, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -26,8 +23,10 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import toast, { Toaster } from "react-hot-toast";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { createClientSupabase } from "@/lib/supabase/client";
+import { useAtom } from "jotai";
+import { userAtom } from "../atom/userAtom";
 // import { supabase } from "@/lib/utils";
 
 type ModalView = "log-in" | "sign-up" | "forgot-password";
@@ -73,11 +72,10 @@ export default function AuthModals({
 }) {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter(); // Add this line to use the router
-  //   const pathname = usePathname(); // Get the current path
-  //   console.log("router", router);
-  //   console.log("pathname", pathname);
-  //   const supabase = createClientSupabase();
   const supabase = createClientSupabase();
+  const [, setUser] = useAtom(userAtom);
+
+  console.log("userAtom", userAtom);
 
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange(
@@ -136,18 +134,28 @@ export default function AuthModals({
     }
 
     if (!existingUser) {
-      // Insert new user
-      const { error: insertError } = await supabase.from("users").insert({
+      const userData = {
         id: user.id,
         email: user.email,
         name: user.user_metadata.full_name || user.email,
         image: user.user_metadata.avatar_url,
-      });
+      };
+      // Insert new user
+      const { error: insertError } = await supabase
+        .from("users")
+        .insert(userData);
 
       if (insertError) {
         console.error("Error inserting user:", insertError.message);
+      } else {
+        setUser(userData);
       }
     } else {
+      const userData = {
+        ...existingUser,
+        email: user.email,
+        image: user.user_metadata.avatar_url,
+      };
       // Only update email and image, preserve existing name
       const { error: updateError } = await supabase
         .from("users")
@@ -160,6 +168,8 @@ export default function AuthModals({
 
       if (updateError) {
         console.error("Error updating user:", updateError.message);
+      } else {
+        setUser(userData);
       }
     }
   }
@@ -206,8 +216,14 @@ export default function AuthModals({
           password: data.password,
         });
       if (error) throw error;
-      const userSession = signInData;
-      console.log("user signin session", userSession);
+      if (signInData.user) {
+        setUser({
+          id: signInData.user.id,
+          email: signInData.user.email!,
+          name: signInData.user.user_metadata.full_name,
+          image: signInData.user.user_metadata.avatar_url,
+        });
+      }
       toast.success("Sign in successful");
       handleClose();
       //   window.location.href = "/";
@@ -229,42 +245,43 @@ export default function AuthModals({
         password: data.password,
       });
       if (error) throw error;
-      const user = signUpData.session?.user;
-      console.log("user signup yo", user);
+      const user = signUpData.user; // Changed from signUpData.session?.user
+
       if (user) {
-        const { data: existingUser, error: selectError } = await supabase
+        // Try to get existing user first
+        const { data: existingUser } = await supabase
           .from("users")
           .select("*")
           .eq("id", user.id)
           .single();
 
-        if (selectError && selectError.code !== "PGRST116") {
-          console.error("Error checking user existence:", selectError.message);
-          return;
-        }
-
+        // Only insert if user doesn't exist
         if (!existingUser) {
-          // Insert new user
-          const { error: insertError } = await supabase.from("users").insert({
+          const userData = {
             id: user.id,
             email: user.email,
-            name: user.user_metadata.full_name,
-            image: user.user_metadata.avatar_url,
-            // Add any additional fields here
-          });
+            name: user.email?.split("@")[0] || "User", // Fallback username from email
+            image: user.user_metadata?.avatar_url || null,
+          };
+
+          const { error: insertError } = await supabase
+            .from("users")
+            .insert(userData);
 
           if (insertError) {
             console.error("Error inserting user:", insertError.message);
-          } else {
-            console.log("User inserted successfully");
+            return;
           }
+
+          setUser(userData);
         } else {
-          console.log("User already exists");
+          setUser(existingUser);
         }
+
+        toast.success("Sign up successful");
+        handleClose();
+        router.refresh();
       }
-      toast.success("Sign up successful");
-      handleClose();
-      router.refresh(); // Redirect and revalidate the original path
     } catch (error) {
       console.error("Error signing up:", error);
       toast.error("Sign up failed. Please check your email and password.");

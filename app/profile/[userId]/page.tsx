@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useSupabase } from "@/app/context/SupabaseContext";
 import PostFeed from "./components/PostFeed";
 import { MotionGrid } from "@/app/components/motionGrid";
 import { ProfileHeader } from "./components/ProfileHeader";
@@ -10,47 +8,43 @@ import { About } from "./components/AboutContainer";
 import { Location } from "./components/LocationContainer";
 import { SocialLinks } from "./components/SocialsContainer";
 import { fetchFollowData, fetchOwnedItems, fetchUser } from "./action";
-import { SkeletonCard } from "@/app/home/components/SkeletonLoader";
-import {
-  SkeletonLoaderProfile,
-  SkeletonProfileHeader,
-  SkeletonProfileSection,
-  SkeletonTable,
-} from "./components/SkeletonLoader";
+import { SkeletonLoaderProfile } from "./components/SkeletonLoader";
+import { userAtom } from "@/app/atom/userAtom";
+import { useAtom } from "jotai";
+import { useQueries } from "@tanstack/react-query";
 
-export default function ProfilePage({ params: { userId: ownerId } }) {
-  const { session } = useSupabase();
-  const user = session?.user; // my user
+export default function ProfilePage({
+  params: { userId: ownerId },
+}: {
+  params: { userId: string };
+}) {
+  const [user] = useAtom(userAtom); // current logged in user
 
-  const [profileUser, setProfileUser] = useState(null);
-  const [followData, setFollowData] = useState({});
-  const [ownedItems, setOwnedItems] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queries = useQueries({
+    queries: [
+      {
+        queryKey: ["user", ownerId],
+        queryFn: () => fetchUser(ownerId),
+      },
+      {
+        queryKey: ["followData", user?.id, ownerId],
+        queryFn: () => fetchFollowData(user?.id || "", ownerId),
+      },
+      {
+        queryKey: ["ownedItems", ownerId],
+        queryFn: () => fetchOwnedItems(ownerId),
+      },
+    ],
+  });
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-
-      const fetchedUser = await fetchUser(ownerId);
-      setProfileUser(fetchedUser);
-
-      const followData = await fetchFollowData(user?.id, ownerId);
-      setFollowData(followData);
-
-      const ownedItems = await fetchOwnedItems(ownerId);
-      setOwnedItems(ownedItems);
-
-      setIsLoading(false);
-    };
-
-    fetchData();
-  }, [ownerId, user]);
+  const [userQuery, followDataQuery, ownedItemsQuery] = queries;
+  const isLoading = queries.some((query) => query.isLoading);
 
   if (isLoading) {
     return <SkeletonLoaderProfile />;
   }
 
-  if (!profileUser) {
+  if (!userQuery) {
     return (
       <div className="space-y-4 justify-center flex items-center flex-col mt-8">
         <h1 className="text-2xl font-bold"> User Not Found! </h1>
@@ -58,27 +52,25 @@ export default function ProfilePage({ params: { userId: ownerId } }) {
     );
   }
 
-  console.log("profileUser", profileUser);
-
   return (
     <MotionGrid>
       <div className="container mx-auto p-4">
-        <ProfileHeader user={profileUser} />
+        <ProfileHeader user={userQuery.data} />
         <div className="flex flex-col md:flex-row mt-6 gap-6">
           <div className="md:w-1/4 space-y-4 mb-6">
             <Stats
-              itemsCount={ownedItems.length}
-              followersCount={followData.followersCount}
-              followingCount={followData.followingCount}
+              itemsCount={ownedItemsQuery.data?.length || 0}
+              followersCount={followDataQuery.data?.followersCount || 0}
+              followingCount={followDataQuery.data?.followingCount || 0}
               userId={ownerId}
               currentUserId={user?.id}
-              isFollowing={followData.isFollowing}
+              isFollowing={followDataQuery.data?.isFollowing || false}
             />
             <About />
             <Location />
             <SocialLinks />
           </div>
-          <PostFeed ownedItems={ownedItems} />
+          <PostFeed ownedItems={ownedItemsQuery.data} />
         </div>
       </div>
     </MotionGrid>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { followUser, unfollowUser } from "../action";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export function FollowButton({
   targetUserId,
@@ -17,58 +18,44 @@ export function FollowButton({
   const [isFollowing, setIsFollowing] = useState<boolean>(initialIsFollowing);
   const [isPending, setIsPending] = useState(false);
 
-  useEffect(() => {
-    console.log("Initial isFollowing:", initialIsFollowing);
-    console.log("Current isFollowing state:", isFollowing);
-  }, [initialIsFollowing, isFollowing]);
+  const queryClient = useQueryClient();
 
-  // const handleFollow = async () => {
-  //   if (!currentUserId) return;
+  // Replace the manual mutation handling with React Query mutations
+  const followMutation = useMutation({
+    mutationFn: () => followUser(currentUserId!, targetUserId),
+    onSuccess: () => {
+      setIsFollowing(true);
+      // Invalidate and refetch relevant queries
+      queryClient.invalidateQueries({
+        queryKey: ["followData", currentUserId, targetUserId],
+      });
+    },
+    onError: (error) => {
+      console.error("Follow failed:", error);
+    },
+  });
 
-  //   setIsPending(true);
+  const unfollowMutation = useMutation({
+    mutationFn: () => unfollowUser(currentUserId!, targetUserId),
+    onSuccess: () => {
+      setIsFollowing(false);
+      // Invalidate and refetch relevant queries
+      queryClient.invalidateQueries({
+        queryKey: ["followData", currentUserId, targetUserId],
+      });
+    },
+    onError: (error) => {
+      console.error("Unfollow failed:", error);
+    },
+  });
 
-  //   // Simulate follow/unfollow action
-  //   try {
-  //     if (isFollowing) {
-  //       // Simulate unfollow action
-  //       console.log(`Unfollowing user: ${targetUserId}`);
-  //       setIsFollowing(false);
-  //     } else {
-  //       // Simulate follow action
-  //       console.log(`Following user: ${targetUserId}`);
-  //       setIsFollowing(true);
-  //     }
-  //   } catch (error) {
-  //     console.error("Follow action failed:", error);
-  //   } finally {
-  //     setIsPending(false);
-  //   }
-  // };
   const handleFollow = async () => {
     if (!currentUserId) return;
 
-    setIsPending(true);
-
-    try {
-      if (isFollowing) {
-        const response = await unfollowUser(currentUserId, targetUserId);
-        if (response.success) {
-          setIsFollowing(false);
-        } else {
-          console.error("Unfollow failed:", response.error);
-        }
-      } else {
-        const response = await followUser(currentUserId, targetUserId);
-        if (response.success) {
-          setIsFollowing(true);
-        } else {
-          console.error("Follow failed:", response.error);
-        }
-      }
-    } catch (error) {
-      console.error("Follow action failed:", error);
-    } finally {
-      setIsPending(false);
+    if (isFollowing) {
+      unfollowMutation.mutate();
+    } else {
+      followMutation.mutate();
     }
   };
 

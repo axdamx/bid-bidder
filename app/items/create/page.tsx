@@ -28,6 +28,8 @@ import {
 } from "@/components/ui/dialog";
 import { MotionGrid } from "@/app/components/motionGrid";
 import { useSupabase } from "@/app/context/SupabaseContext";
+import { userAtom } from "@/app/atom/userAtom";
+import { useAtom } from "jotai";
 
 type UploadResult = {
   info: { public_id: string };
@@ -41,11 +43,7 @@ export default function CreatePage() {
   const [newItemId, setNewItemId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { session } = useSupabase();
-
-  if (!session) {
-    return null;
-  }
+  const [user] = useAtom(userAtom);
 
   const form = useForm<CreateItemFormData>({
     resolver: zodResolver(createItemSchema),
@@ -62,45 +60,6 @@ export default function CreatePage() {
     formState: { errors, isValid },
   } = form;
 
-  // Update your onSubmit function
-  // const onSubmit = async (data: CreateItemFormData) => {
-  //   if (imageIds.length === 0) {
-  //     form.setError("images", { message: "At least one image is required" });
-  //     return;
-  //   }
-
-  //   const formData = new FormData();
-  //   Object.entries(data).forEach(([key, value]) => {
-  //     if (key !== "images") {
-  //       formData.append(key, value.toString());
-  //     }
-  //   });
-  //   imageIds.forEach((id) => formData.append("images[]", id));
-
-  //   try {
-  //     const result = await createItemAction(formData);
-  //     if (result && result.id) {
-  //       setNewItemId(result.id);
-  //       setShowSuccessModal(true);
-  //       // Reset form after successful submission
-  //       form.reset({
-  //         name: "",
-  //         startingPrice: undefined,
-  //         bidInterval: undefined,
-  //         description: "",
-  //         endDate: "",
-  //         images: [],
-  //       });
-  //       setImageIds([]);
-  //     } else {
-  //       console.error("No item ID returned from creation");
-  //       // Optionally show an error message to the user
-  //     }
-  //   } catch (error) {
-  //     console.error("Failed to create item:", error);
-  //     // Optionally show an error message to the user
-  //   }
-  // };
   const onSubmit = async (data: CreateItemFormData) => {
     setIsSubmitting(true);
     setError(null);
@@ -120,7 +79,7 @@ export default function CreatePage() {
     imageIds.forEach((id) => formData.append("images[]", id));
 
     try {
-      const response = await createItemAction(formData, session?.user.id);
+      const response = await createItemAction(formData, user?.id || "");
 
       if (!response.success) {
         setError(response.error || "Failed to create item");

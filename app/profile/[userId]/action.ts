@@ -199,13 +199,13 @@ export type NotificationFollower = {
 //         subject: `New Auction Item: ${item.name}`,
 //         content: `
 //           Hi ${follower.name},
-          
+
 //           ${author.name} just listed a new item for auction!
-          
+
 //           Item: ${item.name}
 //           Starting Price: $${item.startingPrice}
 //           Ends: ${new Date(item.endDate).toLocaleDateString()}
-          
+
 //           Don't miss out on this exciting auction!
 //         `,
 //       };
@@ -258,7 +258,7 @@ export async function followUser(followerId: string, followingId: string) {
     // const supabase = createClientSupabase();
     const supabase = createServerSupabase();
     const { error } = await supabase
-      .from('follows')
+      .from("follows")
       .insert([{ followerId, followingId }]);
 
     if (error) throw error;
@@ -275,7 +275,7 @@ export async function unfollowUser(followerId: string, followingId: string) {
     // const supabase = createClientSupabase();
     const supabase = createServerSupabase();
     const { error } = await supabase
-      .from('follows')
+      .from("follows")
       .delete()
       .match({ followerId, followingId });
 
@@ -298,8 +298,8 @@ export async function getFollowStatus(
     // const supabase = createClientSupabase();
     const supabase = createServerSupabase();
     const { data, error } = await supabase
-      .from('follows')
-      .select('*')
+      .from("follows")
+      .select("*")
       .match({ followerId, followingId });
 
     if (error) throw error;
@@ -315,16 +315,17 @@ export async function getFollowCounts(userId: string) {
     // const supabase = createClientSupabase();
     const supabase = createServerSupabase();
     const { data: followers, error: followersError } = await supabase
-      .from('follows')
-      .select('*')
-      .eq('followingId', userId);
+      .from("follows")
+      .select("*")
+      .eq("followingId", userId);
 
     const { data: following, error: followingError } = await supabase
-      .from('follows')
-      .select('*')
-      .eq('followerId', userId);
+      .from("follows")
+      .select("*")
+      .eq("followerId", userId);
 
-    if (followersError || followingError) throw followersError || followingError;
+    if (followersError || followingError)
+      throw followersError || followingError;
 
     return {
       followersCount: followers.length,
@@ -343,10 +344,10 @@ export async function getFollowersForNotification(
     // const supabase = createClientSupabase();
     const supabase = createServerSupabase();
     const { data, error } = await supabase
-      .from('follows')
-      .select('users(id, email, name)')
-      .eq('followingId', authorId)
-      .innerJoin('users', 'users.id', 'follows.followerId');
+      .from("follows")
+      .select("users(id, email, name)")
+      .eq("followingId", authorId)
+      .innerJoin("users", "users.id", "follows.followerId");
 
     if (error) throw error;
 
@@ -371,18 +372,20 @@ export async function createItemWithNotification(
     // 1. Create the item
     const supabase = createServerSupabase();
     const { data: newItem, error: itemError } = await supabase
-      .from('items')
-      .insert([{
-        userId,
-        name: data.name,
-        startingPrice: data.startingPrice,
-        currentBid: 0,
-        bidInterval: data.bidInterval,
-        endDate: data.endDate,
-        description: data.description,
-        imageId: data.imageId,
-        status: "active",
-      }])
+      .from("items")
+      .insert([
+        {
+          userId,
+          name: data.name,
+          startingPrice: data.startingPrice,
+          currentBid: 0,
+          bidInterval: data.bidInterval,
+          endDate: data.endDate,
+          description: data.description,
+          imageId: data.imageId,
+          status: "active",
+        },
+      ])
       .single();
 
     if (itemError) throw itemError;
@@ -412,9 +415,10 @@ export const getItemsByUserId = cache(async (userId: string) => {
     // const supabase = createClientSupabase();
     const supabase = createServerSupabase();
     const { data: userItems, error } = await supabase
-      .from('items')
-      .select('*')
-      .eq('userId', userId);
+      .from("items")
+      .select("*")
+      .eq("userId", userId)
+      .order("createdAt", { ascending: false }); // Sort by latest createdAt
 
     if (error) throw error;
 

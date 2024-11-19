@@ -56,6 +56,8 @@ import { getUserById } from "@/app/action";
 import ChatComponentV2 from "./components/ChatComponentsV2";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createClientSupabase } from "@/lib/supabase/client";
+import { userAtom } from "@/app/atom/userAtom";
+import { useAtom } from "jotai";
 
 // export function formatTimestamp(timestamp: string) {
 //   return formatDistance(new Date(), timestamp, { addSuffix: true });
@@ -113,8 +115,9 @@ export default function AuctionItem({
   const [authModalView, setAuthModalView] = useState<ModalView>("log-in");
   // const [currentUserData, setCurrentUserData] = useState(null);
 
-  const { session } = useSupabase();
-  const currentSessionUserId = session?.user?.id;
+  // const { session } = useSupabase();
+  // const currentSessionUserId = session?.user?.id;
+  const [user] = useAtom(userAtom);
 
   // const supabase = createClientSupabase();
   // console.log("whats good, supabase", supabase);
@@ -134,9 +137,9 @@ export default function AuctionItem({
   //   }
   // }, [currentSessionUserId]);
   const { data: currentUserData } = useQuery({
-    queryKey: ["user", currentSessionUserId],
-    queryFn: () => getUserById(currentSessionUserId!),
-    enabled: !!currentSessionUserId,
+    queryKey: ["user", user?.id],
+    queryFn: () => getUserById(user?.id || ""),
+    enabled: !!user?.id,
     staleTime: Infinity,
   });
 

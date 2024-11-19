@@ -18,6 +18,7 @@ import { eq, ilike } from "drizzle-orm";
 import { cache } from "react";
 import { signIn, signOut } from "./auth";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
 // import { supabase } from "@/lib/utils";
 export async function getUserById(userId: string) {
   const supabase = createServerSupabase();
@@ -27,19 +28,19 @@ export async function getUserById(userId: string) {
 
   try {
     const { data: user, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', userId)
+      .from("users")
+      .select("*")
+      .eq("id", userId)
       .single();
 
     if (error) {
-      console.error('Error fetching user by ID:', error);
+      console.error("Error fetching user by ID:", error);
       return null;
     }
-
+    revalidatePath("/dashboard");
     return user;
   } catch (error) {
-    console.error('Unexpected error fetching user by ID:', error);
+    console.error("Unexpected error fetching user by ID:", error);
     return null;
   }
 }
@@ -64,8 +65,7 @@ export const getItemsWithUsers = cache(async () => {
   const supabase = createServerSupabase();
 
   try {
-    const { data: itemsWithUsers, error } = await supabase
-      .from('items')
+    const { data: itemsWithUsers, error } = await supabase.from("items")
       .select(`
         *,
         user:users(*)
@@ -85,7 +85,7 @@ export const getItemsWithUsers = cache(async () => {
 });
 
 // export const getLiveAuctions = cache(async () => {
-//   try { 
+//   try {
 //     const { data: items, error } = await supabase
 //       .from('items')
 //       .select(`
@@ -95,7 +95,7 @@ export const getItemsWithUsers = cache(async () => {
 //       .gt('endDate', new Date().toISOString())
 
 //     if (error) throw error
-    
+
 //     return items || []
 //   } catch (error) {
 //     console.error("Error fetching live auctions:", error)
@@ -108,7 +108,10 @@ export const getLiveAuctions = cache(async () => {
   // console.log('items', items)
   return items
     .filter((item) => new Date(item.endDate + "Z") > new Date())
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
 });
 
 export const getEndedAuctions = cache(async () => {
@@ -132,7 +135,7 @@ export const getUpcomingAuctions = cache(async (limit: number = 2) => {
 //       .limit(limit)
 
 //     if (error) throw error
-    
+
 //     return items || []
 //   } catch (error) {
 //     console.error("Error fetching ended auctions:", error)
@@ -153,14 +156,13 @@ export const getUpcomingAuctions = cache(async (limit: number = 2) => {
 //       .limit(limit)
 
 //     if (error) throw error
-    
+
 //     return items || []
 //   } catch (error) {
 //     console.error("Error fetching upcoming auctions:", error)
 //     return []
 //   }
 // });
-
 
 // export async function searchItems(query: string) {
 //   if (!query) {
@@ -200,28 +202,27 @@ export async function searchItems(query: string) {
 
   try {
     const { data: searchResults, error } = await supabase
-      .from('items')
-      .select('id, name, imageId, currentBid')
-      .ilike('name', `%${query}%`)
+      .from("items")
+      .select("id, name, imageId, currentBid")
+      .ilike("name", `%${query}%`)
       .limit(5);
 
     if (error) {
-      console.error('Search error:', error);
+      console.error("Search error:", error);
       return [];
     }
 
-    return searchResults.map(item => ({
+    return searchResults.map((item) => ({
       id: item.id.toString(), // Convert to string since id is serial
       name: item.name,
       imageUrl: item.imageId || null, // You might want to transform this to a full URL if needed
-      currentBid: item.currentBid
+      currentBid: item.currentBid,
     }));
   } catch (error) {
-    console.error('Unexpected error:', error);
+    console.error("Unexpected error:", error);
     return [];
   }
 }
-
 
 // Sign In
 export async function signInWithGoogle() {

@@ -8,6 +8,8 @@ import { getEndedAuctions } from "./action";
 import { TopBidsClient } from "./home/components/sections/TopSection";
 import { supabase } from "@/lib/utils";
 import CategoryCarousell from "./home/components/sections/CategoryCarousell";
+import { useAtom } from "jotai";
+import { userAtom } from "./atom/userAtom";
 
 function LoadingSection({ message }: { message: string }) {
   return (
@@ -26,11 +28,11 @@ function LoadingSection({ message }: { message: string }) {
   );
 }
 
-export async function TopBids() {
-  const items = (await getEndedAuctions()).slice(0, 3);
+// export async function TopBids() {
+//   const items = (await getEndedAuctions()).slice(0, 3);
 
-  return <TopBidsClient initialItems={items} />;
-}
+//   return <TopBidsClient initialItems={items} />;
+// }
 
 export default function Home() {
   return (

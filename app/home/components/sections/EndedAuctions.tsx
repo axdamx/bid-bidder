@@ -6,6 +6,7 @@ import { MotionGrid } from "@/app/components/motionGrid";
 import ItemCard from "@/app/item-card";
 import { useState, useEffect } from "react";
 import { SkeletonCard } from "../SkeletonLoader";
+import { useQuery } from "@tanstack/react-query";
 
 // export async function EndedAuctions({ limit = 3 }: { limit?: number }) {
 //   const items = (await getEndedAuctions()).slice(0, limit);
@@ -22,20 +23,12 @@ import { SkeletonCard } from "../SkeletonLoader";
 //   );
 // }
 export function EndedAuctions({ limit }: { limit?: number }) {
-  const [items, setItems] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    getEndedAuctions(3)
-      .then((data) => {
-        setItems(data);
-        setIsLoading(false);
-      })
-      .catch((error) => {
-        console.error("Error fetching ended auctions:", error);
-        setIsLoading(false);
-      });
-  }, []);
+  const { data: items = [], isLoading } = useQuery({
+    queryKey: ["endedAuctions"],
+    queryFn: () => getEndedAuctions(),
+    staleTime: 0, // Set to 0 to always check for updates
+    refetchOnMount: true, // Refetch when component mounts
+  });
   return (
     <section className="w-full">
       <div className="max-w-screen-2xl mx-auto px-4 md:px-6">

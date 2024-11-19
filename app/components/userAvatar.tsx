@@ -13,6 +13,8 @@ import { useState } from "react";
 import { handleSignOut, signOutWithGoogle } from "../action";
 import { createClientSupabase } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
+import { useAtom } from "jotai";
+import { userAtom } from "../atom/userAtom";
 // import { supabase } from "@/lib/utils";
 
 export default function UserAvatar({
@@ -21,21 +23,24 @@ export default function UserAvatar({
   email = "john@example.com",
   userId = "1",
 }: {
-  name?: string;
+  name: string;
   imageUrl?: string;
-  email?: string;
-  userId?: string;
+  email: string;
+  userId: string;
 }) {
-  console.log("name", name);
+  // console.log("name", name);
   const supabase = createClientSupabase();
+  const [, setUser] = useAtom(userAtom);
 
   const [isOpen, setIsOpen] = useState(false);
 
-  const initials = name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase();
+  const initials =
+    name ||
+    ""
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase();
 
   const handleLinkClick = () => {
     setIsOpen(false);
@@ -93,6 +98,7 @@ export default function UserAvatar({
 
               // Clear any local storage items if needed
               // localStorage.removeItem("supabase.auth.token");
+              setUser(null);
 
               // Force reload to clear all state
               window.location.href = "/";

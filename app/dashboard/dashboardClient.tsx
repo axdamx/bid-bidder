@@ -36,6 +36,8 @@ import PaymentsAndPayouts from "./payment/paymentDetails";
 import OrderDetails from "./orders/ordersDetails";
 import HelpDetails from "./help/helpDetails";
 import { MotionGrid } from "../components/motionGrid";
+import { userAtom } from "../atom/userAtom";
+import { useAtom } from "jotai";
 
 type User = {
   name?: string;
@@ -51,6 +53,7 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [activeContent, setActiveContent] = useState("userDetails");
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [user] = useAtom(userAtom);
 
   console.log("initialUser", initialUser);
 
@@ -58,7 +61,7 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
     return null;
   }
 
-  const initials = initialUser?.name
+  const initials = user?.name
     .split(" ")
     .map((n) => n[0])
     .join("")
@@ -120,7 +123,7 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
                       Manage your personal information
                     </CardDescription>
                   </CardHeader>
-                  <UserDetailsPage initialUser={initialUser} />
+                  <UserDetailsPage initialUser={user} />
                 </Card>
               </div>
             </div>
@@ -225,14 +228,15 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
       <div className="p-1 border-b">
         <div className="flex items-center gap-4 mb-4 justify-center relative">
           <Avatar className="h-12 w-12">
-            <AvatarImage src={initialUser.image} alt="User" />
+            <AvatarImage src={user?.image} alt="User" />
             <AvatarFallback>{initials}</AvatarFallback>
           </Avatar>
           {isSidebarOpen && (
             <div className="flex items-center gap-2">
               <div>
-                <p className="font-medium">{initialUser?.name}</p>
-                <p className="text-sm text-gray-500">{initialUser?.email}</p>
+                <p className="font-medium">{user?.name}</p>
+                <p className="font-medium">{user?.id}</p>
+                <p className="text-sm text-gray-500">{user?.email}</p>
               </div>
             </div>
           )}

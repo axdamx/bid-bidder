@@ -35,6 +35,8 @@ import { CldImage } from "next-cloudinary";
 import { formatCurrency } from "@/lib/utils";
 import CheckoutSkeleton from "../components/CheckoutSkeleton";
 import { useQuery } from "@tanstack/react-query";
+import { useAtom } from "jotai";
+import { userAtom } from "@/app/atom/userAtom";
 
 const addressSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -69,34 +71,8 @@ export default function CheckoutPage({
     "address"
   );
   const [formData, setFormData] = useState<Partial<FormData>>({});
-  const { session } = useSupabase();
-  const user = session?.user;
+  const [user] = useAtom(userAtom);
 
-  console.log("user", user);
-
-  // Add state for checkout items
-  // const [checkoutItems, setCheckoutItems] = useState(null);
-  // const [loading, setLoading] = useState(true);
-
-  // Add useEffect to fetch checkout items
-  // useEffect(() => {
-  //   const fetchItems = async () => {
-  //     setLoading(true);
-  //     if (user?.id) {
-  //       try {
-  //         const items = await getCheckoutItems(user.id);
-  //         console.log("items dalam checkout", items);
-  //         setCheckoutItems(items);
-  //       } catch (error) {
-  //         console.error("Error fetching checkout items:", error);
-  //       } finally {
-  //         setLoading(false);
-  //       }
-  //     }
-  //   };
-
-  //   fetchItems();
-  // }, [user?.id]);
   const { data: checkoutItems, isLoading } = useQuery({
     queryKey: ["checkoutItems", user?.id],
     queryFn: () => getCheckoutItems(user?.id!, itemId),
@@ -267,8 +243,8 @@ export default function CheckoutPage({
                                     <RadioGroupItem value="yes" />
                                   </FormControl>
                                   <FormLabel className="font-normal">
-                                    Yes, I'd like to receive exclusive offers
-                                    and updates
+                                    Yes, I&apos;d like to receive exclusive
+                                    offers and updates
                                   </FormLabel>
                                 </FormItem>
                                 <FormItem className="flex items-center space-x-3 space-y-0">
@@ -276,7 +252,7 @@ export default function CheckoutPage({
                                     <RadioGroupItem value="no" />
                                   </FormControl>
                                   <FormLabel className="font-normal">
-                                    No, I don't want to receive marketing
+                                    No, I don&apos;t want to receive marketing
                                     communications
                                   </FormLabel>
                                 </FormItem>

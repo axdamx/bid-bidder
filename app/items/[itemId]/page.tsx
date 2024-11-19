@@ -12,14 +12,18 @@ import { MotionGrid } from "@/app/components/motionGrid";
 import { useSupabase } from "@/app/context/SupabaseContext";
 import Spinner from "@/app/components/Spinner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { userAtom } from "@/app/atom/userAtom";
+import { useAtom } from "jotai";
 
 export default function ItemPage({
   params: { itemId },
 }: {
   params: { itemId: string };
 }) {
-  const { session } = useSupabase();
-  const user = session?.user;
+  // const { session } = useSupabase();
+  // const user = session?.user;
+  const [user] = useAtom(userAtom);
+
   const queryClient = useQueryClient();
 
   // const [item, setItem] = useState(null);
