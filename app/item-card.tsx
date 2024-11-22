@@ -7,17 +7,13 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Item } from "@/src/db/schema";
-import { format } from "date-fns";
+import { Badge } from "@/components/ui/badge";
+import { User } from "lucide-react";
 import { CldImage } from "next-cloudinary";
 import Link from "next/link";
 import CountdownTimer from "./countdown-timer";
-import { Clock, User } from "lucide-react";
 import { ItemWithUser, User as UserType } from "./items";
-import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/utils";
 
 interface ItemCardProps {
@@ -27,12 +23,13 @@ interface ItemCardProps {
 
 const ItemCard: React.FC<ItemCardProps> = ({ item, user }) => {
   const isItemEnded = isBidOver(item.endDate);
+
   function isBidOver(endDate: Date) {
     return new Date(endDate + "Z") < new Date();
   }
 
   return (
-    <Card className="w-full h-full overflow-hidden transition-shadow hover:shadow-lg">
+    <Card className="w-full h-full overflow-hidden transition-shadow hover:shadow-lg flex flex-col">
       <CardHeader className="p-0">
         <div className="relative h-48 overflow-hidden">
           {item.imageId && (
@@ -52,7 +49,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, user }) => {
           </Badge>
         </div>
       </CardHeader>
-      <CardContent className="p-4">
+      <CardContent className="p-4 flex-1">
         <div className="flex items-center justify-between gap-2">
           <CardTitle className="text-lg font-semibold break-words">
             {item.name}
@@ -72,14 +69,14 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, user }) => {
             </p>
           </div>
         </div>
-        <div className="mt-4 text-center">
+      </CardContent>
+      <div className="mt-auto p-4 pt-0">
+        <div className="text-center mb-4">
           {!isItemEnded && (
             <p className="text-sm text-muted-foreground mb-1">Ends in</p>
           )}
           <CountdownTimer endDate={item.endDate} />
         </div>
-      </CardContent>
-      <CardFooter className="p-4 pt-0">
         <Button
           asChild
           className="w-full"
@@ -89,7 +86,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, user }) => {
             {isItemEnded ? "View Details" : "Place Bid"}
           </Link>
         </Button>
-      </CardFooter>
+      </div>
     </Card>
   );
 };
