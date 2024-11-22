@@ -70,7 +70,7 @@ const UserDetailsPage = ({ initialUser }) => {
         toast.success(`${editingField} updated successfully`);
         setIsDialogOpen(false);
         router.refresh();
-        console.log("result.data", result.data);
+        // console.log("result.data", result.data);
         // this is for atom
         setUser((prev) => ({
           ...prev,

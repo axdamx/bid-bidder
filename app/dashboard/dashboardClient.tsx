@@ -59,7 +59,7 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [user] = useAtom(userAtom);
 
-  console.log("initialUser", initialUser);
+  // console.log("initialUser", initialUser);
 
   if (!initialUser) {
     return null;

@@ -79,7 +79,7 @@ export default function CheckoutPage({
     enabled: !!user?.id, // Only run query when user.id exists
   });
 
-  console.log("checkoutItems", checkoutItems);
+  // console.log("checkoutItems", checkoutItems);
 
   const shippingCost = 20;
   const buyersPremium = checkoutItems?.currentBid! * 0.07;

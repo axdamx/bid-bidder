@@ -112,12 +112,13 @@ export default function AuctionItem({
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showDisclaimerModal, setShowDisclaimerModal] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [isAuthModalsOpen, setIsAuthModalsOpen] = useState(false); // State to control AuthModals
   const [authModalView, setAuthModalView] = useState<ModalView>("log-in");
   // const [currentUserData, setCurrentUserData] = useState(null);
   const router = useRouter();
+  const supabase = createClientSupabase();
+  const queryClient = useQueryClient();
 
   // const { session } = useSupabase();
   // const currentSessionUserId = session?.user?.id;
@@ -132,6 +133,8 @@ export default function AuctionItem({
 
   const hasBids = bids.length > 0;
   const isBidOver = new Date(item.endDate + "Z") < new Date();
+
+  // console.log("dalam item page", item);
 
   // const supabase = createClientSupabase();
   // console.log("whats good, supabase", supabase);
@@ -150,14 +153,14 @@ export default function AuctionItem({
   //     fetchUserData();
   //   }
   // }, [currentSessionUserId]);
-  const { data: currentUserData } = useQuery({
-    queryKey: ["user", user?.id],
-    queryFn: () => getUserById(user?.id || ""),
-    enabled: !!user?.id,
-    staleTime: Infinity,
-  });
+  // const { data: currentUserData } = useQuery({
+  //   queryKey: ["user", user?.id],
+  //   queryFn: () => getUserById(user?.id || ""),
+  //   enabled: !!user?.id,
+  //   staleTime: Infinity,
+  // });
 
-  console.log("current User Id", currentUserData);
+  // console.log("current User Id", currentUserData);
 
   const handleBidSubmit = async () => {
     if (!userId) {
@@ -195,7 +198,7 @@ export default function AuctionItem({
 
   const { mutate: createOrder } = useMutation({
     mutationFn: () =>
-      createOrderAction(item.id, userId, highestBid!, item.itemUser.id),
+      createOrderAction(item.id, userId, highestBid!, item.users.id),
     onError: (error) => {
       console.error("Failed to create order:", error);
       toast.error("Failed to create order. Please contact support.");
@@ -206,7 +209,7 @@ export default function AuctionItem({
     updateBidAcknowledgment();
   };
 
-  const { mutate: submitBid } = useMutation({
+  const { mutate: submitBid, isPending } = useMutation({
     mutationFn: async () => {
       await createBidAction(item.id, userId);
     },
@@ -226,69 +229,134 @@ export default function AuctionItem({
     );
   };
 
-  const handleNewBid = useCallback((newBid: any) => {
-    setHighestBid(newBid.newBid);
-    setBids((prevBids) => [newBid.bidInfo, ...prevBids]);
-    toast.success(
-      `New bid received: ${formatCurrency(newBid.newBid)} by ${
-        newBid.bidInfo.users.name
-      }`
-    );
-  }, []);
+  // const handleNewBid = useCallback((newBid: any) => {
+  //   setHighestBid(newBid.newBid);
+  //   setBids((prevBids) => [newBid.bidInfo, ...prevBids]);
+  //   toast.success(
+  //     `New bid received: ${formatCurrency(newBid.newBid)} by ${
+  //       newBid.bidInfo.users.name
+  //     }`
+  //   );
+  // }, []);
+
+  // const handleAuctionEnd = useCallback(() => {
+  //   // Only attempt to create order if there are bids and current user is the winner
+  //   if (bids.length > 0 && bids[0].userId === userId) {
+  //     // Use React Query to handle the order creation
+  //     createOrder();
+  //   }
+
+  //   setShowWinnerModal(true);
+  // }, [bids, userId, item.id, highestBid]);
 
   const handleAuctionEnd = useCallback(() => {
-    // Only attempt to create order if there are bids and current user is the winner
     if (bids.length > 0 && bids[0].userId === userId) {
-      // Use React Query to handle the order creation
       createOrder();
     }
-
     setShowWinnerModal(true);
-  }, [bids, userId, item.id, highestBid]);
+  }, [bids, userId, createOrder]);
 
   const { data: orderExists } = useQuery({
     queryKey: ["order", item.id, userId],
     queryFn: () => checkExistingOrder(item.id, userId),
     enabled: !!userId && isBidOver && isWinner, // Only run query if user is winner and auction is over
   });
+  const { mutate: updateItemStatusMutate, isPending: isUpdating } = useMutation(
+    {
+      mutationFn: () => updateItemStatus(item.id, userId),
+      onError: (error) => {
+        console.error("Failed to update item status:", error);
+        toast.error("Failed to proceed to checkout. Please try again.");
+      },
+    }
+  );
+  // useEffect(() => {
+  //   const channel = supabase
+  //     .channel(`item-bids-${item.id}`)
+  //     .on(
+  //       "postgres_changes",
+  //       {
+  //         event: "INSERT",
+  //         schema: "public",
+  //         table: "bids",
+  //         filter: `itemId=eq.${item.id}`,
+  //       },
+  //       (payload: any) => {
+  //         console.log("payload", payload.new);
+  //         const newBid = payload.new;
+  //         // Update local state
+  //         setHighestBid(newBid.amount);
+  //         setBids((prevBids) => [newBid, ...prevBids]);
 
-  useEffect(() => {
-    const socket = io("http://localhost:8082", {
-      withCredentials: true,
-    });
+  //         // Show toast notification
+  //         toast.success(
+  //           `New bid received: ${formatCurrency(newBid.amount)} by ${
+  //             newBid.users.name
+  //           }`
+  //         );
 
-    socket.on("connect", () => {
-      console.log("Connected to Socket.IO server");
-      socket.emit("joinItem", item.id);
-    });
+  //         // Invalidate queries to refetch latest data
+  //         queryClient.invalidateQueries({ queryKey: ["bids", item.id] });
+  //         queryClient.invalidateQueries({ queryKey: ["item", item.id] });
+  //       }
+  //     )
+  //     .subscribe();
 
-    socket.on("newBid", (newBid) => {
-      console.log("Updating bid:", newBid);
-      handleNewBid(newBid);
-    });
+  //   return () => {
+  //     supabase.removeChannel(channel);
+  //   };
+  // }, [item.id, queryClient, supabase]);
 
-    socket.on("userCount", (count) => {
-      console.log("Connected users count:", count);
-      setUserCount(count);
-      // Show toast notification when a new user enters
-      // if (count > prevUserCountRef.current) {
-      //   toast("A new user has joined the auction");
-      // }
+  // console.log("orderExists?", orderExists);
 
-      // // Update the ref and state
-      // prevUserCountRef.current = count;
-      // setUserCount(count);
-    });
+  // useEffect(() => {
+  //   const socket = io("http://localhost:8082", {
+  //     withCredentials: true,
+  //   });
 
-    socket.on("disconnect", () => {
-      console.log("Disconnected from Socket.IO server");
-    });
+  //   socket.on("connect", () => {
+  //     console.log("Connected to Socket.IO server");
+  //     socket.emit("joinItem", item.id);
+  //   });
 
-    return () => {
-      socket.emit("leaveItem", item.id);
-      socket.disconnect();
-    };
-  }, [handleNewBid, item.id]);
+  //   socket.on("newBid", (newBid) => {
+  //     console.log("Updating bid:", newBid);
+  //     handleNewBid(newBid);
+  //   });
+
+  //   socket.on("userCount", (count) => {
+  //     console.log("Connected users count:", count);
+  //     setUserCount(count);
+  //     // Show toast notification when a new user enters
+  //     // if (count > prevUserCountRef.current) {
+  //     //   toast("A new user has joined the auction");
+  //     // }
+
+  //     // // Update the ref and state
+  //     // prevUserCountRef.current = count;
+  //     // setUserCount(count);
+  //   });
+
+  //   socket.on("disconnect", () => {
+  //     console.log("Disconnected from Socket.IO server");
+  //   });
+
+  //   return () => {
+  //     socket.emit("leaveItem", item.id);
+  //     socket.disconnect();
+  //   };
+  // }, [handleNewBid, item.id]);
+
+  // useEffect(() => {
+  //   setHighestBid(item.currentBid);
+  //   setBids(allBids);
+  // }, [item.currentBid, allBids]);
+
+  // useEffect(() => {
+  //   if (isBidOver && !hasBids) {
+  //     setShowWinnerModal(true);
+  //   }
+  // }, [isBidOver, hasBids]);
 
   useEffect(() => {
     setHighestBid(item.currentBid);
@@ -352,9 +420,21 @@ export default function AuctionItem({
               View Order
             </Button>
           ) : (
-            <form action={async () => await updateItemStatus(item.id, userId)}>
-              <Button type="submit" className="mt-8">
-                Proceed to Checkout
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault(); // Prevent default form submission
+                await updateItemStatusMutate(); // Call the mutation
+              }}
+            >
+              <Button type="submit" className="mt-8" disabled={isUpdating}>
+                {isUpdating ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  "Proceed to Checkout"
+                )}
               </Button>
             </form>
           )}
@@ -486,11 +566,11 @@ export default function AuctionItem({
               <CardDescription className="text-base md:text-lg">
                 Created by:{" "}
                 <Link
-                  href={`/profile/${item.itemUser.id}`}
+                  href={`/profile/${item.users.id}`}
                   className="hover:underline flex items-center gap-1"
                 >
                   <User className="h-4 w-4" />
-                  {item.itemUser.name}
+                  {item.users.name}
                 </Link>
               </CardDescription>
             </CardHeader>
@@ -573,10 +653,10 @@ export default function AuctionItem({
               {!isBidOver && (
                 <Button
                   className="w-full"
-                  disabled={isWinner || isSubmitting}
+                  disabled={isWinner || isPending}
                   onClick={handleBidSubmit}
                 >
-                  {isSubmitting ? (
+                  {isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Processing...
@@ -587,6 +667,24 @@ export default function AuctionItem({
                     "Place Bid"
                   )}
                 </Button>
+                // <Button
+                //   className="w-full relative overflow-hidden border-2 border-transparent rounded-md transition-all duration-300 group" // Added Tailwind classes
+                //   disabled={isWinner || isPending}
+                //   onClick={handleBidSubmit}
+                // >
+                //   <span className="absolute inset-0 border-2 border-blue-500 transform scale-0 transition-transform duration-500 group-hover:scale-100" />{" "}
+                //   {/* Moving border */}
+                //   {isPending ? (
+                //     <>
+                //       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                //       Processing...
+                //     </>
+                //   ) : isWinner ? (
+                //     "You are currently winning this bid!"
+                //   ) : (
+                //     "Place Bid"
+                //   )}
+                // </Button>
               )}
             </CardContent>
           </Card>
@@ -608,12 +706,12 @@ export default function AuctionItem({
             <Button
               variant="outline"
               onClick={() => setShowDisclaimerModal(false)}
-              disabled={isSubmitting}
+              disabled={isPending}
             >
               Cancel
             </Button>
-            <Button onClick={handleDisclaimerConfirm} disabled={isSubmitting}>
-              {isSubmitting ? (
+            <Button onClick={handleDisclaimerConfirm} disabled={isPending}>
+              {isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Processing...
@@ -671,8 +769,8 @@ export default function AuctionItem({
                 <ChatComponent
                   itemId={item.id}
                   userId={userId}
-                  userName={currentUserData?.name} // Or however you get the current user's name
-                  itemOwnerId={item.itemUser.id}
+                  userName={user?.name || ""} // Or however you get the current user's name
+                  itemOwnerId={item.users.id}
                 />
               ) : (
                 // <ChatComponentV2

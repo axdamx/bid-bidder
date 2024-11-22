@@ -75,13 +75,13 @@ export default function AuthModals({
   const supabase = createClientSupabase();
   const [, setUser] = useAtom(userAtom);
 
-  console.log("userAtom", userAtom);
+  // console.log("userAtom", userAtom);
 
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (session?.user) {
-          console.log("User signed in:", session.user);
+          // console.log("User signed in:", session.user);
           upsertUser(session.user);
         }
       }

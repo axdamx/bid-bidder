@@ -56,8 +56,8 @@ export default function ChatComponent({
   //   const { sessionState, refreshSession } = useSession();
   const supabase = createClientSupabase();
 
-  console.log("userId", userId);
-  console.log("itemOwnerId", itemOwnerId);
+  // console.log("userId", userId);
+  // console.log("itemOwnerId", itemOwnerId);
   const isOwner = userId === itemOwnerId; // Add this check
 
   //   const verifySession = async () => {

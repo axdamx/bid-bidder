@@ -1,19 +1,15 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import {
-  fetchItem,
-  fetchItemUser,
-  fetchBids,
-  checkBidAcknowledgmentAction,
-} from "./actions";
+import { fetchItem, fetchBids, checkBidAcknowledgmentAction } from "./actions";
 import ItemPageClient from "./item-page-client";
 import { MotionGrid } from "@/app/components/motionGrid";
-import { useSupabase } from "@/app/context/SupabaseContext";
-import Spinner from "@/app/components/Spinner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { userAtom } from "@/app/atom/userAtom";
 import { useAtom } from "jotai";
+import { useEffect } from "react";
+import { createClientSupabase } from "@/lib/supabase/client";
+import { formatCurrency } from "@/lib/utils";
+import toast, { Toaster } from "react-hot-toast";
 
 export default function ItemPage({
   params: { itemId },
@@ -23,8 +19,52 @@ export default function ItemPage({
   // const { session } = useSupabase();
   // const user = session?.user;
   const [user] = useAtom(userAtom);
-
+  const supabase = createClientSupabase();
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const channel = supabase
+      .channel(`item-bids-${itemId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "bids",
+          filter: `itemId=eq.${itemId}`,
+        },
+        async (payload) => {
+          // Change to async function
+          // console.log("Payload la", payload.new);
+          // Fetch user info based on userId from the payload
+          const { data: userData, error: userError } = await supabase
+            .from("users") // Assuming your user table is named 'users'
+            .select("*")
+            .eq("id", payload.new.userId) // Use userId from the payload
+            .single();
+
+          if (userError) {
+            console.error("Error fetching user data:", userError);
+            return;
+          }
+          // Invalidate queries to trigger refetch
+          queryClient.invalidateQueries({ queryKey: ["bids", itemId] });
+          queryClient.invalidateQueries({ queryKey: ["item", itemId] });
+
+          // Optionally show toast notification here if you want it at global level
+          toast.success(
+            `New bid received: ${formatCurrency(payload.new.amount)} by ${
+              userData.name
+            }`
+          );
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [itemId, queryClient, supabase]);
 
   // const [item, setItem] = useState(null);
   // const [itemUser, setItemUser] = useState(null);
@@ -60,6 +100,7 @@ export default function ItemPage({
   // useEffect(() => {
   //   fetchData();
   // }, [fetchData]);
+
   // Main item query
   const itemQuery = useQuery({
     queryKey: ["item", itemId],
@@ -68,13 +109,15 @@ export default function ItemPage({
     refetchOnMount: true, // Refetch when component mounts
   });
 
-  // Item user query - depends on item data
-  const itemUserQuery = useQuery({
-    queryKey: ["itemUser", itemQuery.data?.userId],
-    queryFn: () => fetchItemUser(itemQuery.data?.userId),
-    enabled: !!itemQuery.data?.userId,
-    staleTime: Infinity,
-  });
+  // console.log("ItemQuery", itemQuery.data);
+
+  // // Item user query - depends on item data
+  // const itemUserQuery = useQuery({
+  //   queryKey: ["itemUser", itemQuery.data?.userId],
+  //   queryFn: () => fetchItemUser(itemQuery.data?.userId),
+  //   enabled: !!itemQuery.data?.userId,
+  //   staleTime: Infinity,
+  // });
 
   // Bids query
   const bidsQuery = useQuery({
@@ -93,10 +136,7 @@ export default function ItemPage({
   });
 
   const isLoading =
-    itemQuery.isLoading ||
-    bidsQuery.isLoading ||
-    bidAckQuery.isLoading ||
-    (itemQuery.data && itemUserQuery.isLoading);
+    itemQuery.isLoading || bidsQuery.isLoading || bidAckQuery.isLoading;
 
   if (isLoading) {
     return (
@@ -159,10 +199,10 @@ export default function ItemPage({
     );
   }
 
-  const itemWithOwner = {
-    ...(itemQuery.data || {}),
-    itemUser: itemUserQuery.data,
-  };
+  // const itemWithOwner = {
+  //   ...(itemQuery.data || {}),
+  //   itemUser: itemUserQuery.data,
+  // };
 
   return (
     <MotionGrid
@@ -170,8 +210,13 @@ export default function ItemPage({
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.8 }}
     >
+      <Toaster
+        toastOptions={{ duration: 3000 }}
+        position="bottom-right"
+        reverseOrder={false}
+      />
       <ItemPageClient
-        item={itemWithOwner}
+        item={itemQuery.data}
         allBids={bidsQuery.data || []}
         userId={user?.id!}
         hasAcknowledgedBid={bidAckQuery.data || false}

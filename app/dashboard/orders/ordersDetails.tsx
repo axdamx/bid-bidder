@@ -42,6 +42,14 @@ import { getOrders, Order, updateOrderStatus } from "./action";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/lib/utils";
 import { LoadingModal } from "@/app/components/LoadingModal";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 // Extended mock data
 
@@ -131,133 +139,192 @@ export default function OrderDetails() {
     updateStatus({ orderId, status: newStatus });
   };
 
-  const OrdersTable = ({ orders, showStatusUpdate = false }) => (
-    <div className="overflow-x-auto rounded-md border">
-      {/* Desktop view */}
-      <div className="hidden md:block">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Order ID</TableHead>
-              <TableHead>Item</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Amount</TableHead>
-              {showStatusUpdate && <TableHead>Update Status</TableHead>}
-              <TableHead>Action</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {orders?.map((order: Order) => (
-              <TableRow key={order.id}>
-                <TableCell className="font-medium">{order.id}</TableCell>
-                <TableCell>{order.item.name}</TableCell>
-                <TableCell>
-                  {new Date(order.orderDate).toLocaleDateString()}
-                </TableCell>
-                <TableCell>
-                  {showStatusUpdate ? (
-                    <Select
-                      defaultValue={order.orderStatus}
-                      onValueChange={(value) =>
-                        handleStatusUpdate(order.id, value)
-                      }
-                    >
-                      <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Update status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="processing">Processing</SelectItem>
-                        <SelectItem value="shipped">Shipped</SelectItem>
-                        <SelectItem value="delivered">Delivered</SelectItem>
-                        <SelectItem value="cancelled">Cancelled</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <StatusBadge status={order.orderStatus} />
-                  )}
-                </TableCell>
-                <TableCell>{formatCurrency(order.amount)}</TableCell>
-                <TableCell>
-                  <Sheet>
-                    <SheetTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setSelectedOrder(order)}
-                      >
-                        View Details
-                      </Button>
-                    </SheetTrigger>
-                    {/* Update your SheetContent to use the new Order type */}
-                  </Sheet>
-                </TableCell>
+  const OrdersTable = ({ orders, showStatusUpdate = false }) => {
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 5;
+
+    // Calculate pagination
+    const totalPages = Math.ceil((orders?.length || 0) / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const currentOrders = orders?.slice(startIndex, endIndex);
+    return (
+      <div className="overflow-x-auto rounded-md border">
+        {/* Desktop view */}
+        <div className="hidden md:block">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Order ID</TableHead>
+                <TableHead>Item</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Amount</TableHead>
+                {showStatusUpdate && <TableHead>Update Status</TableHead>}
+                <TableHead>Action</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+            </TableHeader>
+            <TableBody>
+              {orders?.map((order: Order) => (
+                <TableRow key={order.id}>
+                  <TableCell className="font-medium">{order.id}</TableCell>
+                  <TableCell>{order.item.name}</TableCell>
+                  <TableCell>
+                    {new Date(order.orderDate).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell>
+                    {showStatusUpdate ? (
+                      <Select
+                        defaultValue={order.orderStatus}
+                        onValueChange={(value) =>
+                          handleStatusUpdate(order.id, value)
+                        }
+                      >
+                        <SelectTrigger className="w-[180px]">
+                          <SelectValue placeholder="Update status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="processing">Processing</SelectItem>
+                          <SelectItem value="shipped">Shipped</SelectItem>
+                          <SelectItem value="delivered">Delivered</SelectItem>
+                          <SelectItem value="cancelled">Cancelled</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <StatusBadge status={order.orderStatus} />
+                    )}
+                  </TableCell>
+                  <TableCell>{formatCurrency(order.amount)}</TableCell>
+                  <TableCell>
+                    <Sheet>
+                      <SheetTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setSelectedOrder(order)}
+                        >
+                          View Details
+                        </Button>
+                      </SheetTrigger>
+                      {/* Update your SheetContent to use the new Order type */}
+                    </Sheet>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
 
-      {/* Mobile view */}
-      <div className="md:hidden">
-        {orders?.map((order: Order) => (
-          <div key={order.id} className="border-b p-4 space-y-3">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="font-medium">{order.item.name}</p>
-                <p className="text-sm text-muted-foreground">ID: {order.id}</p>
+        {/* Mobile view */}
+        <div className="md:hidden">
+          {orders?.map((order: Order) => (
+            <div key={order.id} className="border-b p-4 space-y-3">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="font-medium">{order.item.name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    ID: {order.id}
+                  </p>
+                </div>
+                <StatusBadge status={order.orderStatus} />
               </div>
-              <StatusBadge status={order.orderStatus} />
-            </div>
 
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-muted-foreground">
-                {new Date(order.orderDate).toLocaleDateString()}
-              </span>
-              <span className="font-medium">
-                {formatCurrency(order.amount)}
-              </span>
-            </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-muted-foreground">
+                  {new Date(order.orderDate).toLocaleDateString()}
+                </span>
+                <span className="font-medium">
+                  {formatCurrency(order.amount)}
+                </span>
+              </div>
 
-            <div className="flex flex-col gap-2">
-              {showStatusUpdate && (
-                <Select
-                  defaultValue={order.orderStatus}
-                  onValueChange={(value) => handleStatusUpdate(order.id, value)}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Update status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="processing">Processing</SelectItem>
-                    <SelectItem value="shipped">Shipped</SelectItem>
-                    <SelectItem value="delivered">Delivered</SelectItem>
-                    <SelectItem value="cancelled">Cancelled</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="flex flex-col gap-2">
+                {showStatusUpdate && (
+                  <Select
+                    defaultValue={order.orderStatus}
+                    onValueChange={(value) =>
+                      handleStatusUpdate(order.id, value)
+                    }
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Update status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="processing">Processing</SelectItem>
+                      <SelectItem value="shipped">Shipped</SelectItem>
+                      <SelectItem value="delivered">Delivered</SelectItem>
+                      <SelectItem value="cancelled">Cancelled</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => setSelectedOrder(order)}
+                    >
+                      View Details
+                    </Button>
+                  </SheetTrigger>
+                  {/* Sheet content remains the same */}
+                </Sheet>
+              </div>
+            </div>
+          ))}
+        </div>
+        {totalPages > 1 && (
+          <Pagination className="justify-center">
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
+                  className={
+                    currentPage === 1
+                      ? "pointer-events-none opacity-50"
+                      : "cursor-pointer"
+                  }
+                />
+              </PaginationItem>
+
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                (page) => (
+                  <PaginationItem key={page}>
+                    <PaginationLink
+                      onClick={() => setCurrentPage(page)}
+                      isActive={currentPage === page}
+                      className="cursor-pointer"
+                    >
+                      {page}
+                    </PaginationLink>
+                  </PaginationItem>
+                )
               )}
 
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
-                    onClick={() => setSelectedOrder(order)}
-                  >
-                    View Details
-                  </Button>
-                </SheetTrigger>
-                {/* Sheet content remains the same */}
-              </Sheet>
-            </div>
-          </div>
-        ))}
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                  }
+                  className={
+                    currentPage === totalPages
+                      ? "pointer-events-none opacity-50"
+                      : "cursor-pointer"
+                  }
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        )}
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <>

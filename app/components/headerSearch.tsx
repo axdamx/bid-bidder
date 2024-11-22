@@ -84,7 +84,7 @@ export default function SearchCommand() {
   }, []);
 
   return (
-    <>
+    <div>
       <button
         onClick={() => setOpen(true)}
         className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors"
@@ -162,6 +162,6 @@ export default function SearchCommand() {
           )}
         </CommandList>
       </CommandDialog>
-    </>
+    </div>
   );
 }

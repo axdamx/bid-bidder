@@ -244,20 +244,20 @@ export async function checkBidAcknowledgmentAction(
 export async function fetchItem(itemId: string) {
   const { data: item } = await supabase
     .from("items")
-    .select("*, images (*)")
+    .select("*, images (*), users!items_userId_fkey (*)") // Added users relation
     .eq("id", parseInt(itemId))
     .single();
   return item;
 }
 
-export async function fetchItemUser(userId: string) {
-  const { data: itemUser } = await supabase
-    .from("users")
-    .select("*")
-    .eq("id", userId)
-    .single();
-  return itemUser;
-}
+// export async function fetchItemUser(userId: string) {
+//   const { data: itemUser } = await supabase
+//     .from("users")
+//     .select("*")
+//     .eq("id", userId)
+//     .single();
+//   return itemUser;
+// }
 
 export async function fetchBids(itemId: string) {
   const { data: bids = [] } = await supabase
