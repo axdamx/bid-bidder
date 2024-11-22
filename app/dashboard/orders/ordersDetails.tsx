@@ -50,6 +50,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import Link from "next/link";
 
 // Extended mock data
 
@@ -165,7 +166,7 @@ export default function OrderDetails() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {orders?.map((order: Order) => (
+              {currentOrders?.map((order: Order) => (
                 <TableRow key={order.id}>
                   <TableCell className="font-medium">{order.id}</TableCell>
                   <TableCell>{order.item.name}</TableCell>
@@ -202,9 +203,12 @@ export default function OrderDetails() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => setSelectedOrder(order)}
+                          onClick={() => console.log(order.itemId)}
                         >
-                          View Details
+                          {/* <Link href={`/items/${order.itemId}`}>View Item</Link> */}
+                          <Link href={`/checkout/${order.itemId}`}>
+                            View Item
+                          </Link>
                         </Button>
                       </SheetTrigger>
                       {/* Update your SheetContent to use the new Order type */}
@@ -217,8 +221,10 @@ export default function OrderDetails() {
         </div>
 
         {/* Mobile view */}
-        <div className="md:hidden">
-          {orders?.map((order: Order) => (
+        <div className="md:hidden overflow-y-auto max-h-[400px]">
+          {" "}
+          {/* Set max height and enable vertical scrolling */}
+          {currentOrders?.map((order: Order) => (
             <div key={order.id} className="border-b p-4 space-y-3">
               <div className="flex justify-between items-start">
                 <div>
@@ -278,7 +284,9 @@ export default function OrderDetails() {
           ))}
         </div>
         {totalPages > 1 && (
-          <Pagination className="justify-center">
+          <Pagination className="justify-center p-4">
+            {" "}
+            {/* Added padding to the pagination */}
             <PaginationContent>
               <PaginationItem>
                 <PaginationPrevious

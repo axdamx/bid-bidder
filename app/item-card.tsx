@@ -71,6 +71,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, user }) => {
         </div>
       </CardContent>
       <div className="mt-auto p-4 pt-0">
+        {isItemEnded.toString()}
         <div className="text-center mb-4">
           {!isItemEnded && (
             <p className="text-sm text-muted-foreground mb-1">Ends in</p>

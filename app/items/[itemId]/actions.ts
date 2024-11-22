@@ -301,6 +301,11 @@ export async function createOrderAction(
     return null; // Order already exists, no need to create a new one
   }
 
+  console.log("Apa ni, itemId", itemId);
+  console.log("Apa ni, userId", userId);
+  console.log("Apa ni, finalBidAmount", finalBidAmount);
+  console.log("Apa ni, sellerId", sellerId);
+
   try {
     const { data: order, error } = await supabase
       .from("orders")

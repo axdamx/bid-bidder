@@ -16,7 +16,7 @@ import {
   updateBidAcknowledgmentAction,
   updateItemStatus,
 } from "./actions";
-import { formatDistance } from "date-fns";
+import { differenceInDays, format, formatDistance } from "date-fns";
 import { io } from "socket.io-client";
 import {
   Table,
@@ -90,6 +90,17 @@ function formatCurrency(value: number) {
   }).format(value);
 
   return formattedValue;
+}
+
+function getDateInfo(dateString: string) {
+  const targetDate = new Date(dateString);
+  const formattedDate = format(targetDate, "MMMM d, yyyy"); // Format the date
+  const formattedTime = format(targetDate, "hh:mm a"); // Format the time (12-hour format)
+
+  return {
+    formattedDate,
+    formattedTime,
+  };
 }
 type ModalView = "log-in" | "sign-up" | "forgot-password";
 export default function AuctionItem({
@@ -203,6 +214,9 @@ export default function AuctionItem({
       console.error("Failed to create order:", error);
       toast.error("Failed to create order. Please contact support.");
     },
+    onSuccess: (payload) => {
+      console.log("Apa ni, masuktak", payload);
+    },
   });
 
   const handleDisclaimerConfirm = () => {
@@ -248,11 +262,27 @@ export default function AuctionItem({
 
   //   setShowWinnerModal(true);
   // }, [bids, userId, item.id, highestBid]);
+  // console.log("Bids:", bids);
+  // console.log("Checking auction end conditions...");
+  // console.log("Bids:", bids);
+  // console.log("User ID:", userId);
 
   const handleAuctionEnd = useCallback(() => {
-    if (bids.length > 0 && bids[0].userId === userId) {
-      createOrder();
+    // console.log("Checking auction end conditions...");
+    // console.log("Bids:", bids);
+    // console.log("User ID:", userId);
+
+    // if (isWinner) {
+    //   console.log("User is the winner, creating order...");
+    //   createOrder(); // Ensure this is being called
+    // } else {
+    //   console.log("User is not the winner or no bids placed.");
+    // }
+    console.log("Checking auction end conditions...", orderExists);
+    if (orderExists) {
+      return; // Do not show any modal if the user has an order
     }
+
     setShowWinnerModal(true);
   }, [bids, userId, createOrder]);
 
@@ -261,12 +291,17 @@ export default function AuctionItem({
     queryFn: () => checkExistingOrder(item.id, userId),
     enabled: !!userId && isBidOver && isWinner, // Only run query if user is winner and auction is over
   });
+
   const { mutate: updateItemStatusMutate, isPending: isUpdating } = useMutation(
     {
       mutationFn: () => updateItemStatus(item.id, userId),
       onError: (error) => {
         console.error("Failed to update item status:", error);
         toast.error("Failed to proceed to checkout. Please try again.");
+      },
+      onSuccess: () => {
+        console.log("we sure only winner can see this flow, so ");
+        createOrder(); // Ensure this is being called
       },
     }
   );
@@ -368,6 +403,10 @@ export default function AuctionItem({
       setShowWinnerModal(true);
     }
   }, [isBidOver, hasBids]);
+
+  const dateInfo = getDateInfo(item.endDate + "Z");
+  // console.log(`Date: ${dateInfo.formattedDate}`); // Output the formatted date
+  // console.log(`Days remaining: ${dateInfo.formattedTime}`); // Output the number of days remaining
 
   const NoWinnerDialog = () => (
     <>
@@ -597,6 +636,11 @@ export default function AuctionItem({
                 <div className="break-words">
                   <p className="text-sm text-muted-foreground">Total Bids</p>
                   <p className="text-lg">{bids.length}</p>
+                </div>
+                <div className="break-words">
+                  <p className="text-sm text-muted-foreground">End Date</p>
+                  <p className="text-lg">{dateInfo.formattedDate}</p>
+                  <p className="text-lg">{dateInfo.formattedTime}</p>
                 </div>
               </div>
               <div>

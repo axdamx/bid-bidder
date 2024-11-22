@@ -83,19 +83,19 @@ const HeroSection = () => {
               <p className="text-2xl font-bold text-red-500">
                 <AnimatedNumber end={50} />
               </p>
-              <p className="text-gray-600">Artwork</p>
+              <p className="text-gray-600">Listings</p>
             </div>
             <div>
               <p className="text-2xl font-bold text-red-500">
                 <AnimatedNumber end={30} />
               </p>
-              <p className="text-gray-600">Artist</p>
+              <p className="text-gray-600">Users</p>
             </div>
             <div>
               <p className="text-2xl font-bold text-red-500">
                 <AnimatedNumber end={20} />
               </p>
-              <p className="text-gray-600">Auction</p>
+              <p className="text-gray-600">Bids Placed</p>
             </div>
           </div>
         </div>
