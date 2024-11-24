@@ -671,11 +671,11 @@ export default function AuctionItem({
                   </Button>
                 )}
               </div>
-              <div>
+              {/* <div>
                 <p className="text-sm text-muted-foreground">
                   Connected users: {userCount}
                 </p>
-              </div>
+              </div> */}
               <CountdownTimer
                 endDate={item.endDate}
                 onExpire={handleAuctionEnd}

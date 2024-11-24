@@ -32,7 +32,7 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={cn(
-          "min-h-screen text-large md:text-xl font-serif tracking-wide overflow-x-hidden",
+          "min-h-screen text-large md:text-xl font-serif tracking-wide overflow-x-hidden bg-gradient-to-r from-orange-100 via-white to-pink-100",
           fontSans.variable
         )}
       >

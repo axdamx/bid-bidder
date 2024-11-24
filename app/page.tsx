@@ -45,7 +45,7 @@ export default function Home() {
           <TopBids />
         </Suspense> */}
 
-        <CategoryCarousell />
+        {/* <CategoryCarousell /> */}
 
         {/* Live Auctions - Featured Section */}
         <section className="container px-4 md:px-6">
