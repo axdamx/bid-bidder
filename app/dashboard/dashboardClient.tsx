@@ -229,7 +229,7 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
   };
 
   const SidebarContent = () => (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full rounded-xl">
       <div className="p-4 border-b">
         <div className="flex items-center gap-4 mb-2">
           <Avatar className="h-10 w-10">
@@ -283,11 +283,11 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
   );
 
   return (
-    <div className="flex max-h-screen bg-gray-100">
+    <div className="flex max-h-screen py-6">
       {/* Desktop Sidebar */}
       <aside
         className={cn(
-          "hidden md:flex flex-col border-r bg-white overflow-hidden", // Added overflow-hidden
+          "hidden md:flex flex-col bg-white overflow-hidden rounded-xl", // Added overflow-hidden
           isSidebarOpen ? "w-64" : "w-16"
         )}
       >
@@ -319,7 +319,7 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
       <main className="flex-1">
         {" "}
         {/* Removed overflow-auto */}
-        <div className="md:hidden flex items-center p-4 border-b bg-background">
+        <div className="md:hidden flex items-center p-4 border-b bg-background rounded-xl">
           <Button
             variant="ghost"
             size="icon"

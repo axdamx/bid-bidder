@@ -42,6 +42,7 @@ export default function CreatePage() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [newItemId, setNewItemId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isFutureListing, setIsFutureListing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [user] = useAtom(userAtom);
 
@@ -53,6 +54,7 @@ export default function CreatePage() {
       // bidInterval: 0,
       description: "",
       images: [],
+      startingDate: "",
     },
   });
 
@@ -108,7 +110,7 @@ export default function CreatePage() {
   };
 
   return (
-    <main className="container mx-auto py-12">
+    <div className="container mx-auto py-12 rounded-xl">
       <Dialog open={showSuccessModal} onOpenChange={setShowSuccessModal}>
         <DialogContent className="[&>button]:hidden">
           <DialogHeader>
@@ -131,7 +133,7 @@ export default function CreatePage() {
       </Dialog>
 
       <MotionGrid>
-        <div className="flex min-h-screen bg-background">
+        <div className="flex min-h-screen">
           <div className="flex-1 space-y-4 p-8 pt-6 overflow-y-auto">
             <Card className="w-full max-w-4xl mx-auto">
               <CardHeader>
@@ -283,6 +285,50 @@ export default function CreatePage() {
                       )}
                     </div>
 
+                    <div className="space-y-4">
+                      {/* Add this checkbox before the other form fields */}
+                      <div className="flex items-center space-x-2">
+                        <Label
+                          htmlFor="futureListing"
+                          className="flex items-center space-x-2 cursor-pointer"
+                        >
+                          <input
+                            type="checkbox"
+                            id="futureListing"
+                            checked={isFutureListing}
+                            onChange={(e) =>
+                              setIsFutureListing(e.target.checked)
+                            }
+                            className="rounded border-gray-300 focus:ring-primary"
+                          />
+                          <span>Schedule for future date</span>
+                        </Label>
+                      </div>
+
+                      {/* Show starting date field only if future listing is selected */}
+                      {isFutureListing && (
+                        <div>
+                          <Label htmlFor="startingDate">
+                            Starting Date & Time
+                          </Label>
+                          <div className="relative">
+                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                            <Input
+                              {...form.register("startingDate")}
+                              type="datetime-local"
+                              className="pl-10"
+                              min={new Date().toISOString().slice(0, 16)}
+                            />
+                          </div>
+                          {errors.startingDate && (
+                            <p className="text-sm text-red-500 mt-1">
+                              {errors.startingDate.message}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
                     <div>
                       <Label htmlFor="endDate">End Date</Label>
                       <div className="relative">
@@ -349,6 +395,6 @@ export default function CreatePage() {
           </div>
         </div>
       </MotionGrid>
-    </main>
+    </div>
   );
 }

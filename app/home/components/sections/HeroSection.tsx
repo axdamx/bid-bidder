@@ -47,7 +47,7 @@ const AnimatedNumber = ({
 
 const HeroSection = () => {
   return (
-    <div className="w-full bg-gradient-to-br from-gray-50 to-gray-150 flex rounded-xl mt-8">
+    <div className="w-full  flex rounded-xl mt-8">
       <div className="mx-auto px-4 py-16 flex flex-col lg:flex-row items-center gap-12">
         {/* Left content */}
         <div className="flex-1 space-y-8">
