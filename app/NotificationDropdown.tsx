@@ -122,7 +122,13 @@ export function NotificationDropdown() {
                   key={notification.id}
                   className="flex items-start space-x-2"
                 >
-                  <span className="text-blue-500 p-2">•</span>
+                  <span
+                    className={`p-2 ${
+                      notification.read ? "text-red-500" : "text-blue-500"
+                    }`}
+                  >
+                    •
+                  </span>
                   <div>
                     <button
                       onClick={() => handleNotificationClick(notification)}

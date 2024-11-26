@@ -7,7 +7,7 @@ import React, {
   ReactNode,
 } from "react";
 import { Session } from "@supabase/supabase-js";
-import { supabase } from "@/lib/supabase/client"; // Import the singleton instance
+import { supabase } from "@/lib/utils";
 
 type SupabaseContextType = {
   session: Session | null;

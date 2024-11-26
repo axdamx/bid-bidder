@@ -1,11 +1,12 @@
 "use client";
 
 import { createContext, useContext, useEffect, useRef, useState } from "react";
-import { useAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import { RealtimeChannel } from "@supabase/supabase-js";
 import { userAtom } from "../atom/userAtom";
-import { supabase } from "@/lib/utils";
+// import { supabase } from "@/lib/utils";
 import { notificationsAtom, unreadCountAtom } from "../atom/notificationAtom";
+import { createClientSupabase } from "@/lib/supabase/client";
 
 interface NotificationContextType {
   isConnected: boolean;
@@ -24,36 +25,35 @@ export function NotificationProvider({
   const [isConnected, setIsConnected] = useState(false);
   const channelRef = useRef<RealtimeChannel | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
-  const [notifications, setNotifications] = useAtom(notificationsAtom);
-  const [, setUnreadCount] = useAtom(unreadCountAtom);
+  const setNotifications = useSetAtom(notificationsAtom); // Change this line
+  // const setUnreadCount = useSetAtom(unreadCountAtom); // Change this line
   const [user] = useAtom(userAtom);
+  const supabase = createClientSupabase(); // IF QUERY AT CLIENT, USE THIS
 
   const fetchNotifications = async (userId: string) => {
-    if (!user) return;
+    if (!user) {
+      console.log("3. Early return - no user");
+      return;
+    }
 
-    // TODO: query the notifications table for the user
-    console.log("fetching notifications for user ID:", userId);
     try {
       const { data: existingNotifications, error } = await supabase
-        .from("notifications") // Specify the table name
-        .select("*") // Select all columns
-        .eq("userId", userId) // Filter by userId
-        // .order("createdAt", { ascending: false }) // Order by createdAt in descending order
-        .limit(50); // Limit the results to 50
+        .from("notifications")
+        .select("*")
+        .eq("userId", userId)
+        .order("createdAt", { ascending: false })
+        .limit(50);
 
       if (error) {
-        console.error("Error fetching notifications:", error);
+        console.error("6. Error fetching notifications:", error);
         return;
       }
 
-      console.log("Fetched notifications:", existingNotifications);
-
       if (existingNotifications) {
         setNotifications(existingNotifications);
-        // setUnreadCount(existingNotifications.filter((n) => !n.read).length);
       }
     } catch (error) {
-      console.error("Error fetching notifications:", error);
+      console.error("8. Caught error:", error);
     }
   };
 
@@ -106,10 +106,9 @@ export function NotificationProvider({
 
   useEffect(() => {
     if (user) {
-      fetchNotifications(user.id); // Fetch notifications on login
+      fetchNotifications(user.id);
       setupChannel();
     } else {
-      // Clear notifications and reset connection on logout
       setNotifications([]);
       setIsConnected(false);
       if (channelRef.current) {

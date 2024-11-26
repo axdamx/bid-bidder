@@ -83,7 +83,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, user }) => {
           variant={isItemEnded ? "secondary" : "default"}
         >
           <Link href={`/items/${item.id}`}>
-            {isItemEnded ? "View Details" : "Place Bid"}
+            {isItemEnded ? "View Details" : "Enter Listing"}
           </Link>
         </Button>
       </div>

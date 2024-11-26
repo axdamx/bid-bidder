@@ -203,7 +203,7 @@ export function LiveAuctions() {
 
   return (
     <ItemCarousel
-      items={items}
+      items={items.slice(0, 5)}
       isLoading={isLoading}
       title="Live Auctions"
       description="Bid on active auctions"
