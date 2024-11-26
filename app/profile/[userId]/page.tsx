@@ -40,6 +40,10 @@ export default function ProfilePage({
   const [userQuery, followDataQuery, ownedItemsQuery] = queries;
   const isLoading = queries.some((query) => query.isLoading);
 
+  console.log("followDataQuery", followDataQuery.data);
+  console.log("userQuery", userQuery.data);
+  console.log("ownedItemsQuery", ownedItemsQuery.data);
+
   if (isLoading) {
     return <SkeletonLoaderProfile />;
   }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Card,
   CardContent,
@@ -16,8 +16,7 @@ import {
   updateBidAcknowledgmentAction,
   updateItemStatus,
 } from "./actions";
-import { differenceInDays, format, formatDistance } from "date-fns";
-import { io } from "socket.io-client";
+import { format, formatDistance } from "date-fns";
 import {
   Table,
   TableBody,
@@ -46,16 +45,12 @@ import {
 import toast, { Toaster } from "react-hot-toast";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import ItemImage from "./image-component";
 import { CldImage } from "next-cloudinary";
 import Lightbox from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
 import AuthModals from "@/app/components/AuthModal";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ChatComponent from "./components/ChatComponents";
-import { useSupabase } from "@/app/context/SupabaseContext";
-import { getUserById } from "@/app/action";
-import ChatComponentV2 from "./components/ChatComponentsV2";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createClientSupabase } from "@/lib/supabase/client";
 import { userAtom } from "@/app/atom/userAtom";
@@ -128,13 +123,12 @@ export default function AuctionItem({
   const [authModalView, setAuthModalView] = useState<ModalView>("log-in");
   // const [currentUserData, setCurrentUserData] = useState(null);
   const router = useRouter();
-  const supabase = createClientSupabase();
-  const queryClient = useQueryClient();
 
   // const { session } = useSupabase();
   // const currentSessionUserId = session?.user?.id;
   const [user] = useAtom(userAtom); // winner id
 
+  const isOwner = item.users.id === userId;
   const images = item.images.map((img: { publicId: string }) => img.publicId);
   const latestBidderName = bids.length > 0 && bids[0].users.name;
   const isWinner = bids.length > 0 && bids[0].userId === userId;
@@ -694,7 +688,7 @@ export default function AuctionItem({
                   </Button>
                 </form>
               )} */}
-              {!isBidOver && (
+              {!isBidOver && !isOwner && (
                 <Button
                   className="w-full"
                   disabled={isWinner || isPending}

@@ -2,6 +2,7 @@
 import { getUserById } from "@/app/action";
 import { createClientSupabase } from "@/lib/supabase/client";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { supabase } from "@/lib/utils";
 // import { getUserById } from "@/app/action";
 // import { database } from "@/src/db/database";
 // import { follows, items, users } from "@/src/db/schema";
@@ -19,244 +20,13 @@ export type NotificationFollower = {
   name: string | null;
 };
 
-// // Follow actions
-// export async function followUser(followerId: string, followingId: string) {
-//   try {
-//     await database.insert(follows).values({
-//       followerId,
-//       followingId,
-//     });
-//     revalidatePath(`/profile/${followingId}`);
-//     return { success: true };
-//   } catch (error) {
-//     return { success: false, error };
-//   }
-// }
-
-// export async function unfollowUser(followerId: string, followingId: string) {
-//   try {
-//     await database
-//       .delete(follows)
-//       .where(
-//         and(
-//           eq(follows.followerId, followerId),
-//           eq(follows.followingId, followingId)
-//         )
-//       );
-//     revalidatePath(`/profile/${followingId}`);
-//     return { success: true };
-//   } catch (error) {
-//     return { success: false, error };
-//   }
-// }
-
-// export async function getFollowStatus(
-//   followerId: string | null,
-//   followingId: string
-// ) {
-//   if (!followerId) return { isFollowing: false };
-
-//   try {
-//     const result = await database
-//       .select()
-//       .from(follows)
-//       .where(
-//         and(
-//           eq(follows.followerId, followerId),
-//           eq(follows.followingId, followingId)
-//         )
-//       );
-//     return { isFollowing: result.length > 0 };
-//   } catch (error) {
-//     return { isFollowing: false, error };
-//   }
-// }
-
-// export async function getFollowCounts(userId: string) {
-//   try {
-//     const followers = await database
-//       .select()
-//       .from(follows)
-//       .where(eq(follows.followingId, userId));
-
-//     const following = await database
-//       .select()
-//       .from(follows)
-//       .where(eq(follows.followerId, userId));
-
-//     return {
-//       followersCount: followers.length,
-//       followingCount: following.length,
-//     };
-//   } catch (error) {
-//     return { followersCount: 0, followingCount: 0, error };
-//   }
-// }
-
-// // Notification actions
-// export async function getFollowersForNotification(
-//   authorId: string
-// ): Promise<NotificationFollower[]> {
-//   try {
-//     const followers = await database
-//       .select({
-//         id: users.id,
-//         email: users.email,
-//         name: users.name,
-//       })
-//       .from(follows)
-//       .innerJoin(users, eq(users.id, follows.followerId))
-//       .where(eq(follows.followingId, authorId));
-
-//     return followers.map((follower) => ({
-//       id: follower.id,
-//       email: follower.email ?? "", // Use the nullish coalescing operator to provide a default value for email
-//       name: follower.name,
-//     }));
-//   } catch (error) {
-//     console.error("Error fetching followers for notification:", error);
-//     return [];
-//   }
-// }
-
-// // Create item with notification
-// interface CreateItemData {
-//   name: string;
-//   startingPrice: number;
-//   bidInterval: number;
-//   endDate: Date;
-//   description?: string;
-//   imageId?: string;
-// }
-
-// export async function createItemWithNotification(
-//   userId: string,
-//   data: CreateItemData
-// ) {
-//   try {
-//     // 1. Create the item
-//     const [newItem] = await database
-//       .insert(items)
-//       .values({
-//         userId,
-//         name: data.name,
-//         startingPrice: data.startingPrice,
-//         currentBid: 0,
-//         bidInterval: data.bidInterval,
-//         endDate: data.endDate,
-//         description: data.description,
-//         imageId: data.imageId,
-//         status: "active",
-//       })
-//       .returning();
-
-//     // 2. Get all followers
-//     const followers = await getFollowersForNotification(userId);
-
-//     // 3. Send email notifications (implement your email service)
-//     await notifyFollowers({
-//       followers,
-//       item: newItem,
-//       authorId: userId,
-//     });
-
-//     revalidatePath("/items");
-//     revalidatePath(`/profile/${userId}`);
-
-//     return { success: true, item: newItem };
-//   } catch (error) {
-//     console.error("Error in createItemWithNotification:", error);
-//     return { success: false, error };
-//   }
-// }
-
-// async function notifyFollowers({
-//   followers,
-//   item,
-//   authorId,
-// }: {
-//   followers: NotificationFollower[];
-//   item: any; // Replace with your item type
-//   authorId: string;
-// }) {
-//   // Implement your email service here
-//   // Example with resend:
-//   // const resend = new Resend('re_123456789');
-
-//   try {
-//     // Get author name
-//     const [author] = await database
-//       .select({
-//         name: users.name,
-//       })
-//       .from(users)
-//       .where(eq(users.id, authorId));
-
-//     for (const follower of followers) {
-//       // Example email structure
-//       const emailContent = {
-//         to: follower.email,
-//         subject: `New Auction Item: ${item.name}`,
-//         content: `
-//           Hi ${follower.name},
-
-//           ${author.name} just listed a new item for auction!
-
-//           Item: ${item.name}
-//           Starting Price: $${item.startingPrice}
-//           Ends: ${new Date(item.endDate).toLocaleDateString()}
-
-//           Don't miss out on this exciting auction!
-//         `,
-//       };
-
-//       // Send email using your service
-//       // await resend.emails.send({
-//       //   from: "Auction Site <noreply@yourdomain.com>",
-//       //   to: emailContent.to,
-//       //   subject: emailContent.subject,
-//       //   text: emailContent.content
-//       // });
-
-//       console.log("Would send email:", emailContent);
-//     }
-//   } catch (error) {
-//     console.error("Error sending notifications:", error);
-//     throw error;
-//   }
-// }
-
-// export const getItemsByUserId = cache(async (userId: string) => {
-//   try {
-//     // Query items filtering by userId
-//     const userItems = await database.query.items.findMany({
-//       where: eq(items.userId, userId),
-//     });
-
-//     // Fetch user details for these items
-//     const itemsWithUser = await Promise.all(
-//       userItems.map(async (item) => ({
-//         ...item,
-//         user: await getUserById(item.userId),
-//       }))
-//     );
-
-//     return { ownedItems: itemsWithUser, error: null };
-//   } catch (error) {
-//     console.error(`Error fetching items for user ${userId}:`, error);
-//     return {
-//       ownedItems: [],
-//       error: `Failed to fetch items for user ${userId}`,
-//     };
-//   }
-// });
-// ... existing imports ...
-
 // Follow actions
 export async function followUser(followerId: string, followingId: string) {
   try {
     // const supabase = createClientSupabase();
-    const supabase = createServerSupabase();
+    // const supabase = createServerSupabase();
+    console.log("🚀 ~ followUser ~ followerId:", followerId);
+    console.log("🚀 ~ followUser ~ followingId:", followingId);
     const { error } = await supabase
       .from("follows")
       .insert([{ followerId, followingId }]);
@@ -266,6 +36,7 @@ export async function followUser(followerId: string, followingId: string) {
     revalidatePath(`/profile/${followingId}`);
     return { success: true };
   } catch (error) {
+    console.error("Error following user:", error);
     return { success: false, error };
   }
 }
@@ -273,7 +44,7 @@ export async function followUser(followerId: string, followingId: string) {
 export async function unfollowUser(followerId: string, followingId: string) {
   try {
     // const supabase = createClientSupabase();
-    const supabase = createServerSupabase();
+    // const supabase = createServerSupabase();
     const { error } = await supabase
       .from("follows")
       .delete()
@@ -284,6 +55,7 @@ export async function unfollowUser(followerId: string, followingId: string) {
     revalidatePath(`/profile/${followingId}`);
     return { success: true };
   } catch (error) {
+    console.error("Error unfollowing user:", error);
     return { success: false, error };
   }
 }
@@ -296,7 +68,7 @@ export async function getFollowStatus(
 
   try {
     // const supabase = createClientSupabase();
-    const supabase = createServerSupabase();
+    // const supabase = createServerSupabase();
     const { data, error } = await supabase
       .from("follows")
       .select("*")
@@ -306,6 +78,7 @@ export async function getFollowStatus(
 
     return { isFollowing: data.length > 0 };
   } catch (error) {
+    console.error("Error fetching follow status:", error);
     return { isFollowing: false, error };
   }
 }
@@ -313,7 +86,7 @@ export async function getFollowStatus(
 export async function getFollowCounts(userId: string) {
   try {
     // const supabase = createClientSupabase();
-    const supabase = createServerSupabase();
+    // const supabase = createServerSupabase();
     const { data: followers, error: followersError } = await supabase
       .from("follows")
       .select("*")
@@ -332,6 +105,7 @@ export async function getFollowCounts(userId: string) {
       followingCount: following.length,
     };
   } catch (error) {
+    console.error("Error fetching follow counts:", error);
     return { followersCount: 0, followingCount: 0, error };
   }
 }
@@ -342,7 +116,7 @@ export async function getFollowersForNotification(
 ): Promise<NotificationFollower[]> {
   try {
     // const supabase = createClientSupabase();
-    const supabase = createServerSupabase();
+    // const supabase = createServerSupabase();
     const { data, error } = await supabase
       .from("follows")
       .select("users(id, email, name)")
@@ -370,7 +144,7 @@ export async function createItemWithNotification(
   try {
     // const supabase = createClientSupabase();
     // 1. Create the item
-    const supabase = createServerSupabase();
+    // const supabase = createServerSupabase();
     const { data: newItem, error: itemError } = await supabase
       .from("items")
       .insert([
@@ -413,7 +187,7 @@ export async function createItemWithNotification(
 export const getItemsByUserId = cache(async (userId: string) => {
   try {
     // const supabase = createClientSupabase();
-    const supabase = createServerSupabase();
+    // const supabase = createServerSupabase();
     const { data: userItems, error } = await supabase
       .from("items")
       .select("*")
@@ -441,7 +215,7 @@ export const getItemsByUserId = cache(async (userId: string) => {
 
 export async function fetchUser(userId: string) {
   // const supabase = createClientSupabase();
-  const supabase = createServerSupabase();
+  // const supabase = createServerSupabase();
   const { data: user, error } = await supabase
     .from("users")
     .select("*")

@@ -1,11 +1,11 @@
 "use client";
+
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useAtom } from "jotai";
-import { useSupabase } from "./SupabaseContext";
 import { RealtimeChannel } from "@supabase/supabase-js";
 import { userAtom } from "../atom/userAtom";
 import { supabase } from "@/lib/utils";
-import { notificationsAtom } from "../atom/notificationAtom";
+import { notificationsAtom, unreadCountAtom } from "../atom/notificationAtom";
 
 interface NotificationContextType {
   isConnected: boolean;
@@ -24,64 +24,76 @@ export function NotificationProvider({
   const [isConnected, setIsConnected] = useState(false);
   const channelRef = useRef<RealtimeChannel | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
-  const [, setNotifications] = useAtom(notificationsAtom);
-  //   const { supabase, user } = useSupabase();
+  const [notifications, setNotifications] = useAtom(notificationsAtom);
+  const [, setUnreadCount] = useAtom(unreadCountAtom);
   const [user] = useAtom(userAtom);
+
+  const fetchNotifications = async (userId: string) => {
+    if (!user) return;
+
+    // TODO: query the notifications table for the user
+    console.log("fetching notifications for user ID:", userId);
+    try {
+      const { data: existingNotifications, error } = await supabase
+        .from("notifications") // Specify the table name
+        .select("*") // Select all columns
+        .eq("userId", userId) // Filter by userId
+        // .order("createdAt", { ascending: false }) // Order by createdAt in descending order
+        .limit(50); // Limit the results to 50
+
+      if (error) {
+        console.error("Error fetching notifications:", error);
+        return;
+      }
+
+      console.log("Fetched notifications:", existingNotifications);
+
+      if (existingNotifications) {
+        setNotifications(existingNotifications);
+        // setUnreadCount(existingNotifications.filter((n) => !n.read).length);
+      }
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+    }
+  };
 
   const setupChannel = async () => {
     if (!user || channelRef.current) return;
 
-    try {
-      // Fetch initial notifications
-      const { data: existingNotifications } = await supabase
-        .from("notifications")
-        .select("*")
-        .eq("userId", user.id)
-        .order("createdAt", { ascending: false })
-        .limit(50); // Limit the initial fetch
-
-      if (existingNotifications) {
-        setNotifications(existingNotifications);
-      }
-
-      // Set up real-time channel
-      channelRef.current = supabase
-        .channel(`notifications:${user.id}`)
-        .on(
-          "postgres_changes",
-          {
-            event: "INSERT",
-            schema: "public",
-            table: "notifications",
-            filter: `userId=eq.${user.id}`,
-          },
-          (payload) => {
-            setNotifications((prev) => [payload.new, ...prev]);
-          }
-        )
-        .on("presence", { event: "sync" }, () => {
-          setIsConnected(true);
-        })
-        .on("presence", { event: "join" }, () => {
-          setIsConnected(true);
-        })
-        .on("presence", { event: "leave" }, () => {
-          setIsConnected(false);
-        });
-
-      await channelRef.current.subscribe(async (status) => {
-        if (status === "SUBSCRIBED") {
-          setIsConnected(true);
-        } else if (status === "CLOSED") {
-          setIsConnected(false);
-          // Attempt to reconnect after a delay
-          reconnectTimeoutRef.current = setTimeout(reconnect, 5000);
+    // Set up real-time channel
+    channelRef.current = supabase
+      .channel(`notifications:${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `userId=eq.${user.id}`,
+        },
+        (payload) => {
+          setNotifications((prev) => [payload.new, ...prev]);
+          // setUnreadCount((prev) => prev + 1);
         }
+      )
+      .on("presence", { event: "sync" }, () => {
+        setIsConnected(true);
+      })
+      .on("presence", { event: "join" }, () => {
+        setIsConnected(true);
+      })
+      .on("presence", { event: "leave" }, () => {
+        setIsConnected(false);
       });
-    } catch (error) {
-      console.error("Error setting up notification channel:", error);
-      setIsConnected(false);
-    }
+
+    await channelRef.current.subscribe(async (status) => {
+      if (status === "SUBSCRIBED") {
+        setIsConnected(true);
+      } else if (status === "CLOSED") {
+        setIsConnected(false);
+        reconnectTimeoutRef.current = setTimeout(reconnect, 5000);
+      }
+    });
   };
 
   const reconnect = async () => {
@@ -93,7 +105,18 @@ export function NotificationProvider({
   };
 
   useEffect(() => {
-    setupChannel();
+    if (user) {
+      fetchNotifications(user.id); // Fetch notifications on login
+      setupChannel();
+    } else {
+      // Clear notifications and reset connection on logout
+      setNotifications([]);
+      setIsConnected(false);
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
+    }
 
     return () => {
       if (channelRef.current) {
@@ -104,7 +127,7 @@ export function NotificationProvider({
         clearTimeout(reconnectTimeoutRef.current);
       }
     };
-  }, [user?.id]); // Only re-run if user ID changes
+  }, [user?.id]);
 
   return (
     <NotificationContext.Provider value={{ isConnected, reconnect }}>

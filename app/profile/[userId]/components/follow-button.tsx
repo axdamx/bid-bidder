@@ -24,6 +24,7 @@ export function FollowButton({
   const followMutation = useMutation({
     mutationFn: () => followUser(currentUserId!, targetUserId),
     onSuccess: () => {
+      console.log("followMutation onSuccess");
       setIsFollowing(true);
       // Invalidate and refetch relevant queries
       queryClient.invalidateQueries({
@@ -52,6 +53,7 @@ export function FollowButton({
   const handleFollow = async () => {
     if (!currentUserId) return;
 
+    console.log("isFollowing", isFollowing);
     if (isFollowing) {
       unfollowMutation.mutate();
     } else {

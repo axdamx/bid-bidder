@@ -12,6 +12,7 @@ export interface Notification {
 }
 
 export const notificationsAtom = atom<Notification[]>([]);
+
 export const unreadCountAtom = atom((get) => {
   const notifications = get(notificationsAtom);
   return notifications.filter((n) => !n.read).length;

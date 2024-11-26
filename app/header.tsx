@@ -60,14 +60,16 @@ export function Header() {
 
           {/* Right Section: User Controls */}
           <div className="flex items-center gap-4">
-            <NotificationDropdown />
             {user && (
-              <UserAvatar
-                name={user.name!}
-                imageUrl={user.image!}
-                email={user.email!}
-                userId={user.id!}
-              />
+              <>
+                <NotificationDropdown />
+                <UserAvatar
+                  name={user.name!}
+                  imageUrl={user.image!}
+                  email={user.email!}
+                  userId={user.id!}
+                />
+              </>
             )}
 
             {/* Desktop Sign In/Out */}
