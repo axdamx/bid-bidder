@@ -12,6 +12,7 @@ import { useSupabase } from "./context/SupabaseContext";
 import { fetchUser } from "./profile/[userId]/action";
 import { userAtom } from "./atom/userAtom";
 import { useAtom } from "jotai";
+import { NotificationDropdown } from "./NotificationDropdown";
 
 export function Header() {
   const [user] = useAtom(userAtom);
@@ -59,6 +60,7 @@ export function Header() {
 
           {/* Right Section: User Controls */}
           <div className="flex items-center gap-4">
+            <NotificationDropdown />
             {user && (
               <UserAvatar
                 name={user.name!}

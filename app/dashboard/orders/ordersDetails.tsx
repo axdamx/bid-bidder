@@ -338,36 +338,32 @@ export default function OrderDetails() {
     <>
       <LoadingModal isOpen={isUpdating} message="Updating order status..." />
       <div className="max-w-7xl mx-auto p-4 space-y-8">
-        <Card>
+        {/* <Card>
           <CardHeader>
             <CardTitle>Order History</CardTitle>
             <CardDescription>View and manage your orders</CardDescription>
           </CardHeader>
-          <CardContent className="p-0 sm:p-6">
-            <Tabs
-              value={activeTab}
-              onValueChange={setActiveTab}
-              className="w-full"
-            >
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="winning">Winning Orders</TabsTrigger>
-                <TabsTrigger value="selling">Selling Orders</TabsTrigger>
-              </TabsList>
-              <TabsContent value="winning">
-                <OrdersTable
-                  orders={orders?.winningOrders}
-                  showStatusUpdate={false}
-                />
-              </TabsContent>
-              <TabsContent value="selling">
-                <OrdersTable
-                  orders={orders?.sellingOrders}
-                  showStatusUpdate={true}
-                />
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
+          <CardContent className="p-0 sm:p-6"> */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="winning">Winning Orders</TabsTrigger>
+            <TabsTrigger value="selling">Selling Orders</TabsTrigger>
+          </TabsList>
+          <TabsContent value="winning">
+            <OrdersTable
+              orders={orders?.winningOrders}
+              showStatusUpdate={false}
+            />
+          </TabsContent>
+          <TabsContent value="selling">
+            <OrdersTable
+              orders={orders?.sellingOrders}
+              showStatusUpdate={true}
+            />
+          </TabsContent>
+        </Tabs>
+        {/* </CardContent>
+        </Card> */}
       </div>
     </>
   );

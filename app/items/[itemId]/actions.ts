@@ -147,30 +147,30 @@ export async function createBidAction(itemId: number, userId: string) {
     console.error("Error fetching latest bid:", latestBidError);
   }
 
-  // Socket.IO update remains the same
-  try {
-    console.log("Sending bid update to Socket.IO server");
-    const response = await fetch("http://localhost:8082/api/bids", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        itemId,
-        newBid: latestBidValue,
-        bidInfo: latestBid,
-      }),
-    });
+  // // Socket.IO update remains the same
+  // try {
+  //   console.log("Sending bid update to Socket.IO server");
+  //   const response = await fetch("http://localhost:8082/api/bids", {
+  //     method: "POST",
+  //     headers: {
+  //       "Content-Type": "application/json",
+  //     },
+  //     body: JSON.stringify({
+  //       itemId,
+  //       newBid: latestBidValue,
+  //       bidInfo: latestBid,
+  //     }),
+  //   });
 
-    if (!response.ok) {
-      console.error("Failed to send bid update to Socket.IO server");
-    }
+  //   if (!response.ok) {
+  //     console.error("Failed to send bid update to Socket.IO server");
+  //   }
 
-    const result = await response.json();
-    console.log("Socket.IO server response:", result);
-  } catch (error) {
-    console.error("Error sending bid update:", error);
-  }
+  //   const result = await response.json();
+  //   console.log("Socket.IO server response:", result);
+  // } catch (error) {
+  //   console.error("Error sending bid update:", error);
+  // }
 
   revalidatePath(`/items/${itemId}`);
 }

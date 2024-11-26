@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { CldUploadWidget, CldImage } from "next-cloudinary";
 import { createItemAction } from "./actions";
@@ -15,10 +16,8 @@ import {
   Calendar,
   FileText,
   Loader2,
+  X,
 } from "lucide-react";
-import { useForm } from "react-hook-form";
-import { CreateItemFormData, createItemSchema } from "@/src/db/schema";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import {
   Dialog,
@@ -27,9 +26,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { MotionGrid } from "@/app/components/motionGrid";
-import { useSupabase } from "@/app/context/SupabaseContext";
-import { userAtom } from "@/app/atom/userAtom";
 import { useAtom } from "jotai";
+import { userAtom } from "@/app/atom/userAtom";
+import { CreateItemFormData, createItemSchema } from "@/src/db/schema";
+import { DateTimePicker } from "./components/DateTimePicker";
 
 type UploadResult = {
   info: { public_id: string };
@@ -42,32 +42,32 @@ export default function CreatePage() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [newItemId, setNewItemId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isFutureListing, setIsFutureListing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [user] = useAtom(userAtom);
+  const [isNavigating, setIsNavigating] = useState(false); // Add this line near other state declarations
 
-  const form = useForm<CreateItemFormData>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isValid },
+    setValue,
+    reset,
+    trigger, // Add this
+  } = useForm<CreateItemFormData>({
     resolver: zodResolver(createItemSchema),
     defaultValues: {
       name: "",
-      // startingPrice: 0,
-      // bidInterval: 0,
       description: "",
       images: [],
-      startingDate: "",
     },
   });
-
-  const {
-    formState: { errors, isValid },
-  } = form;
 
   const onSubmit = async (data: CreateItemFormData) => {
     setIsSubmitting(true);
     setError(null);
 
     if (imageIds.length === 0) {
-      form.setError("images", { message: "At least one image is required" });
+      setValue("images", [], { shouldValidate: true });
       setIsSubmitting(false);
       return;
     }
@@ -91,8 +91,7 @@ export default function CreatePage() {
       setNewItemId(response.id!);
       setShowSuccessModal(true);
 
-      // Reset form after successful submission
-      form.reset({
+      reset({
         name: "",
         startingPrice: undefined,
         bidInterval: undefined,
@@ -110,7 +109,7 @@ export default function CreatePage() {
   };
 
   return (
-    <div className="container mx-auto py-12 rounded-xl">
+    <div className="container mx-auto p-6">
       <Dialog open={showSuccessModal} onOpenChange={setShowSuccessModal}>
         <DialogContent className="[&>button]:hidden">
           <DialogHeader>
@@ -120,280 +119,237 @@ export default function CreatePage() {
             <p>Your listing has been created successfully.</p>
             <div className="flex justify-center">
               <Button
-                onClick={() => {
+                onClick={async () => {
+                  setIsNavigating(true);
                   setShowSuccessModal(false);
-                  router.push(`/items/${newItemId}`);
+                  await router.push(`/items/${newItemId}`);
                 }}
+                disabled={isNavigating}
               >
-                View Listing
+                {isNavigating ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Redirecting...
+                  </>
+                ) : (
+                  "View Listing"
+                )}
               </Button>
             </div>
           </div>
         </DialogContent>
       </Dialog>
 
+      <Dialog open={isNavigating} modal>
+        <DialogContent className="[&>button]:hidden">
+          <div className="flex flex-col items-center justify-center space-y-4">
+            <Loader2 className="h-8 w-8 animate-spin" />
+            <p>Redirecting to your listing...</p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <MotionGrid>
-        <div className="flex min-h-screen">
-          <div className="flex-1 space-y-4 p-8 pt-6 overflow-y-auto">
-            <Card className="w-full max-w-4xl mx-auto">
-              <CardHeader>
-                <CardTitle className="text-3xl font-bold text-center">
-                  Add New Listing
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form
-                  onSubmit={form.handleSubmit(onSubmit)}
-                  className="space-y-6"
-                >
-                  <div>
-                    <Label className="text-lg font-medium">
-                      Photos (Max 5)
-                    </Label>
-                    <div className="mt-2">
-                      <CldUploadWidget
-                        uploadPreset="jzhhmoah"
-                        onSuccess={(result) => {
-                          const uploadResult = result as UploadResult;
-                          setImageIds((prev) => {
-                            if (prev.length >= 5) return prev;
-                            const newImageIds = [
-                              ...prev,
-                              uploadResult.info.public_id,
-                            ];
-                            form.setValue("images", newImageIds);
-                            return newImageIds;
-                          });
-                        }}
-                      >
-                        {({ open }) => (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => open()} // Fix: Changed from onClick={(e) => open()}
-                            disabled={imageIds.length >= 5}
-                            className="flex items-center space-x-2"
-                          >
-                            <Camera className="w-4 h-4" />
-                            <span>
-                              {imageIds.length >= 5
-                                ? "Maximum images reached"
-                                : `Upload Photos (${imageIds.length}/5)`}
-                            </span>
-                          </Button>
-                        )}
-                      </CldUploadWidget>
-                    </div>
-
-                    <div
-                      className={`grid gap-4 mt-4 ${
+        <h1 className="text-3xl font-bold text-center mb-8">
+          Create New Listing
+        </h1>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+          <div className="mb-8">
+            <Label className="text-lg font-medium">Photos (Max 5)</Label>
+            <div className="mt-2 space-y-2">
+              <CldUploadWidget
+                uploadPreset="jzhhmoah"
+                onSuccess={(result) => {
+                  const uploadResult = result as UploadResult;
+                  setImageIds((prev) => {
+                    if (prev.length >= 5) return prev;
+                    const newImageIds = [...prev, uploadResult.info.public_id];
+                    setValue("images", newImageIds);
+                    return newImageIds;
+                  });
+                }}
+              >
+                {({ open }) => (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => open()}
+                    disabled={imageIds.length >= 5}
+                    className="w-full"
+                  >
+                    <Camera className="mr-2 h-4 w-4" />
+                    <span>
+                      {imageIds.length >= 5
+                        ? "Maximum images reached"
+                        : `Upload Photos (${imageIds.length}/5)`}
+                    </span>
+                  </Button>
+                )}
+              </CldUploadWidget>
+              <div
+                className={`grid gap-4 mt-4 ${
+                  imageIds.length === 1
+                    ? "grid-cols-1"
+                    : imageIds.length === 2
+                    ? "grid-cols-2"
+                    : "grid-cols-1 md:grid-cols-2"
+                }`}
+              >
+                {imageIds.map((id) => (
+                  <div key={id} className="relative">
+                    <CldImage
+                      width="400"
+                      height="200"
+                      src={id}
+                      alt="Uploaded image"
+                      className={`rounded-lg object-cover w-full ${
                         imageIds.length === 1
-                          ? "grid-cols-1"
+                          ? "min-h-[400px]"
                           : imageIds.length === 2
-                          ? "grid-cols-2"
-                          : "grid-cols-1 md:grid-cols-2"
+                          ? "min-h-[300px]"
+                          : "min-h-[200px]"
                       }`}
-                    >
-                      {imageIds.map((id) => (
-                        <div key={id} className="relative">
-                          <CldImage
-                            width="400"
-                            height="200"
-                            src={id}
-                            alt="Uploaded image"
-                            className={`rounded-lg object-cover w-full ${
-                              imageIds.length === 1
-                                ? "min-h-[400px]"
-                                : imageIds.length === 2
-                                ? "min-h-[300px]"
-                                : "min-h-[200px]"
-                            }`}
-                          />
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="sm"
-                            className="absolute top-2 right-2"
-                            onClick={() => {
-                              setImageIds((prev) =>
-                                prev.filter((imgId) => imgId !== id)
-                              );
-                              form.setValue(
-                                "images",
-                                imageIds.filter((imgId) => imgId !== id)
-                              );
-                            }}
-                          >
-                            Remove
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="name">Listing Name</Label>
-                      <Input
-                        {...form.register("name")}
-                        placeholder="Enter listing title"
-                      />
-                      {errors.name && (
-                        <p className="text-sm text-red-500 mt-1">
-                          {errors.name.message}
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <Label htmlFor="startingPrice">Starting Price</Label>
-                      <div className="relative">
-                        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                        <Input
-                          {...form.register("startingPrice", {
-                            valueAsNumber: true,
-                          })}
-                          type="number"
-                          className="pl-10"
-                          placeholder="0.00"
-                        />
-                      </div>
-                      {errors.startingPrice && (
-                        <p className="text-sm text-red-500 mt-1">
-                          {errors.startingPrice.message}
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <Label htmlFor="bidInterval">Bid Interval</Label>
-                      <div className="relative">
-                        <Clock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                        <Input
-                          {...form.register("bidInterval", {
-                            valueAsNumber: true,
-                          })}
-                          type="number"
-                          className="pl-10"
-                          placeholder="Enter bid interval"
-                        />
-                      </div>
-                      {errors.bidInterval && (
-                        <p className="text-sm text-red-500 mt-1">
-                          {errors.bidInterval.message}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="space-y-4">
-                      {/* Add this checkbox before the other form fields */}
-                      <div className="flex items-center space-x-2">
-                        <Label
-                          htmlFor="futureListing"
-                          className="flex items-center space-x-2 cursor-pointer"
-                        >
-                          <input
-                            type="checkbox"
-                            id="futureListing"
-                            checked={isFutureListing}
-                            onChange={(e) =>
-                              setIsFutureListing(e.target.checked)
-                            }
-                            className="rounded border-gray-300 focus:ring-primary"
-                          />
-                          <span>Schedule for future date</span>
-                        </Label>
-                      </div>
-
-                      {/* Show starting date field only if future listing is selected */}
-                      {isFutureListing && (
-                        <div>
-                          <Label htmlFor="startingDate">
-                            Starting Date & Time
-                          </Label>
-                          <div className="relative">
-                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                            <Input
-                              {...form.register("startingDate")}
-                              type="datetime-local"
-                              className="pl-10"
-                              min={new Date().toISOString().slice(0, 16)}
-                            />
-                          </div>
-                          {errors.startingDate && (
-                            <p className="text-sm text-red-500 mt-1">
-                              {errors.startingDate.message}
-                            </p>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    <div>
-                      <Label htmlFor="endDate">End Date</Label>
-                      <div className="relative">
-                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                        <Input
-                          {...form.register("endDate")}
-                          type="datetime-local"
-                          className="pl-10"
-                        />
-                      </div>
-                      {errors.endDate && (
-                        <p className="text-sm text-red-500 mt-1">
-                          {errors.endDate.message}
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <Label htmlFor="description" className="gap-4">
-                        Description
-                      </Label>
-                      <div className="relative">
-                        <FileText className="absolute left-3 top-3 text-gray-400" />
-                        <Textarea
-                          {...form.register("description")}
-                          className="pl-10"
-                          placeholder="Enter detailed description"
-                          rows={5}
-                        />
-                      </div>
-                      {errors.description && (
-                        <p className="text-sm text-red-500 mt-1">
-                          {errors.description.message}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex justify-center">
+                    />
                     <Button
-                      type="submit"
-                      disabled={!isValid || imageIds.length === 0}
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Processing...
-                        </>
-                      ) : (
-                        "Submit Listing"
-                      )}
-                    </Button>
-                    {/* <Button
                       type="button"
                       variant="destructive"
-                      onClick={handleReset}
+                      size="icon"
+                      className="absolute top-1 right-1"
+                      onClick={() => {
+                        setImageIds((prev) =>
+                          prev.filter((imgId) => imgId !== id)
+                        );
+                        setValue(
+                          "images",
+                          imageIds.filter((imgId) => imgId !== id)
+                        );
+                      }}
                     >
-                      Cancel
-                    </Button> */}
+                      <X className="h-4 w-4" />
+                    </Button>
                   </div>
-                </form>
-              </CardContent>
-            </Card>
+                ))}
+              </div>
+            </div>
+            {errors.images && (
+              <p className="text-sm text-red-500 mt-1">
+                {errors.images.message}
+              </p>
+            )}
           </div>
-        </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-6">
+              <div>
+                <Label htmlFor="name">Listing Name</Label>
+                <Input
+                  id="name"
+                  {...register("name")}
+                  placeholder="Enter listing title"
+                />
+                {errors.name && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {errors.name.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="startingPrice">Starting Price</Label>
+                <div className="relative">
+                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <Input
+                    id="startingPrice"
+                    {...register("startingPrice", { valueAsNumber: true })}
+                    type="number"
+                    className="pl-10"
+                    placeholder="0.00"
+                  />
+                </div>
+                {errors.startingPrice && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {errors.startingPrice.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="bidInterval">Bid Interval</Label>
+                <div className="relative">
+                  <Clock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <Input
+                    id="bidInterval"
+                    {...register("bidInterval", { valueAsNumber: true })}
+                    type="number"
+                    className="pl-10"
+                    placeholder="Enter bid interval"
+                  />
+                </div>
+                {errors.bidInterval && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {errors.bidInterval.message}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              <div>
+                <Label htmlFor="endDate">End Date</Label>
+                <div className="relative">
+                  <DateTimePicker
+                    onChange={(date: Date | undefined) => {
+                      setValue("endDate", date ? date.toISOString() : "", {
+                        shouldValidate: true,
+                      });
+                      trigger(); // Add this to re-validate the form
+                    }}
+                  />
+                </div>
+                {errors.endDate && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {errors.endDate.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="description">Description</Label>
+                <div className="relative">
+                  <FileText className="absolute left-3 top-3 text-gray-400" />
+                  <Textarea
+                    id="description"
+                    {...register("description")}
+                    className="pl-10"
+                    placeholder="Enter detailed description"
+                    rows={6}
+                  />
+                </div>
+                {errors.description && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {errors.description.message}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-center">
+            <Button
+              type="submit"
+              disabled={!isValid || imageIds.length === 0 || isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                "Submit Listing"
+              )}
+            </Button>
+          </div>
+        </form>
       </MotionGrid>
     </div>
   );

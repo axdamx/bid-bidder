@@ -741,227 +741,89 @@ export default function PaymentsAndPayouts() {
   };
 
   return (
-    <Card className="w-full max-w-4xl mx-auto">
-      <CardHeader>
-        <CardTitle className="text-2xl">Payments & Payouts</CardTitle>
+    <div className="max-w-4xl mx-auto p-4">
+      {/* <CardHeader> */}
+      {/* <CardTitle className="text-2xl">Payments & Payouts</CardTitle>
         <CardDescription>
           Manage your payment methods and payout preferences
         </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Tabs
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className="space-y-4"
-        >
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="payments">Payments</TabsTrigger>
-            <TabsTrigger value="payouts">Payouts</TabsTrigger>
-          </TabsList>
-          <TabsContent value="payments" className="space-y-4">
-            <div className="grid gap-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold">Your Payment Methods</h3>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="outline">
-                      <PlusCircle className="mr-2 h-4 w-4" />
-                      Add Payment Method
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[425px]">
-                    <DialogHeader>
-                      <DialogTitle>Add Payment Method</DialogTitle>
-                      <DialogDescription>
-                        Enter your card details to add a new payment method.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
+      </CardHeader> */}
+      {/* <CardContent> */}
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="space-y-4"
+      >
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="payments">Payments</TabsTrigger>
+          <TabsTrigger value="payouts">Payouts</TabsTrigger>
+        </TabsList>
+        <TabsContent value="payments" className="space-y-4">
+          <div className="grid gap-4">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold">Your Payment Methods</h3>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Add Payment Method
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                  <DialogHeader>
+                    <DialogTitle>Add Payment Method</DialogTitle>
+                    <DialogDescription>
+                      Enter your card details to add a new payment method.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="cardNumber">Card number</Label>
+                      <Input
+                        id="cardNumber"
+                        placeholder="1234 5678 9012 3456"
+                        value={paymentMethod.cardNumber}
+                        onChange={(e) =>
+                          handlePaymentInputChange("cardNumber", e.target.value)
+                        }
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
                       <div className="grid gap-2">
-                        <Label htmlFor="cardNumber">Card number</Label>
+                        <Label htmlFor="expiration">Expiration</Label>
                         <Input
-                          id="cardNumber"
-                          placeholder="1234 5678 9012 3456"
-                          value={paymentMethod.cardNumber}
+                          id="expiration"
+                          placeholder="MM/YY"
+                          value={paymentMethod.expiration}
                           onChange={(e) =>
                             handlePaymentInputChange(
-                              "cardNumber",
+                              "expiration",
                               e.target.value
                             )
                           }
                         />
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="grid gap-2">
-                          <Label htmlFor="expiration">Expiration</Label>
-                          <Input
-                            id="expiration"
-                            placeholder="MM/YY"
-                            value={paymentMethod.expiration}
-                            onChange={(e) =>
-                              handlePaymentInputChange(
-                                "expiration",
-                                e.target.value
-                              )
-                            }
-                          />
-                        </div>
-                        <div className="grid gap-2">
-                          <Label htmlFor="cvv">CVV</Label>
-                          <Input
-                            id="cvv"
-                            placeholder="123"
-                            value={paymentMethod.cvv}
-                            onChange={(e) =>
-                              handlePaymentInputChange("cvv", e.target.value)
-                            }
-                          />
-                        </div>
-                      </div>
                       <div className="grid gap-2">
-                        <Label htmlFor="country">Country</Label>
-                        <Select
-                          value={paymentMethod.country}
-                          onValueChange={(value) =>
-                            handlePaymentInputChange("country", value)
+                        <Label htmlFor="cvv">CVV</Label>
+                        <Input
+                          id="cvv"
+                          placeholder="123"
+                          value={paymentMethod.cvv}
+                          onChange={(e) =>
+                            handlePaymentInputChange("cvv", e.target.value)
                           }
-                        >
-                          <SelectTrigger id="country">
-                            <SelectValue placeholder="Select a country" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="United Kingdom">
-                              United Kingdom
-                            </SelectItem>
-                            <SelectItem value="United States">
-                              United States
-                            </SelectItem>
-                            <SelectItem value="Canada">Canada</SelectItem>
-                            <SelectItem value="Malaysia">Malaysia</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        />
                       </div>
                     </div>
-                    <DialogFooter>
-                      <Button onClick={handleSavePaymentMethod}>
-                        Save Payment Method
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-              </div>
-              <Card>
-                <CardHeader className="flex flex-row items-center gap-4">
-                  <div className="bg-primary/10 p-2 rounded-full">
-                    <PlayIcon className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <CardTitle>PayPal</CardTitle>
-                    <CardDescription>example@gmail.com</CardDescription>
-                  </div>
-                </CardHeader>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center gap-4">
-                  <div className="bg-primary/10 p-2 rounded-full">
-                    <CreditCard className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <CardTitle>Visa ending in 1234</CardTitle>
-                    <CardDescription>Expires 12/25</CardDescription>
-                  </div>
-                </CardHeader>
-              </Card>
-            </div>
-          </TabsContent>
-          <TabsContent value="payouts" className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold">Your Payout Methods</h3>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button variant="outline">
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Add Payout Method
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[425px]">
-                  <DialogHeader>
-                    <DialogTitle>Add Payout Method</DialogTitle>
-                    <DialogDescription>
-                      Enter your bank account details for payouts.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="grid gap-4 py-4">
                     <div className="grid gap-2">
-                      <Label htmlFor="accountType">Account Type</Label>
+                      <Label htmlFor="country">Country</Label>
                       <Select
-                        value={payoutMethod.accountType}
+                        value={paymentMethod.country}
                         onValueChange={(value) =>
-                          handlePayoutInputChange("accountType", value)
+                          handlePaymentInputChange("country", value)
                         }
                       >
-                        <SelectTrigger id="accountType">
-                          <SelectValue placeholder="Select account type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="checking">Checking</SelectItem>
-                          <SelectItem value="savings">Savings</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="accountNumber">Account Number</Label>
-                      <Input
-                        id="accountNumber"
-                        placeholder="Enter account number"
-                        value={payoutMethod.accountNumber}
-                        onChange={(e) =>
-                          handlePayoutInputChange(
-                            "accountNumber",
-                            e.target.value
-                          )
-                        }
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="routingNumber">Routing Number</Label>
-                      <Input
-                        id="routingNumber"
-                        placeholder="Enter routing number"
-                        value={payoutMethod.routingNumber}
-                        onChange={(e) =>
-                          handlePayoutInputChange(
-                            "routingNumber",
-                            e.target.value
-                          )
-                        }
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="accountHolderName">
-                        Account Holder Name
-                      </Label>
-                      <Input
-                        id="accountHolderName"
-                        placeholder="Enter account holder name"
-                        value={payoutMethod.accountHolderName}
-                        onChange={(e) =>
-                          handlePayoutInputChange(
-                            "accountHolderName",
-                            e.target.value
-                          )
-                        }
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="payoutCountry">Country</Label>
-                      <Select
-                        value={payoutMethod.country}
-                        onValueChange={(value) =>
-                          handlePayoutInputChange("country", value)
-                        }
-                      >
-                        <SelectTrigger id="payoutCountry">
+                        <SelectTrigger id="country">
                           <SelectValue placeholder="Select a country" />
                         </SelectTrigger>
                         <SelectContent>
@@ -978,8 +840,8 @@ export default function PaymentsAndPayouts() {
                     </div>
                   </div>
                   <DialogFooter>
-                    <Button onClick={handleSavePayoutMethod}>
-                      Save Payout Method
+                    <Button onClick={handleSavePaymentMethod}>
+                      Save Payment Method
                     </Button>
                   </DialogFooter>
                 </DialogContent>
@@ -988,18 +850,147 @@ export default function PaymentsAndPayouts() {
             <Card>
               <CardHeader className="flex flex-row items-center gap-4">
                 <div className="bg-primary/10 p-2 rounded-full">
-                  <Building className="h-6 w-6 text-primary" />
+                  <PlayIcon className="h-6 w-6 text-primary" />
                 </div>
                 <div>
-                  <CardTitle>Bank Account (USD)</CardTitle>
-                  <CardDescription>Account ending in 5678</CardDescription>
+                  <CardTitle>PayPal</CardTitle>
+                  <CardDescription>example@gmail.com</CardDescription>
                 </div>
               </CardHeader>
             </Card>
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-      <CardFooter>
+            <Card>
+              <CardHeader className="flex flex-row items-center gap-4">
+                <div className="bg-primary/10 p-2 rounded-full">
+                  <CreditCard className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <CardTitle>Visa ending in 1234</CardTitle>
+                  <CardDescription>Expires 12/25</CardDescription>
+                </div>
+              </CardHeader>
+            </Card>
+          </div>
+        </TabsContent>
+        <TabsContent value="payouts" className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-semibold">Your Payout Methods</h3>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Add Payout Method
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Add Payout Method</DialogTitle>
+                  <DialogDescription>
+                    Enter your bank account details for payouts.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="accountType">Account Type</Label>
+                    <Select
+                      value={payoutMethod.accountType}
+                      onValueChange={(value) =>
+                        handlePayoutInputChange("accountType", value)
+                      }
+                    >
+                      <SelectTrigger id="accountType">
+                        <SelectValue placeholder="Select account type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="checking">Checking</SelectItem>
+                        <SelectItem value="savings">Savings</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="accountNumber">Account Number</Label>
+                    <Input
+                      id="accountNumber"
+                      placeholder="Enter account number"
+                      value={payoutMethod.accountNumber}
+                      onChange={(e) =>
+                        handlePayoutInputChange("accountNumber", e.target.value)
+                      }
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="routingNumber">Routing Number</Label>
+                    <Input
+                      id="routingNumber"
+                      placeholder="Enter routing number"
+                      value={payoutMethod.routingNumber}
+                      onChange={(e) =>
+                        handlePayoutInputChange("routingNumber", e.target.value)
+                      }
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="accountHolderName">
+                      Account Holder Name
+                    </Label>
+                    <Input
+                      id="accountHolderName"
+                      placeholder="Enter account holder name"
+                      value={payoutMethod.accountHolderName}
+                      onChange={(e) =>
+                        handlePayoutInputChange(
+                          "accountHolderName",
+                          e.target.value
+                        )
+                      }
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="payoutCountry">Country</Label>
+                    <Select
+                      value={payoutMethod.country}
+                      onValueChange={(value) =>
+                        handlePayoutInputChange("country", value)
+                      }
+                    >
+                      <SelectTrigger id="payoutCountry">
+                        <SelectValue placeholder="Select a country" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="United Kingdom">
+                          United Kingdom
+                        </SelectItem>
+                        <SelectItem value="United States">
+                          United States
+                        </SelectItem>
+                        <SelectItem value="Canada">Canada</SelectItem>
+                        <SelectItem value="Malaysia">Malaysia</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button onClick={handleSavePayoutMethod}>
+                    Save Payout Method
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center gap-4">
+              <div className="bg-primary/10 p-2 rounded-full">
+                <Building className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <CardTitle>Bank Account (USD)</CardTitle>
+                <CardDescription>Account ending in 5678</CardDescription>
+              </div>
+            </CardHeader>
+          </Card>
+        </TabsContent>
+      </Tabs>
+      {/* </CardContent> */}
+      <CardFooter className="mt-6">
         <p className="text-sm text-muted-foreground">
           All payments are processed securely through our platform. By using our
           services, you agree to our{" "}
@@ -1013,6 +1004,6 @@ export default function PaymentsAndPayouts() {
           .
         </p>
       </CardFooter>
-    </Card>
+    </div>
   );
 }

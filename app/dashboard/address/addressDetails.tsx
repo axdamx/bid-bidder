@@ -468,28 +468,28 @@ const Addresses = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-4">
-      <Card className="mb-8">
-        <CardHeader>
+      {/* <Card className="mb-8"> */}
+      {/* <CardHeader>
           <CardTitle>Manage Addresses</CardTitle>
           <CardDescription>
             Update your shipping and billing addresses
           </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="shipping" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="shipping">Shipping Address</TabsTrigger>
-              <TabsTrigger value="billing">Billing Address</TabsTrigger>
-            </TabsList>
-            <TabsContent value="shipping" className="mt-4">
-              <AddressSection {...addresses.shipping} />
-            </TabsContent>
-            <TabsContent value="billing" className="mt-4">
-              <AddressSection {...addresses.billing} />
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+        </CardHeader> */}
+      <CardContent>
+        <Tabs defaultValue="shipping" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="shipping">Shipping Address</TabsTrigger>
+            <TabsTrigger value="billing">Billing Address</TabsTrigger>
+          </TabsList>
+          <TabsContent value="shipping" className="mt-4">
+            <AddressSection {...addresses.shipping} />
+          </TabsContent>
+          <TabsContent value="billing" className="mt-4">
+            <AddressSection {...addresses.billing} />
+          </TabsContent>
+        </Tabs>
+      </CardContent>
+      {/* </Card> */}
     </div>
   );
 };

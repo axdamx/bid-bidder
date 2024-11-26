@@ -239,37 +239,37 @@ const UserDetailsPage = ({ initialUser }) => {
 
   return (
     <div className="max-w-3xl mx-auto p-4 space-y-4">
-      <Card>
-        <CardHeader>
+      {/* <Card> */}
+      {/* <CardHeader>
           <CardTitle>Profile Settings</CardTitle>
           <CardDescription>
             Manage your account settings and preferences.
           </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="personal" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="personal">Personal</TabsTrigger>
-              <TabsTrigger value="contact">Contact</TabsTrigger>
-            </TabsList>
-            {Object.entries(fieldConfig).map(([key, section]) => (
-              <TabsContent key={key} value={key} className="mt-4">
-                <div className="space-y-2">
-                  <div className="mb-4">
-                    <h3 className="text-lg font-semibold">{section.title}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {section.description}
-                    </p>
-                  </div>
-                  {Object.entries(section.fields).map(([field, config]) => (
-                    <div key={field}>{renderField(field, config)}</div>
-                  ))}
+        </CardHeader> */}
+      <CardContent>
+        <Tabs defaultValue="personal" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="personal">Personal</TabsTrigger>
+            <TabsTrigger value="contact">Contact</TabsTrigger>
+          </TabsList>
+          {Object.entries(fieldConfig).map(([key, section]) => (
+            <TabsContent key={key} value={key} className="mt-4">
+              <div className="space-y-2">
+                <div className="mb-4">
+                  <h3 className="text-lg font-semibold">{section.title}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {section.description}
+                  </p>
                 </div>
-              </TabsContent>
-            ))}
-          </Tabs>
-        </CardContent>
-      </Card>
+                {Object.entries(section.fields).map(([field, config]) => (
+                  <div key={field}>{renderField(field, config)}</div>
+                ))}
+              </div>
+            </TabsContent>
+          ))}
+        </Tabs>
+      </CardContent>
+      {/* </Card> */}
       {renderEditDialog()}
     </div>
   );

@@ -10,6 +10,7 @@ import SessionProvider from "@/lib/supabase/SessionProvider";
 import { Providers } from "./atom/providers";
 import { createStore, Provider } from "jotai";
 import { DevTools } from "jotai-devtools";
+import { NotificationProvider } from "./context/NotificationContext";
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -41,13 +42,15 @@ export default function RootLayout({
           <QueryProvider>
             {/* <SupabaseProvider> */}
             {/* <SessionProvider> */}
-            <Header />
-            <main className="mx-auto max-w-full">
-              <div className="px-4 sm:px-6 w-full max-w-full">
-                {children}
-                <Footer />
-              </div>
-            </main>
+            <NotificationProvider>
+              <Header />
+              <main className="mx-auto max-w-full">
+                <div className="px-4 sm:px-6 w-full max-w-full">
+                  {children}
+                  <Footer />
+                </div>
+              </main>
+            </NotificationProvider>
             {/* </SessionProvider> */}
             {/* </SupabaseProvider> */}
           </QueryProvider>
