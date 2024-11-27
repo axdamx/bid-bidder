@@ -2,12 +2,14 @@
 
 import { auth } from "@/app/auth";
 import { useSupabase } from "@/app/context/SupabaseContext";
-import { supabase } from "@/lib/utils";
+import { createServerSupabase } from "@/lib/supabase/server";
+// import { supabase } from "@/lib/utils";
 import { database } from "@/src/db/database";
 import { bidAcknowledgments, bids, items, users } from "@/src/db/schema";
 import { desc, eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+const supabase = createServerSupabase();
 
 // export async function createBidAction(itemId: number) {
 //   const session = await auth();
@@ -134,18 +136,18 @@ export async function createBidAction(itemId: number, userId: string) {
 
   if (updateError) throw new Error("Failed to update item");
 
-  // Fetch latest bid with user information
-  const { data: latestBid, error: latestBidError } = await supabase
-    .from("bids")
-    .select("*, users (*)")
-    .eq("itemId", itemId)
-    .order("id", { ascending: false })
-    .limit(1)
-    .single();
+  // // Fetch latest bid with user information
+  // const { data: latestBid, error: latestBidError } = await supabase
+  //   .from("bids")
+  //   .select("*, users (*)")
+  //   .eq("itemId", itemId)
+  //   .order("id", { ascending: false })
+  //   .limit(1)
+  //   .single();
 
-  if (latestBidError) {
-    console.error("Error fetching latest bid:", latestBidError);
-  }
+  // if (latestBidError) {
+  //   console.error("Error fetching latest bid:", latestBidError);
+  // }
 
   // // Socket.IO update remains the same
   // try {
@@ -300,11 +302,6 @@ export async function createOrderAction(
   if (orderExists) {
     return null; // Order already exists, no need to create a new one
   }
-
-  console.log("Apa ni, itemId", itemId);
-  console.log("Apa ni, userId", userId);
-  console.log("Apa ni, finalBidAmount", finalBidAmount);
-  console.log("Apa ni, sellerId", sellerId);
 
   try {
     const { data: order, error } = await supabase

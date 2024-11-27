@@ -2,7 +2,7 @@
 import { getUserById } from "@/app/action";
 import { createClientSupabase } from "@/lib/supabase/client";
 import { createServerSupabase } from "@/lib/supabase/server";
-import { supabase } from "@/lib/utils";
+// import { supabase } from "@/lib/utils";
 // import { getUserById } from "@/app/action";
 // import { database } from "@/src/db/database";
 // import { follows, items, users } from "@/src/db/schema";
@@ -19,6 +19,8 @@ export type NotificationFollower = {
   email: string;
   name: string | null;
 };
+
+const supabase = createServerSupabase();
 
 // Follow actions
 export async function followUser(followerId: string, followingId: string) {

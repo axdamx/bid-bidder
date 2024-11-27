@@ -32,6 +32,8 @@ import { Button } from "@/components/ui/button";
 import { CldImage } from "next-cloudinary";
 import { formatTimestamp } from "@/app/items/[itemId]/item-page-client";
 import Link from "next/link";
+import CountdownTimer from "@/app/countdown-timer";
+import { formatCurrency } from "@/lib/utils";
 
 // Expanded mock data for the artwork (20 items)
 const artworks = Array.from({ length: 20 }, (_, i) => ({
@@ -48,15 +50,17 @@ const artworks = Array.from({ length: 20 }, (_, i) => ({
   ).toISOString(),
 }));
 
-export default function ProfileTable({ ownedItems }: { ownedItems: any[] }) {
+export default function ProfileTable(ownedItems) {
   const [view, setView] = React.useState("grid");
   const [searchTerm, setSearchTerm] = React.useState("");
   const [sortOrder, setSortOrder] = React.useState("low");
   const [currentPage, setCurrentPage] = React.useState(1);
   const itemsPerPage = 10;
 
+  console.log("ownedItems", ownedItems);
+
   const filteredAndSortedItems = React.useMemo(() => {
-    return ownedItems
+    return ownedItems.items
       .filter((item) =>
         item.name.toLowerCase().includes(searchTerm.toLowerCase())
       )
@@ -157,15 +161,14 @@ export default function ProfileTable({ ownedItems }: { ownedItems: any[] }) {
                     <div className="p-4">
                       <h3 className="text-lg font-semibold">{item.name}</h3>
                       <p className="text-sm text-gray-500">
-                        Starting: {item.startingPrice.toFixed(2)} ETH
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        Current: {item.currentBid.toFixed(2)} ETH
+                        Current bid: {formatCurrency(item.currentBid)}
                       </p>
                       <p className="text-xs text-gray-400">
-                        {formatTimestamp(item.createdAt)}
+                        Starting Price: {formatCurrency(item.startingPrice)}
+                        {/* {formatTimestamp(item.createdAt)} */}
                         {/* {new Date(item.createdAt).toLocaleString()} */}
                       </p>
+                      <CountdownTimer endDate={item.endDate} />
                     </div>
                   </CardContent>
                 </Card>
@@ -175,6 +178,15 @@ export default function ProfileTable({ ownedItems }: { ownedItems: any[] }) {
         );
     }
   };
+
+  // Update the rendering to handle empty states
+  if (ownedItems.items.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-muted-foreground">No items found</p>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4">

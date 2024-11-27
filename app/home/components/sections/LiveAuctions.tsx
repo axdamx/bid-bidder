@@ -207,7 +207,7 @@ export function LiveAuctions() {
       isLoading={isLoading}
       title="Live Auctions"
       description="Bid on active auctions"
-      viewAllLink="/auctions"
+      viewAllLink="live"
     />
   );
 }

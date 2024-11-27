@@ -1,52 +1,47 @@
-import { database } from "@/src/db/database";
-import ItemCard from "../item-card";
-import { eq } from "drizzle-orm";
-import { items } from "@/src/db/schema";
-import { auth } from "../auth";
-import { EmptyState } from "./empty-state";
-import { getItemsByUserId } from "../profile/[userId]/action";
-import { MotionGrid } from "../components/motionGrid";
+import {
+  getLiveAuctions,
+  getUpcomingAuctions,
+  getEndedAuctions,
+} from "@/app/action";
+import ItemsListingClient from "./components/ItemListingClient";
 
-export default async function MyAuctionPage() {
-  const session = await auth();
+export default async function AuctionsPage({
+  searchParams,
+}: {
+  searchParams: { type?: string };
+}) {
+  // Get the auction type from URL params, default to "live"
+  const type = searchParams.type || "live";
 
-  if (!session || !session.user) {
-    throw new Error("Unauthorized");
+  // Fetch data based on type
+  let items = [];
+  let title = "";
+  let description = "";
+
+  switch (type) {
+    case "live":
+      items = await getLiveAuctions();
+      title = "Live Auctions";
+      description = "Currently active auctions";
+      break;
+    case "upcoming":
+      items = await getUpcomingAuctions();
+      title = "Upcoming Auctions";
+      description = "Auctions starting soon";
+      break;
+    case "ended":
+      items = await getEndedAuctions();
+      title = "Ended Auctions";
+      description = "Past auction results";
+      break;
   }
-
-  const allItems = await database.query.items.findMany({
-    where: eq(items.userId, session.user.id!),
-  });
-
-  const { ownedItems, error } = await getItemsByUserId(session.user.id!);
-  if (error) {
-    // Handle error
-  } else {
-    // Use items
-    // console.log("ownedItems", ownedItems);
-  }
-
-  const hasItems = ownedItems.length > 0;
 
   return (
-    <main className="container mx-auto py-12">
-      <h2 className="text-2xl font-bold mb-4">My Current Auctions</h2>
-      {hasItems ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-8">
-          {ownedItems.map((item, index) => (
-            <MotionGrid
-              key={item.id}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: index * 0.2 }}
-            >
-              <ItemCard key={item.id} item={item} />
-            </MotionGrid>
-          ))}
-        </div>
-      ) : (
-        <EmptyState />
-      )}
-    </main>
+    <ItemsListingClient
+      items={items}
+      title={title}
+      description={description}
+      type={type}
+    />
   );
 }

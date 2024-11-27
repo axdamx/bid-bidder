@@ -1,27 +1,16 @@
 "use server";
 
-// import { supabase } from "@/lib/utils";
-import { database } from "@/src/db/database";
-import { items, users } from "@/src/db/schema";
-import { createClient } from "@supabase/supabase-js";
-import { eq, ilike } from "drizzle-orm";
-
-// export async function getUserById(userId: string) {
-//   if (!userId) return null;
-
-//   return await database.query.users.findFirst({
-//     where: eq(users.id, userId),
-//   });
-// }
-
-// import { database } from "@/src/db/database";
 import { cache } from "react";
 import { signIn, signOut } from "./auth";
-import { createServerSupabase } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { createServerSupabase } from "@/lib/supabase/server";
 // import { supabase } from "@/lib/utils";
+// import { supabase } from "@/lib/utils";
+
+const supabase = createServerSupabase();
+
 export async function getUserById(userId: string) {
-  const supabase = createServerSupabase();
+  // const supabase = createServerSupabase();
   if (!userId) return null;
 
   // const supabase = createServerSupabase(); // Create Supabase client
@@ -45,24 +34,9 @@ export async function getUserById(userId: string) {
   }
 }
 
-// export const getItemsWithUsers = cache(async () => {
-//   try {
-//     const allItems = await database.query.items.findMany();
-//     const itemsWithUsers = await Promise.all(
-//       allItems.map(async (item) => ({
-//         ...item,
-//         user: await getUserById(item.userId),
-//       }))
-//     );
-//     return { items: itemsWithUsers, error: null };
-//   } catch (error) {
-//     console.error("Error fetching items with users:", error);
-//     return { items: [], error: "Failed to fetch items" };
-//   }
-// });
 export const getItemsWithUsers = cache(async () => {
   // const supabase = createServerSupabase(); // Create Supabase client
-  const supabase = createServerSupabase();
+  // const supabase = createServerSupabase();
 
   try {
     const { data: itemsWithUsers, error } = await supabase.from("items")
@@ -84,25 +58,7 @@ export const getItemsWithUsers = cache(async () => {
   }
 });
 
-// export const getLiveAuctions = cache(async () => {
-//   try {
-//     const { data: items, error } = await supabase
-//       .from('items')
-//       .select(`
-//         *,
-//         user:users(*)
-//       `)
-//       .gt('endDate', new Date().toISOString())
-
-//     if (error) throw error
-
-//     return items || []
-//   } catch (error) {
-//     console.error("Error fetching live auctions:", error)
-//     return []
-//   }
-// });
-
+// export const
 export const getLiveAuctions = cache(async () => {
   const { items } = await getItemsWithUsers();
   // console.log('items', items)
@@ -123,82 +79,11 @@ export const getUpcomingAuctions = cache(async (limit: number = 2) => {
   const { items } = await getItemsWithUsers();
   return items.slice(0, limit);
 });
-// export const getEndedAuctions = cache(async (limit:number) => {
-//   try {
-//     const { data: items, error } = await supabase
-//       .from('items')
-//       .select(`
-//         *,
-//         user:users(*)
-//       `)
-//       .lt('endDate', new Date().toISOString())
-//       .limit(limit)
-
-//     if (error) throw error
-
-//     return items || []
-//   } catch (error) {
-//     console.error("Error fetching ended auctions:", error)
-//     return []
-//   }
-// });
-
-// export const getUpcomingAuctions = cache(async (limit: number = 2) => {
-//   try {
-//     const { data: items, error } = await supabase
-//       .from('items')
-//       .select(`
-//         *,
-//         user:users(*)
-//       `)
-//       .gt('endDate', new Date().toISOString())
-//       .order('endDate', { ascending: true })
-//       .limit(limit)
-
-//     if (error) throw error
-
-//     return items || []
-//   } catch (error) {
-//     console.error("Error fetching upcoming auctions:", error)
-//     return []
-//   }
-// });
-
-// export async function searchItems(query: string) {
-//   if (!query) {
-//     return [];
-//   }
-
-//   try {
-//     const searchResults = await database.query.items.findMany({
-//       where: ilike(items.name, `%${query}%`),
-//       limit: 5,
-//       columns: {
-//         id: true,
-//         name: true,
-//         imageId: true,
-//         currentBid: true,
-//       },
-//     });
-
-//     return searchResults.map(item => ({
-//       id: item.id.toString(), // Convert to string since id is serial
-//       name: item.name,
-//       imageUrl: item.imageId ||  null, // You might want to transform this to a full URL if needed
-//       currentBid: item.currentBid
-//     }));
-//   } catch (error) {
-//     console.error('Search error:', error);
-//     return [];
-//   }
-// }
 export async function searchItems(query: string) {
+  // const supabase = createServerSupabase();
   if (!query) {
     return [];
   }
-
-  // const supabase = createServerSupabase(); // Create Supabase client
-  const supabase = createServerSupabase();
 
   try {
     const { data: searchResults, error } = await supabase
@@ -235,7 +120,8 @@ export async function signOutWithGoogle() {
 
 export const handleSignOut = async () => {
   // const supabase = createClientSupabase(); // Use client-side Supabase
-  const supabase = createServerSupabase();
+  // const supabase = createServerSupabase();
+  // const supabase = createServerSupabase();
 
   const { error } = await supabase.auth.signOut();
   if (error) {

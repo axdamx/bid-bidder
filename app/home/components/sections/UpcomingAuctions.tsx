@@ -25,7 +25,7 @@ export function UpcomingAuctions() {
       isLoading={isLoading}
       title="Upcoming Auctions"
       description="View all the upcoming auctions"
-      viewAllLink="/auctions"
+      viewAllLink="upcoming"
     />
   );
 }

@@ -44,7 +44,7 @@ export function EndedAuctions({ limit }: { limit?: number }) {
       isLoading={isLoading}
       title="Ended Auctions"
       description="View all the ended auctions"
-      viewAllLink="/auctions"
+      viewAllLink="ended"
     />
   );
 }

@@ -5,14 +5,17 @@ import { revalidatePath } from "next/cache";
 import { database } from "@/src/db/database";
 import { auth } from "@/app/auth";
 import { redirect } from "next/navigation";
-import { supabase } from "@/lib/utils";
+// import { supabase } from "@/lib/utils";
 import { useSupabase } from "@/app/context/SupabaseContext";
+import { createServerSupabase } from "@/lib/supabase/server";
 
 type CreateItemResponse = {
   success: boolean;
   id?: string;
   error?: string;
 };
+
+const supabase = createServerSupabase();
 
 export async function createItemAction(
   formData: FormData,

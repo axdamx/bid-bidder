@@ -8,12 +8,13 @@ import { Button } from "@/components/ui/button";
 import { useAtom } from "jotai";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
-import { cn, supabase } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatDistanceToNow } from "date-fns";
 import { notificationsAtom, unreadCountAtom } from "./atom/notificationAtom";
 import { useNotifications } from "./context/NotificationContext";
 import { useState } from "react";
+import { createClientSupabase } from "@/lib/supabase/client";
 
 export function NotificationDropdown() {
   const [notifications, setNotifications] = useAtom(notificationsAtom);
@@ -21,6 +22,7 @@ export function NotificationDropdown() {
   const router = useRouter();
   const { isConnected } = useNotifications();
   const [open, setOpen] = useState(false);
+  const supabase = createClientSupabase(); // IF QUERY AT CLIENT, USE THIS
 
   const handleNotificationClick = async (notification: any) => {
     try {
@@ -124,7 +126,7 @@ export function NotificationDropdown() {
                 >
                   <span
                     className={`p-2 ${
-                      notification.read ? "text-red-500" : "text-blue-500"
+                      notification.read ? "text-blue-500" : "text-red-500"
                     }`}
                   >
                     •

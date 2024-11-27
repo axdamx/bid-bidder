@@ -1,8 +1,8 @@
 "use server";
 
-import { supabase } from "@/lib/utils";
+// import { supabase } from "@/lib/utils";
 
-// import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createServerSupabase } from "@/lib/supabase/server";
 
 export type Order = {
   id: number;
@@ -22,6 +22,7 @@ export type Order = {
     image: string;
   };
 };
+const supabase = createServerSupabase();
 
 export async function getOrders(userId: string) {
   //   const supabase = createServerSupabaseClient();

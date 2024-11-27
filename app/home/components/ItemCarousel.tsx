@@ -11,6 +11,7 @@ import ItemCard from "@/app/item-card";
 import { SkeletonCard } from "@/app/home/components/SkeletonLoader";
 import useEmblaCarousel from "embla-carousel-react";
 import { MotionGrid } from "@/app/components/motionGrid";
+import Link from "next/link";
 
 interface Item {
   id: string;
@@ -45,9 +46,12 @@ export function ItemCarousel({
             <h2 className="text-2xl font-bold md:text-3xl">{title}</h2>
             <p className="text-muted-foreground mt-1">{description}</p>
           </div>
-          <a href={viewAllLink} className="text-primary hover:text-primary/80">
+          <Link
+            href={`/auctions?type=${viewAllLink}`}
+            className="text-primary hover:text-primary/80"
+          >
             View all →
-          </a>
+          </Link>
         </div>
 
         <div className="relative">
@@ -91,8 +95,8 @@ export function ItemCarousel({
                         transition={{ delay: items.length * 0.1 }}
                         className="h-full flex"
                       >
-                        <a
-                          href={viewAllLink}
+                        <Link
+                          href={`/auctions?type=${viewAllLink}`}
                           className="w-full flex flex-col items-center justify-center p-6 border rounded-lg hover:bg-accent transition-colors text-center"
                         >
                           <div className="items-center">
@@ -104,7 +108,7 @@ export function ItemCarousel({
                             </p>
                             <span className="mt-4 text-3xl">→</span>
                           </div>
-                        </a>
+                        </Link>
                       </MotionGrid>
                     </div>
                   </CarouselItem>

@@ -27,14 +27,13 @@ type ActionResponse = {
   error?: string;
   data?: any;
 };
+const supabase = createServerSupabase();
 
 export async function updateUserField(
   userId: string,
   field: string,
   value: string
 ): Promise<ActionResponse> {
-  const supabase = createServerSupabase();
-
   try {
     if (!userId || !field || value === undefined) {
       return {
