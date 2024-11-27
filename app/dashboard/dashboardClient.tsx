@@ -209,8 +209,10 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
             <div className="p-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Order Details</CardTitle>
-                  <CardDescription>Manage your payment methods</CardDescription>
+                  <CardTitle>Help</CardTitle>
+                  <CardDescription>
+                    Get support and find answers to common questions
+                  </CardDescription>
                 </CardHeader>
                 <HelpDetails />
               </Card>
@@ -283,7 +285,7 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
   );
 
   return (
-    <div className="flex max-h-screen py-6">
+    <div className="grid h-screen min-h-screen w-full overflow-hidden lg:grid-cols-[280px_1fr] p-8">
       {/* Desktop Sidebar */}
       <aside
         className={cn(
@@ -307,14 +309,12 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
         </div>
         <SidebarContent />
       </aside>
-
       {/* Mobile Sidebar */}
       <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
         <SheetContent side="left" className="p-0 w-64">
           <SidebarContent />
         </SheetContent>
       </Sheet>
-
       {/* Main Content */}
       <main className="flex-1">
         {" "}

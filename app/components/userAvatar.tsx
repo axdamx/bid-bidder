@@ -63,6 +63,7 @@ export default function UserAvatar({
     setIsNavigating(true);
     await router.push(path);
   };
+
   return (
     <>
       <Dialog open={isNavigating} modal>

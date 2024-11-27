@@ -29,7 +29,7 @@ export default function PostFeed({ ownedItems }) {
                 key={item.id}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: index * 0.2 }}
+                transition={{ delay: index * 0.125 }}
               >
                 <ItemCard key={item.id} item={item} />
                 {/* <MainItemCard /> */}

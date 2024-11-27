@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import UserAvatar from "./components/userAvatar";
 import SearchCommand from "./components/headerSearch";
-import { Menu } from "lucide-react";
+import { Loader2, Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { SignOut } from "@/components/ui/sign-out";
 import { useEffect, useState } from "react";
@@ -13,12 +13,44 @@ import { fetchUser } from "./profile/[userId]/action";
 import { userAtom } from "./atom/userAtom";
 import { useAtom } from "jotai";
 import { NotificationDropdown } from "./NotificationDropdown";
+import { usePathname, useRouter } from "next/navigation";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 export function Header() {
   const [user] = useAtom(userAtom);
+  const [isNavigating, setIsNavigating] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const pathname = usePathname();
+  const router = useRouter();
+
+  // Add this effect to reset navigation state when pathname changes
+  useEffect(() => {
+    setIsNavigating(false);
+    setIsOpen(false);
+  }, [pathname]);
+
+  const handleLinkClick = async (e: React.MouseEvent, path: string) => {
+    e.preventDefault();
+    setIsOpen(false);
+    // Don't navigate if we're already on the target path
+    if (path === pathname) {
+      return;
+    }
+    setIsNavigating(true);
+    await router.push(path);
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full bg-gray-50/80 backdrop-blur-sm py-4 shadow-sm">
+      <Dialog open={isNavigating} modal>
+        <DialogContent className="[&>button]:hidden">
+          <div className="flex flex-col items-center justify-center space-y-4">
+            <Loader2 className="h-8 w-8 animate-spin" />
+            <p>Loading...</p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <div className="container px-4 mx-auto">
         <nav className="flex items-center justify-between gap-2 sm:gap-4">
           {/* Left Section: Logo and Navigation */}
@@ -26,6 +58,7 @@ export function Header() {
             <Link
               href="/"
               className="flex-shrink-0"
+              onClick={(e) => handleLinkClick(e, "/")}
               // onClick={(e) => {
               //   e.preventDefault();
               //   window.location.href = "/";
@@ -46,6 +79,7 @@ export function Header() {
                 <Link
                   href="/items/create"
                   className="hover:underline whitespace-nowrap"
+                  onClick={(e) => handleLinkClick(e, "/items/create")}
                 >
                   Create Auction
                 </Link>
@@ -87,6 +121,7 @@ export function Header() {
                       <Link
                         href="/items/create"
                         className="px-2 py-1 hover:bg-gray-100 rounded-md"
+                        onClick={(e) => handleLinkClick(e, "/items/create")}
                       >
                         Create Auction
                       </Link>

@@ -81,7 +81,7 @@ export function ItemCarousel({
                       <MotionGrid
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        transition={{ delay: index * 0.1 }}
+                        transition={{ delay: index * 0.125 }}
                       >
                         <ItemCard item={item} />
                       </MotionGrid>

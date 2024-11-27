@@ -49,6 +49,9 @@ export function NotificationDropdown() {
         case "follow":
           router.push(`/profile/${notification.followerId}`);
           break;
+        case "new_item":
+          router.push(`/items/${notification.itemId}`);
+          break;
         default:
           console.warn(`Unknown notification type: ${notification.type}`);
           break;
