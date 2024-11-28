@@ -33,27 +33,20 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={cn(
-          "min-h-screen text-large md:text-xl font-serif tracking-wide overflow-x-hidden bg-gradient-to-r from-orange-100 via-white to-pink-100",
+          "min-h-screen text-base md:text-xl font-serif tracking-wide overflow-x-hidden bg-gradient-to-r from-orange-100 via-white to-pink-100",
           fontSans.variable
         )}
       >
         <Providers>
-          {/* <DevTools store={customStore} /> */}
-          <QueryProvider>
-            {/* <SupabaseProvider> */}
-            {/* <SessionProvider> */}
-            <NotificationProvider>
-              <Header />
-              <main className="mx-auto max-w-full">
-                <div className="px-4 sm:px-6 w-full max-w-full">
-                  {children}
-                  <Footer />
-                </div>
-              </main>
-            </NotificationProvider>
-            {/* </SessionProvider> */}
-            {/* </SupabaseProvider> */}
-          </QueryProvider>
+          <div className="flex flex-col min-h-screen w-full">
+            <Header />
+            <main className="flex-1 relative w-full">
+              <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-full">
+                {children}
+              </div>
+              <Footer />
+            </main>
+          </div>
         </Providers>
       </body>
     </html>

@@ -7,9 +7,12 @@ import * as z from "zod";
 import {
   ArrowLeft,
   ArrowRight,
+  Building,
+  CreditCard,
   HelpCircle,
   Package,
   RotateCcw,
+  Wallet2,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -56,6 +59,19 @@ const paymentSchema = z.object({
   cardNumber: z.string().min(16, "Invalid card number"),
   expiry: z.string().min(5, "Invalid expiry date"),
   cvc: z.string().min(3, "Invalid CVC"),
+  paymentMethod: z.object({
+    type: z.enum(["credit_card", "online_transfer", "e_wallet"]),
+    // Credit Card Fields
+    cardNumber: z.string().optional(),
+    expiryDate: z.string().optional(),
+    cvv: z.string().optional(),
+    // Online Transfer Fields
+    bankName: z.string().optional(),
+    accountNumber: z.string().optional(),
+    // E-wallet Fields
+    walletProvider: z.string().optional(),
+    walletId: z.string().optional(),
+  }),
 });
 
 type FormData = z.infer<typeof addressSchema> &
@@ -119,17 +135,12 @@ export default function CheckoutPage({
     <div className="container mx-auto py-12 rounded-xl">
       <main className="mx-auto max-w-6xl px-4 py-8">
         <div className="mb-8">
-          <Progress
-            value={progress}
-            className="h-2 w-full"
-            indicatorClassName="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"
-          />
-        </div>
-
-        <div className="mb-8">
-          <div className="flex justify-center space-x-8">
+          <div className="flex flex-col items-center space-y-4 sm:flex-row sm:items-center sm:justify-center sm:space-x-8 sm:space-y-0">
             {steps.map((s, i) => (
-              <div key={s.id} className="flex items-center">
+              <div
+                key={s.id}
+                className="relative flex items-center text-center"
+              >
                 <div
                   className={`flex h-8 w-8 items-center justify-center rounded-full ${
                     step === s.id
@@ -141,7 +152,7 @@ export default function CheckoutPage({
                 </div>
                 <span className="ml-2 font-medium">{s.label}</span>
                 {i < steps.length - 1 && (
-                  <div className="ml-8 h-px w-8 bg-muted" />
+                  <div className="absolute left-1/2 top-10 h-8 w-px -translate-x-1/2 bg-muted sm:static sm:left-auto sm:top-auto sm:ml-8 sm:h-px sm:w-8 sm:translate-x-0" />
                 )}
               </div>
             ))}
@@ -155,7 +166,7 @@ export default function CheckoutPage({
                 {step === "address" && (
                   <Card>
                     <CardHeader>
-                      <CardTitle>Delivery Contact</CardTitle>
+                      <CardTitle>Delivery Method</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-6">
                       <div className="grid gap-4 sm:grid-cols-2">
@@ -329,49 +340,225 @@ export default function CheckoutPage({
                       <CardTitle>Payment Details</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-6">
-                      <FormField
-                        control={form.control}
-                        name="cardNumber"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Card Number</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="Enter card number"
-                                {...field}
+                      <div className="space-y-4">
+                        <FormField
+                          control={form.control}
+                          name="paymentMethod.type"
+                          render={({ field }) => (
+                            <FormItem className="space-y-4">
+                              <FormControl>
+                                <RadioGroup
+                                  onValueChange={field.onChange}
+                                  defaultValue={field.value}
+                                  className="grid grid-cols-3 gap-4"
+                                >
+                                  <FormItem>
+                                    <FormControl>
+                                      <div>
+                                        <RadioGroupItem
+                                          value="credit_card"
+                                          id="credit_card"
+                                          className="peer sr-only"
+                                        />
+                                        <FormLabel
+                                          htmlFor="credit_card"
+                                          className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                                        >
+                                          <CreditCard className="mb-3 h-6 w-6" />
+                                          Credit Card
+                                        </FormLabel>
+                                      </div>
+                                    </FormControl>
+                                  </FormItem>
+                                  <FormItem>
+                                    <FormControl>
+                                      <div>
+                                        <RadioGroupItem
+                                          value="online_transfer"
+                                          id="online_transfer"
+                                          className="peer sr-only"
+                                        />
+                                        <FormLabel
+                                          htmlFor="online_transfer"
+                                          className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                                        >
+                                          <Building className="mb-3 h-6 w-6" />
+                                          Bank Transfer
+                                        </FormLabel>
+                                      </div>
+                                    </FormControl>
+                                  </FormItem>
+                                  <FormItem>
+                                    <FormControl>
+                                      <div>
+                                        <RadioGroupItem
+                                          value="e_wallet"
+                                          id="e_wallet"
+                                          className="peer sr-only"
+                                        />
+                                        <FormLabel
+                                          htmlFor="e_wallet"
+                                          className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                                        >
+                                          <Wallet2 className="mb-3 h-6 w-6" />
+                                          E-Wallet
+                                        </FormLabel>
+                                      </div>
+                                    </FormControl>
+                                  </FormItem>
+                                </RadioGroup>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        {form.watch("paymentMethod.type") === "credit_card" && (
+                          <Card>
+                            <CardHeader>
+                              <CardTitle>Enter your card details</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-6">
+                              <FormField
+                                control={form.control}
+                                name="paymentMethod.cardNumber"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Card Number</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        placeholder="Enter card number"
+                                        {...field}
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
                               />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
+                              <div className="grid gap-4 sm:grid-cols-3">
+                                <FormField
+                                  control={form.control}
+                                  name="paymentMethod.expiryDate"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Expiry Date</FormLabel>
+                                      <FormControl>
+                                        <Input placeholder="MM/YY" {...field} />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                                <FormField
+                                  control={form.control}
+                                  name="paymentMethod.cvv"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>CVC</FormLabel>
+                                      <FormControl>
+                                        <Input placeholder="CVC" {...field} />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                              </div>
+                            </CardContent>
+                          </Card>
                         )}
-                      />
-                      <div className="grid gap-4 sm:grid-cols-3">
-                        <FormField
-                          control={form.control}
-                          name="expiry"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Expiry Date</FormLabel>
-                              <FormControl>
-                                <Input placeholder="MM/YY" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="cvc"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>CVC</FormLabel>
-                              <FormControl>
-                                <Input placeholder="CVC" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+
+                        {form.watch("paymentMethod.type") ===
+                          "online_transfer" && (
+                          <Card>
+                            <CardHeader>
+                              <CardTitle>Enter your bank details</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-6">
+                              <div className="grid gap-4">
+                                <FormField
+                                  control={form.control}
+                                  name="paymentMethod.bankName"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Bank Name</FormLabel>
+                                      <FormControl>
+                                        <Input
+                                          placeholder="Enter bank name"
+                                          {...field}
+                                        />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                                <FormField
+                                  control={form.control}
+                                  name="paymentMethod.accountNumber"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Account Number</FormLabel>
+                                      <FormControl>
+                                        <Input
+                                          placeholder="Enter account number"
+                                          {...field}
+                                        />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                              </div>
+                            </CardContent>
+                          </Card>
+                        )}
+
+                        {form.watch("paymentMethod.type") === "e_wallet" && (
+                          <Card>
+                            <CardHeader>
+                              <CardTitle>
+                                Choose your ewallet provider
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-6">
+                              <div className="grid gap-4">
+                                <FormField
+                                  control={form.control}
+                                  name="paymentMethod.walletProvider"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>
+                                        Ewallet Provider Name
+                                      </FormLabel>
+                                      <FormControl>
+                                        <Input
+                                          placeholder="Enter provider name"
+                                          {...field}
+                                        />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                                <FormField
+                                  control={form.control}
+                                  name="paymentMethod.accountNumber"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Wallet ID</FormLabel>
+                                      <FormControl>
+                                        <Input
+                                          placeholder="Enter wallet ID"
+                                          {...field}
+                                        />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                              </div>
+                            </CardContent>
+                          </Card>
+                        )}
                       </div>
                     </CardContent>
                   </Card>

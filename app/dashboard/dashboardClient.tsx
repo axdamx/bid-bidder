@@ -39,6 +39,7 @@ import { MotionGrid } from "../components/motionGrid";
 import { userAtom } from "../atom/userAtom";
 import { useAtom } from "jotai";
 import { useRouter, useSearchParams } from "next/navigation";
+import { motion } from "framer-motion";
 
 type User = {
   name?: string;
@@ -121,11 +122,11 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
       case "userDetails":
         return (
           <MotionGrid>
-            <div className="p-6">
+            <div className="p-2 sm:p-6">
               <Card>
-                <CardHeader>
-                  <CardTitle>User Details</CardTitle>
-                  <CardDescription>
+                <CardHeader className="p-4">
+                  <CardTitle className="text-lg">User Details</CardTitle>
+                  <CardDescription className="text-sm">
                     Manage your personal information
                   </CardDescription>
                 </CardHeader>
@@ -137,11 +138,11 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
       case "address":
         return (
           <MotionGrid>
-            <div className="p-6">
+            <div className="p-2 sm:p-6">
               <Card>
-                <CardHeader>
-                  <CardTitle>Address</CardTitle>
-                  <CardDescription>
+                <CardHeader className="p-4">
+                  <CardTitle className="text-lg">Address</CardTitle>
+                  <CardDescription className="text-sm">
                     Manage your shipping addresses
                   </CardDescription>
                 </CardHeader>
@@ -178,11 +179,13 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
       case "payment":
         return (
           <MotionGrid>
-            <div className="p-6">
+            <div className="p-2 sm:p-6">
               <Card>
-                <CardHeader>
-                  <CardTitle>Payment Details</CardTitle>
-                  <CardDescription>Manage your payment methods</CardDescription>
+                <CardHeader className="p-4">
+                  <CardTitle className="text-lg">Payment Details</CardTitle>
+                  <CardDescription className="text-sm">
+                    Manage your payment methods
+                  </CardDescription>
                 </CardHeader>
                 <PaymentsAndPayouts />
               </Card>
@@ -192,11 +195,13 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
       case "orders":
         return (
           <MotionGrid>
-            <div className="p-6">
+            <div className="p-2 sm:p-6">
               <Card>
-                <CardHeader>
-                  <CardTitle>Order Details</CardTitle>
-                  <CardDescription>Manage your payment methods</CardDescription>
+                <CardHeader className="p-4">
+                  <CardTitle className="text-lg">Order Details</CardTitle>
+                  <CardDescription className="text-sm">
+                    Manage your orders
+                  </CardDescription>
                 </CardHeader>
                 <OrderDetails />
               </Card>
@@ -206,11 +211,11 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
       case "help":
         return (
           <MotionGrid>
-            <div className="p-6">
+            <div className="p-2 sm:p-6">
               <Card>
-                <CardHeader>
-                  <CardTitle>Help</CardTitle>
-                  <CardDescription>
+                <CardHeader className="p-4">
+                  <CardTitle className="text-lg">Help</CardTitle>
+                  <CardDescription className="text-sm">
                     Get support and find answers to common questions
                   </CardDescription>
                 </CardHeader>
@@ -230,6 +235,17 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
     }
   };
 
+  const sidebarVariants = {
+    open: {
+      width: "16rem",
+      transition: { duration: 0.3, ease: "easeInOut" },
+    },
+    closed: {
+      width: "4rem",
+      transition: { duration: 0.3, ease: "easeInOut" },
+    },
+  };
+
   const SidebarContent = () => (
     <div className="flex flex-col h-full rounded-xl">
       <div className="p-4 border-b">
@@ -239,10 +255,17 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
             <AvatarFallback>{initials}</AvatarFallback>
           </Avatar>
           {isSidebarOpen && (
-            <div>
-              <p className="font-semibold text-sm">{user?.name}</p>
-              <p className="text-xs text-muted-foreground">{user?.email}</p>
-            </div>
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.2 }}
+            >
+              <div>
+                <p className="font-semibold text-sm">{user?.name}</p>
+                <p className="text-xs text-muted-foreground">{user?.email}</p>
+              </div>
+            </motion.div>
           )}
         </div>
       </div>
@@ -259,11 +282,21 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
               )}
               onClick={() => {
                 handleTabChange(item.id);
-                setIsMobileOpen(false); // Close mobile sidebar when clicking item
+                setIsMobileOpen(false);
               }}
             >
               <item.icon className={cn("h-4 w-4", isSidebarOpen && "mr-3")} />
-              {isSidebarOpen && <span className="text-sm">{item.name}</span>}
+              {isSidebarOpen && (
+                <motion.span
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  transition={{ duration: 0.2 }}
+                  className="text-sm"
+                >
+                  {item.name}
+                </motion.span>
+              )}
             </Button>
           ))}
         </div>
@@ -278,20 +311,38 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
           )}
         >
           <LogOut className={cn("h-4 w-4", isSidebarOpen && "mr-3")} />
-          {isSidebarOpen && <span className="text-sm">Sign out</span>}
+          {isSidebarOpen && (
+            <motion.span
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -10 }}
+              transition={{ duration: 0.2 }}
+              className="text-sm"
+            >
+              Sign out
+            </motion.span>
+          )}
         </Button>
       </div>
     </div>
   );
 
   return (
-    <div className="grid h-screen min-h-screen w-full overflow-hidden lg:grid-cols-[280px_1fr] p-8">
+    <div
+      className={cn(
+        "grid min-h-screen w-full overflow-hidden lg:grid-cols-[280px_1fr] p-2 sm:p-8",
+        !isSidebarOpen && "lg:grid-cols-[64px_1fr]"
+      )}
+    >
       {/* Desktop Sidebar */}
-      <aside
+      <motion.aside
         className={cn(
-          "hidden md:flex flex-col bg-white overflow-hidden rounded-xl", // Added overflow-hidden
+          "hidden md:flex flex-col bg-white overflow-hidden rounded-xl",
           isSidebarOpen ? "w-64" : "w-16"
         )}
+        initial="open"
+        animate={isSidebarOpen ? "open" : "closed"}
+        variants={sidebarVariants}
       >
         <div className="flex justify-end p-3">
           <Button
@@ -300,26 +351,35 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
             className="h-6 w-6"
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
           >
-            {isSidebarOpen ? (
-              <ChevronLeft className="h-4 w-4" />
-            ) : (
-              <ChevronRight className="h-4 w-4" />
-            )}
+            <motion.div
+              animate={{ rotate: isSidebarOpen ? 0 : 180 }}
+              transition={{ duration: 0.3 }}
+            >
+              {isSidebarOpen ? (
+                <ChevronLeft className="h-4 w-4" />
+              ) : (
+                <ChevronRight className="h-4 w-4" />
+              )}
+            </motion.div>
           </Button>
         </div>
         <SidebarContent />
-      </aside>
+      </motion.aside>
+
       {/* Mobile Sidebar */}
       <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
         <SheetContent side="left" className="p-0 w-64">
           <SidebarContent />
         </SheetContent>
       </Sheet>
+
       {/* Main Content */}
-      <main className="flex-1">
-        {" "}
-        {/* Removed overflow-auto */}
-        <div className="md:hidden flex items-center p-4 border-b bg-background rounded-xl">
+      <motion.main
+        className="flex-1"
+        layout // This will animate the layout changes
+        transition={{ duration: 0.3, ease: "easeInOut" }}
+      >
+        <div className="md:hidden flex items-center p-2 border-b bg-background rounded-xl w-full">
           <Button
             variant="ghost"
             size="icon"
@@ -330,8 +390,9 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
           </Button>
           <h1 className="font-semibold">Dashboard</h1>
         </div>
-        {renderContent()}
-      </main>
+        <div className="w-full">{renderContent()}</div>
+        {/* {renderContent()} */}
+      </motion.main>
     </div>
   );
 };

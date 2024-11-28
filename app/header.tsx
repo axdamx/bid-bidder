@@ -41,7 +41,7 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-gray-50/80 backdrop-blur-sm py-4 shadow-sm">
+    <header className="sticky top-0 z-50 w-full bg-gray-50/80 backdrop-blur-sm py-2 shadow-sm">
       <Dialog open={isNavigating} modal>
         <DialogContent className="[&>button]:hidden">
           <div className="flex flex-col items-center justify-center space-y-4">
@@ -52,24 +52,20 @@ export function Header() {
       </Dialog>
 
       <div className="container px-4 mx-auto">
-        <nav className="flex items-center justify-between gap-2 sm:gap-4">
+        <nav className="flex items-center justify-between gap-2">
           {/* Left Section: Logo and Navigation */}
           <div className="flex items-center gap-4 sm:gap-8">
             <Link
               href="/"
               className="flex-shrink-0"
               onClick={(e) => handleLinkClick(e, "/")}
-              // onClick={(e) => {
-              //   e.preventDefault();
-              //   window.location.href = "/";
-              // }}
             >
               <Image
                 src="/renown-high-resolution-logo-transparent.png"
                 width={75}
                 height={75}
                 alt="Logo"
-                className="w-20 h-20 sm:w-12 sm:h-12"
+                className="w-20 h-20" // Smaller logo
               />
             </Link>
 
@@ -88,14 +84,21 @@ export function Header() {
           </div>
 
           {/* Center Section: Search */}
-          <div className="flex-1 max-w-[300px] sm:max-w-xl mx-auto flex justify-center">
+          <div className="flex-1 max-w-[200px] sm:max-w-xl mx-auto flex justify-center">
             <SearchCommand />
           </div>
 
           {/* Right Section: User Controls */}
-          <div className="flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-4">
             {user && (
               <>
+                {/* <Link
+                  href="/items/create"
+                  className="hover:underline whitespace-nowrap text-sm"
+                  onClick={(e) => handleLinkClick(e, "/items/create")}
+                >
+                  Create Auction
+                </Link> */}
                 <NotificationDropdown />
                 <UserAvatar
                   name={user.name!}
@@ -105,39 +108,52 @@ export function Header() {
                 />
               </>
             )}
-
-            {/* Desktop Sign In/Out */}
-            <div className="hidden md:block">{!user && <SignIn />}</div>
-
-            {/* Mobile Menu */}
-            <Sheet>
-              <SheetTrigger className="md:hidden">
-                <Menu className="h-6 w-6" />
-              </SheetTrigger>
-              <SheetContent side="right" className="w-[300px]">
-                <div className="flex flex-col gap-4 mt-4">
-                  {user ? (
-                    <nav className="flex flex-col space-y-4">
-                      <Link
-                        href="/items/create"
-                        className="px-2 py-1 hover:bg-gray-100 rounded-md"
-                        onClick={(e) => handleLinkClick(e, "/items/create")}
-                      >
-                        Create Auction
-                      </Link>
-                      {/* <div className="px-2">
-                        <SignOut />
-                      </div> */}
-                    </nav>
-                  ) : (
-                    <div className="px-2">
-                      <SignIn />
-                    </div>
-                  )}
-                </div>
-              </SheetContent>
-            </Sheet>
+            {!user && <SignIn />}
           </div>
+
+          {/* Mobile Menu */}
+          <Sheet open={isOpen} onOpenChange={setIsOpen}>
+            <SheetTrigger className="md:hidden">
+              <Menu className="h-5 w-5" />
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[300px]">
+              <div className="flex flex-col gap-4 mt-4">
+                {user ? (
+                  <nav className="flex flex-col space-y-4">
+                    {/* Mobile User Info */}
+                    <div className="flex items-center gap-2 px-2 py-2">
+                      <UserAvatar
+                        name={user.name!}
+                        imageUrl={user.image!}
+                        email={user.email!}
+                        userId={user.id!}
+                      />
+                      <div className="p-2">
+                        <NotificationDropdown />
+                      </div>
+                      {/* <span className="text-sm">{user.name}</span> */}
+                    </div>
+
+                    {/* Necessary Navigation Items */}
+                    <Link
+                      href="/items/create"
+                      className="px-2 py-1 hover:bg-gray-100 rounded-md text-sm"
+                      onClick={(e) => handleLinkClick(e, "/items/create")}
+                    >
+                      Create Auction
+                    </Link>
+                    {/* <div className="px-2">
+                      <SignOut />
+                    </div> */}
+                  </nav>
+                ) : (
+                  <div className="px-2">
+                    <SignIn />
+                  </div>
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
         </nav>
       </div>
     </header>

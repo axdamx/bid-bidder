@@ -218,118 +218,171 @@ export default function OrderDetails() {
               ))}
             </TableBody>
           </Table>
+          {totalPages > 1 && (
+            <div className="">
+              {/* Add this wrapper */}
+              <Pagination className="p-4">
+                {" "}
+                {/* Added padding to the pagination */}
+                <PaginationContent className="justify-center">
+                  {" "}
+                  {/* Add justify-center here */}
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.max(prev - 1, 1))
+                      }
+                      className={
+                        currentPage === 1
+                          ? "pointer-events-none opacity-50"
+                          : "cursor-pointer"
+                      }
+                    />
+                  </PaginationItem>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                    (page) => (
+                      <PaginationItem key={page}>
+                        <PaginationLink
+                          onClick={() => setCurrentPage(page)}
+                          isActive={currentPage === page}
+                          className="cursor-pointer"
+                        >
+                          {page}
+                        </PaginationLink>
+                      </PaginationItem>
+                    )
+                  )}
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                      }
+                      className={
+                        currentPage === totalPages
+                          ? "pointer-events-none opacity-50"
+                          : "cursor-pointer"
+                      }
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
         </div>
 
         {/* Mobile view */}
         <div className="md:hidden overflow-y-auto max-h-[400px]">
-          {" "}
-          {/* Set max height and enable vertical scrolling */}
-          {currentOrders?.map((order: Order) => (
-            <div key={order.id} className="border-b p-4 space-y-3">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="font-medium">{order.item.name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    ID: {order.id}
-                  </p>
+          <div className="min-w-[320px] overflow-x-auto">
+            {" "}
+            {/* Added wrapper with min-width */}
+            {/* Set max height and enable vertical scrolling */}
+            {currentOrders?.map((order: Order) => (
+              <div key={order.id} className="border-b p-2 space-y-3">
+                <div className="flex justify-between items-start px-9">
+                  <div>
+                    <p className="text-sm">{order.item.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      ID: {order.id}
+                    </p>
+                  </div>
+                  <StatusBadge status={order.orderStatus} />
                 </div>
-                <StatusBadge status={order.orderStatus} />
-              </div>
 
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">
-                  {new Date(order.orderDate).toLocaleDateString()}
-                </span>
-                <span className="font-medium">
-                  {formatCurrency(order.amount)}
-                </span>
-              </div>
+                <div className="flex justify-between items-center text-sm px-9">
+                  <span className="text-muted-foreground">
+                    {new Date(order.orderDate).toLocaleDateString()}
+                  </span>
+                  <span className="text-sm">
+                    {formatCurrency(order.amount)}
+                  </span>
+                </div>
 
-              <div className="flex flex-col gap-2">
-                {showStatusUpdate && (
-                  <Select
-                    defaultValue={order.orderStatus}
-                    onValueChange={(value) =>
-                      handleStatusUpdate(order.id, value)
+                <div className="flex flex-col gap-2">
+                  {showStatusUpdate && (
+                    <Select
+                      defaultValue={order.orderStatus}
+                      onValueChange={(value) =>
+                        handleStatusUpdate(order.id, value)
+                      }
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Update status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="processing">Processing</SelectItem>
+                        <SelectItem value="shipped">Shipped</SelectItem>
+                        <SelectItem value="delivered">Delivered</SelectItem>
+                        <SelectItem value="cancelled">Cancelled</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+
+                  <Sheet>
+                    <SheetTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="w-full"
+                        onClick={() => setSelectedOrder(order)}
+                      >
+                        View Details
+                      </Button>
+                    </SheetTrigger>
+                    {/* Sheet content remains the same */}
+                  </Sheet>
+                </div>
+              </div>
+            ))}
+          </div>
+          {totalPages > 1 && (
+            <Pagination className="justify-center p-4">
+              {" "}
+              {/* Added padding to the pagination */}
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.max(prev - 1, 1))
                     }
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Update status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="processing">Processing</SelectItem>
-                      <SelectItem value="shipped">Shipped</SelectItem>
-                      <SelectItem value="delivered">Delivered</SelectItem>
-                      <SelectItem value="cancelled">Cancelled</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    className={
+                      currentPage === 1
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer"
+                    }
+                  />
+                </PaginationItem>
+
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (page) => (
+                    <PaginationItem key={page}>
+                      <PaginationLink
+                        onClick={() => setCurrentPage(page)}
+                        isActive={currentPage === page}
+                        className="cursor-pointer"
+                      >
+                        {page}
+                      </PaginationLink>
+                    </PaginationItem>
+                  )
                 )}
 
-                <Sheet>
-                  <SheetTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full"
-                      onClick={() => setSelectedOrder(order)}
-                    >
-                      View Details
-                    </Button>
-                  </SheetTrigger>
-                  {/* Sheet content remains the same */}
-                </Sheet>
-              </div>
-            </div>
-          ))}
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                    }
+                    className={
+                      currentPage === totalPages
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer"
+                    }
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          )}
         </div>
-        {totalPages > 1 && (
-          <Pagination className="justify-center p-4">
-            {" "}
-            {/* Added padding to the pagination */}
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.max(prev - 1, 1))
-                  }
-                  className={
-                    currentPage === 1
-                      ? "pointer-events-none opacity-50"
-                      : "cursor-pointer"
-                  }
-                />
-              </PaginationItem>
-
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                (page) => (
-                  <PaginationItem key={page}>
-                    <PaginationLink
-                      onClick={() => setCurrentPage(page)}
-                      isActive={currentPage === page}
-                      className="cursor-pointer"
-                    >
-                      {page}
-                    </PaginationLink>
-                  </PaginationItem>
-                )
-              )}
-
-              <PaginationItem>
-                <PaginationNext
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                  }
-                  className={
-                    currentPage === totalPages
-                      ? "pointer-events-none opacity-50"
-                      : "cursor-pointer"
-                  }
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        )}
       </div>
     );
   };
@@ -346,8 +399,8 @@ export default function OrderDetails() {
           <CardContent className="p-0 sm:p-6"> */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="winning">Winning Orders</TabsTrigger>
-            <TabsTrigger value="selling">Selling Orders</TabsTrigger>
+            <TabsTrigger value="winning">Winning</TabsTrigger>
+            <TabsTrigger value="selling">Selling</TabsTrigger>
           </TabsList>
           <TabsContent value="winning">
             <OrdersTable
