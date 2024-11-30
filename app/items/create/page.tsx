@@ -141,6 +141,7 @@ export default function CreatePage() {
       </Dialog>
 
       <Dialog open={isNavigating} modal>
+        <DialogTitle className="[&>button]:hidden" />
         <DialogContent className="[&>button]:hidden">
           <div className="flex flex-col items-center justify-center space-y-4">
             <Loader2 className="h-8 w-8 animate-spin" />
@@ -297,14 +298,14 @@ export default function CreatePage() {
               <div>
                 <Label htmlFor="endDate">End Date</Label>
                 <div className="relative">
-                  <DateTimePicker
+                  {/* <DateTimePicker
                     onChange={(date: Date | undefined) => {
                       setValue("endDate", date ? date.toISOString() : "", {
                         shouldValidate: true,
                       });
                       trigger(); // Add this to re-validate the form
                     }}
-                  />
+                  /> */}
                 </div>
                 {errors.endDate && (
                   <p className="text-sm text-red-500 mt-1">

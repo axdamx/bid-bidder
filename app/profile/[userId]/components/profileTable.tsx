@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   ChevronLeft,
   ChevronRight,
+  Loader2,
 } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -35,28 +36,37 @@ import Link from "next/link";
 import CountdownTimer from "@/app/countdown-timer";
 import { formatCurrency } from "@/lib/utils";
 import { MotionGrid } from "@/app/components/motionGrid";
-
-// Expanded mock data for the artwork (20 items)
-const artworks = Array.from({ length: 20 }, (_, i) => ({
-  id: i + 1,
-  title: `Artwork ${i + 1}`,
-  image: `/placeholder.svg?height=400&width=400`,
-  backgroundColor: `bg-${["red", "blue", "green", "yellow", "purple"][i % 5]}-${
-    [100, 200, 300, 400, 500][i % 5]
-  }`,
-  startingPrice: Number((Math.random() * 2 + 0.1).toFixed(2)),
-  currentBid: Number((Math.random() * 3 + 0.2).toFixed(2)),
-  createdAt: new Date(
-    Date.now() - Math.floor(Math.random() * 10000000000)
-  ).toISOString(),
-}));
+import { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
 export default function ProfileTable(ownedItems) {
   const [view, setView] = React.useState("grid");
   const [searchTerm, setSearchTerm] = React.useState("");
   const [sortOrder, setSortOrder] = React.useState("low");
   const [currentPage, setCurrentPage] = React.useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 9;
+
+  const [isNavigating, setIsNavigating] = useState(false);
+  const pathname = usePathname();
+  const router = useRouter();
+
+  // Add this effect to reset navigation state when pathname changes
+  useEffect(() => {
+    setIsNavigating(false);
+    // setIsOpen(false);
+  }, [pathname]);
+
+  const handleLinkClick = async (e: React.MouseEvent, path: string) => {
+    e.preventDefault();
+    // setIsOpen(false);
+    // Don't navigate if we're already on the target path
+    if (path === pathname) {
+      return;
+    }
+    setIsNavigating(true);
+    await router.push(path);
+  };
 
   console.log("ownedItems", ownedItems);
 
@@ -157,7 +167,12 @@ export default function ProfileTable(ownedItems) {
                 animate={{ opacity: 1 }}
                 transition={{ delay: index * 0.125 }}
               >
-                <Link key={item.id} href={`/items/${item.id}`} className="">
+                <Link
+                  key={item.id}
+                  href={`/items/${item.id}`}
+                  className=""
+                  onClick={(e) => handleLinkClick(e, `/items/${item.id}`)}
+                >
                   <Card key={item.id} className="overflow-hidden">
                     <CardContent className="p-0">
                       <div
@@ -203,71 +218,83 @@ export default function ProfileTable(ownedItems) {
   }
 
   return (
-    <div className="container mx-auto px-4">
-      <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="relative w-full md:w-[400px]">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
-          <Input
-            className="pl-9"
-            placeholder="Search by name"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+    <>
+      <Dialog open={isNavigating} modal>
+        <DialogTitle className="[&>button]:hidden" />
+        <DialogContent className="[&>button]:hidden">
+          <div className="flex flex-col items-center justify-center space-y-4">
+            <Loader2 className="h-8 w-8 animate-spin" />
+            <p>Loading...</p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <div className="container mx-auto px-4">
+        <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="relative w-full md:w-[400px]">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
+            <Input
+              className="pl-9"
+              placeholder="Search by name"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:mt-6 md:mt-0">
+            <Select value={sortOrder} onValueChange={setSortOrder}>
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="Sort by price" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="low">Price low to high</SelectItem>
+                <SelectItem value="high">Price high to low</SelectItem>
+                <SelectItem value="createdAt">Newest First</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <ToggleGroup
+              type="single"
+              value={view}
+              onValueChange={(value) => value && setView(value)}
+              className="justify-start sm:justify-center"
+            >
+              <ToggleGroupItem value="list" aria-label="List view">
+                <LayoutList className="h-4 w-4" />
+              </ToggleGroupItem>
+              <ToggleGroupItem value="grid" aria-label="Grid view">
+                <LayoutGrid className="h-4 w-4" />
+              </ToggleGroupItem>
+            </ToggleGroup>
+          </div>
         </div>
 
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:mt-6 md:mt-0">
-          <Select value={sortOrder} onValueChange={setSortOrder}>
-            <SelectTrigger className="w-full sm:w-[180px]">
-              <SelectValue placeholder="Sort by price" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="low">Price low to high</SelectItem>
-              <SelectItem value="high">Price high to low</SelectItem>
-              <SelectItem value="createdAt">Newest First</SelectItem>
-            </SelectContent>
-          </Select>
+        {renderContent()}
 
-          <ToggleGroup
-            type="single"
-            value={view}
-            onValueChange={(value) => value && setView(value)}
-            className="justify-start sm:justify-center"
-          >
-            <ToggleGroupItem value="list" aria-label="List view">
-              <LayoutList className="h-4 w-4" />
-            </ToggleGroupItem>
-            <ToggleGroupItem value="grid" aria-label="Grid view">
-              <LayoutGrid className="h-4 w-4" />
-            </ToggleGroupItem>
-          </ToggleGroup>
-        </div>
+        {totalPages > 1 && (
+          <div className="mt-6 flex items-center justify-between mb-6">
+            <Button
+              variant="outline"
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="mr-2 h-4 w-4" /> Previous
+            </Button>
+            <span>
+              Page {currentPage} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+              }
+              disabled={currentPage === totalPages}
+            >
+              Next <ChevronRight className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
+        )}
       </div>
-
-      {renderContent()}
-
-      {totalPages > 1 && (
-        <div className="mt-6 flex items-center justify-between mb-6">
-          <Button
-            variant="outline"
-            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
-          >
-            <ChevronLeft className="mr-2 h-4 w-4" /> Previous
-          </Button>
-          <span>
-            Page {currentPage} of {totalPages}
-          </span>
-          <Button
-            variant="outline"
-            onClick={() =>
-              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-            }
-            disabled={currentPage === totalPages}
-          >
-            Next <ChevronRight className="ml-2 h-4 w-4" />
-          </Button>
-        </div>
-      )}
-    </div>
+    </>
   );
 }

@@ -1,70 +1,114 @@
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 export const SkeletonLoaderProfile = () => {
   return (
-    <div className="w-full">
-      {/* Header */}
-      <div className="relative w-full h-64 bg-gray-300 rounded-lg overflow-hidden animate-pulse">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-gray-500 opacity-50" />
-        <div className="absolute bottom-4 left-4 flex items-center space-x-4">
-          <div className="w-16 h-16 bg-gray-400 rounded-full"></div>
-          <div>
-            <div className="h-6 bg-gray-400 rounded w-32 mb-2"></div>
-            <div className="h-4 bg-gray-400 rounded w-24"></div>
+    <div className="min-h-screen bg-background">
+      {/* Hero Section Skeleton */}
+      <div className="relative h-48 bg-muted">
+        <div className="absolute -bottom-16 left-8 flex items-end gap-4">
+          <Skeleton className="h-32 w-32 rounded-full" />
+          <div className="mb-4 space-y-2">
+            <Skeleton className="h-6 w-40" />
+            <Skeleton className="h-4 w-32" />
           </div>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto flex flex-col md:flex-row mt-8 mb-8">
-        {/* Left column: Profile info */}
-        <div className="md:w-1/3 md:pr-6 mb-6 md:mb-0">
-          {/* Profile Stats */}
-          <div className="flex justify-between mb-6">
-            {["Posts", "Followers", "Following"].map((stat) => (
-              <div key={stat} className="text-center">
-                <div className="h-8 w-16 bg-gray-300 rounded mb-1"></div>
-                <div className="h-4 w-20 bg-gray-200 rounded"></div>
+      {/* Stats Skeleton */}
+      <div className="mt-20 border-b">
+        <div className="container flex items-center justify-between py-4">
+          <div className="flex gap-8">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex items-center gap-2">
+                <Skeleton className="h-4 w-4" />
+                <Skeleton className="h-4 w-20" />
               </div>
             ))}
           </div>
-
-          {/* About */}
-          <div className="mb-6">
-            <div className="h-6 w-24 bg-gray-300 rounded mb-2"></div>
-            <div className="h-4 w-full bg-gray-200 rounded mb-1"></div>
-            <div className="h-4 w-2/3 bg-gray-200 rounded"></div>
-          </div>
-
-          {/* Location */}
-          <div className="mb-6">
-            <div className="h-6 w-24 bg-gray-300 rounded mb-2"></div>
-            <div className="h-4 w-32 bg-gray-200 rounded"></div>
-          </div>
+          <Skeleton className="h-10 w-24" />
         </div>
+      </div>
 
-        {/* Right column: Horizontal Cards */}
-        <div className="lg:w-2/3">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-            {[1, 2].map((card) => (
-              <div
-                key={card}
-                className="border border-gray-200 rounded-lg p-4 animate-pulse flex flex-col sm:flex-row"
-              >
-                <div className="w-full sm:w-1/3 h-32 sm:h-auto bg-gray-300 rounded-lg mb-4 sm:mb-0 sm:mr-4"></div>
-                <div className="w-full sm:w-2/3 flex flex-col justify-between">
-                  <div>
-                    <div className="h-5 sm:h-6 w-3/4 bg-gray-300 rounded mb-2"></div>
-                    <div className="h-3 sm:h-4 w-1/2 bg-gray-200 rounded mb-4"></div>
-                    <div className="h-3 sm:h-4 w-full bg-gray-200 rounded mb-2"></div>
-                    <div className="h-3 sm:h-4 w-5/6 bg-gray-200 rounded"></div>
+      {/* Main Content Skeleton */}
+      <div className="container py-6">
+        <Tabs defaultValue="listings" className="space-y-6">
+          <TabsList>
+            {["Listings", "About", "Reviews"].map((tab) => (
+              <TabsTrigger key={tab} value={tab.toLowerCase()}>
+                <Skeleton className="h-4 w-16" />
+              </TabsTrigger>
+            ))}
+          </TabsList>
+
+          {/* Listings Skeleton */}
+          <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <Card key={i} className="overflow-hidden">
+                <CardContent className="p-0">
+                  <Skeleton className="aspect-square w-full" />
+                  <div className="p-4 space-y-2">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-4 w-1/2" />
                   </div>
-                  <div className="flex justify-between items-center mt-4">
-                    <div className="h-6 sm:h-8 w-20 sm:w-24 bg-gray-300 rounded"></div>
-                    <div className="h-6 sm:h-8 w-24 sm:w-32 bg-gray-200 rounded"></div>
-                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* About Skeleton */}
+          <Card className="hidden">
+            <CardContent className="grid gap-4 p-6">
+              <div className="space-y-2">
+                <Skeleton className="h-6 w-1/4" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-3/4" />
+              </div>
+              <Skeleton className="h-px w-full" />
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-4 w-4" />
+                  <Skeleton className="h-4 w-1/4" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-4 w-4" />
+                  <Skeleton className="h-4 w-1/3" />
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Reviews Skeleton */}
+          <div className="hidden space-y-6">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Card key={i}>
+                <CardContent className="grid gap-4 p-6">
+                  <div className="flex items-start gap-4">
+                    <Skeleton className="h-10 w-10 rounded-full" />
+                    <div className="grid gap-2 flex-1">
+                      <div className="flex items-center justify-between">
+                        <Skeleton className="h-4 w-1/4" />
+                        <Skeleton className="h-4 w-1/6" />
+                      </div>
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Skeleton key={i} className="h-4 w-4" />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-3/4" />
+                  </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
-        </div>
+        </Tabs>
       </div>
     </div>
   );

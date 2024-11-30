@@ -1,7 +1,7 @@
 "use server";
 
 import { cache } from "react";
-import { signIn, signOut } from "./auth";
+// import { signIn, signOut } from "./auth";
 import { revalidatePath } from "next/cache";
 import { createServerSupabase } from "@/lib/supabase/server";
 // import { supabase } from "@/lib/utils";
@@ -35,26 +35,32 @@ export async function getUserById(userId: string) {
 }
 
 export const getItemsWithUsers = cache(async () => {
-  // const supabase = createServerSupabase(); // Create Supabase client
-  // const supabase = createServerSupabase();
-
   try {
-    const { data: itemsWithUsers, error } = await supabase.from("items")
-      .select(`
+    // Verify supabase connection
+    if (!supabase) {
+      console.error("Supabase client not initialized");
+      return { items: [], error: "Database connection failed" };
+    }
+
+    const { data: itemsWithUsers, error } = await supabase
+      .from("items")
+      .select(
+        `
         *,
         user:users(*)
-      `);
+      `
+      )
+      .throwOnError(); // Add explicit error throwing
 
     if (error) {
       console.error("Error fetching items with users:", error);
-      return { items: [], error: "Failed to fetch items" };
+      return { items: [], error: error.message };
     }
-    // console.log("itemsWithUsers", itemsWithUsers);
 
-    return { items: itemsWithUsers, error: null };
+    return { items: itemsWithUsers || [], error: null };
   } catch (error) {
     console.error("Unexpected error fetching items with users:", error);
-    return { items: [], error: "Failed to fetch items" };
+    return { items: [], error: "Database connection failed" };
   }
 });
 
@@ -110,14 +116,6 @@ export async function searchItems(query: string) {
 }
 
 // Sign In
-export async function signInWithGoogle() {
-  await signIn("google");
-}
-
-export async function signOutWithGoogle() {
-  await signOut({ redirectTo: "/" });
-}
-
 export const handleSignOut = async () => {
   // const supabase = createClientSupabase(); // Use client-side Supabase
   // const supabase = createServerSupabase();

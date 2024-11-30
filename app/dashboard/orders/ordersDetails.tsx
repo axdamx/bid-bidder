@@ -51,6 +51,16 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import Link from "next/link";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 // Extended mock data
 
@@ -101,8 +111,14 @@ export default function OrderDetails() {
   const [user] = useAtom(userAtom);
   const queryClient = useQueryClient();
   const [isUpdating, setIsUpdating] = useState(false);
+  const [showErrorDialog, setShowErrorDialog] = useState(false);
 
-  const { data: orders } = useQuery({
+  const {
+    data: orders,
+    error,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ["orders", user?.id],
     queryFn: () => getOrders(user?.id!),
     enabled: !!user?.id,
@@ -390,6 +406,39 @@ export default function OrderDetails() {
   return (
     <>
       <LoadingModal isOpen={isUpdating} message="Updating order status..." />
+
+      <AlertDialog open={showErrorDialog} onOpenChange={setShowErrorDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Connection Error</AlertDialogTitle>
+            <AlertDialogDescription>
+              There was a problem fetching your orders. Please check your
+              connection and try again.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setShowErrorDialog(false)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                refetch();
+                setShowErrorDialog(false);
+              }}
+            >
+              Try Again
+            </AlertDialogAction>
+            <AlertDialogAction
+              onClick={() => {
+                window.location.reload();
+              }}
+            >
+              Refresh Page
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <div className="max-w-7xl mx-auto p-4 space-y-8">
         {/* <Card>
           <CardHeader>

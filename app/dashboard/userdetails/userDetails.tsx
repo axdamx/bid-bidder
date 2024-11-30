@@ -19,21 +19,29 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Pencil, User, Mail, Phone, Calendar, Users } from "lucide-react";
+  Pencil,
+  User,
+  Mail,
+  Phone,
+  Calendar,
+  Users,
+  Camera,
+} from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
-import { updateUserField } from "./action";
+import { updateProfilePicture, updateUserField } from "./action";
 import { useRouter } from "next/navigation";
 import LoadingButton from "@/app/components/LoadingButton";
-import { useQueryClient } from "@tanstack/react-query";
 import { userAtom } from "@/app/atom/userAtom";
 import { useAtom } from "jotai";
+import { CldImage, CldUploadWidget } from "next-cloudinary";
+
+// Add type for User at the top
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  image?: string;
+}
 
 const UserDetailsPage = ({ initialUser }) => {
   const [userData, setUserData] = useState(initialUser);
@@ -44,8 +52,59 @@ const UserDetailsPage = ({ initialUser }) => {
   const router = useRouter(); // Initialize useRouter
   // const queryClient = useQueryClient();
   const [, setUser] = useAtom(userAtom);
+  const [profilePicPreview, setProfilePicPreview] = useState(null);
 
-  // console.log("user dalam userDetails", user);
+  console.log("user dalam userDetails", userData);
+
+  const handleUpload = async (result) => {
+    console.log("Upload result:", result);
+    setIsLoading(true);
+    try {
+      let imageUrl = result.info.secure_url;
+
+      // Check for custom coordinates array
+      if (result.info.coordinates?.custom?.[0]) {
+        const [x, y, width, height] = result.info.coordinates.custom[0];
+        imageUrl = imageUrl.replace(
+          "/upload/",
+          `/upload/c_crop,x_${x},y_${y},w_${width},h_${height}/c_fill,g_face,w_400,h_400,q_auto/`
+        );
+      } else {
+        // Fallback to basic transformations if no coordinates
+        imageUrl = imageUrl.replace(
+          "/upload/",
+          "/upload/c_fill,g_face,w_400,h_400,q_auto/"
+        );
+      }
+
+      console.log("Final image URL:", imageUrl);
+
+      setProfilePicPreview(imageUrl);
+      const updateResult = await updateProfilePicture(userData.id, imageUrl);
+
+      if (updateResult.success) {
+        setUserData((prev) => ({
+          ...prev,
+          image: imageUrl,
+        }));
+        setUser((prev) => ({
+          ...prev,
+          image: imageUrl,
+        }));
+        toast.success("Profile picture updated successfully");
+        router.refresh();
+      } else {
+        setProfilePicPreview(null);
+        toast.error(updateResult.error || "Failed to update profile picture");
+      }
+    } catch (error) {
+      setProfilePicPreview(null);
+      toast.error("An unexpected error occurred");
+      console.error("Upload error:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleEdit = (field) => {
     setEditingField(field);
@@ -72,10 +131,13 @@ const UserDetailsPage = ({ initialUser }) => {
         router.refresh();
         // console.log("result.data", result.data);
         // this is for atom
-        setUser((prev) => ({
-          ...prev,
-          [editingField]: editValue,
-        }));
+        setUser((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            [editingField]: editValue,
+          } as User;
+        });
         // queryClient.invalidateQueries({ queryKey: ["user"] });
         // window.location.reload(); // Replace router.refresh() with this
       } else {
@@ -237,40 +299,167 @@ const UserDetailsPage = ({ initialUser }) => {
     </div>
   );
 
+  console.log("profilePicPreview", profilePicPreview);
+
   return (
-    <div className="max-w-3xl mx-auto p-4 space-y-4">
-      {/* <Card> */}
-      {/* <CardHeader>
-          <CardTitle>Profile Settings</CardTitle>
-          <CardDescription>
-            Manage your account settings and preferences.
-          </CardDescription>
-        </CardHeader> */}
-      <CardContent>
-        <Tabs defaultValue="personal" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="personal">Personal</TabsTrigger>
-            <TabsTrigger value="contact">Contact</TabsTrigger>
-          </TabsList>
-          {Object.entries(fieldConfig).map(([key, section]) => (
-            <TabsContent key={key} value={key} className="mt-4">
-              <div className="space-y-2">
-                <div className="mb-4">
-                  <h3 className="text-lg font-semibold">{section.title}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {section.description}
-                  </p>
+    <div className="max-w-2xl mx-auto p-6">
+      <div className="bg-white rounded-lg shadow-sm p-8">
+        {/* Profile Picture Section */}
+        <div className="flex flex-col items-center mb-8">
+          <div className="relative mb-4">
+            <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-100">
+              {profilePicPreview || userData.image ? ( // Changed from profilePicture to image
+                <CldImage
+                  src={profilePicPreview || userData.image}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                  width={150}
+                  height={150}
+                  crop="fill"
+                  gravity="face"
+                  quality="auto"
+                  preserveTransformations={true} // Add this line
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <User className="w-16 h-16 text-gray-400" />
                 </div>
-                {Object.entries(section.fields).map(([field, config]) => (
-                  <div key={field}>{renderField(field, config)}</div>
-                ))}
-              </div>
-            </TabsContent>
-          ))}
-        </Tabs>
-      </CardContent>
-      {/* </Card> */}
-      {renderEditDialog()}
+              )}
+            </div>
+          </div>
+          <CldUploadWidget
+            uploadPreset="jzhhmoah"
+            onSuccess={handleUpload}
+            options={{
+              maxFiles: 1,
+              sources: ["local", "camera"],
+              resourceType: "image",
+              cropping: true,
+              croppingAspectRatio: 1,
+              croppingShowDimensions: true,
+              croppingValidateDimensions: true,
+              croppingShowBackButton: true,
+              transformation: [
+                {
+                  width: 400,
+                  height: 400,
+                  crop: "fill",
+                  gravity: "face",
+                  quality: "auto",
+                },
+              ],
+              // croppingCoordinatesMode: "custom", // Add this line
+              styles: {
+                palette: {
+                  window: "#FFFFFF",
+                  windowBorder: "#90A0B3",
+                  tabIcon: "#0078FF",
+                  menuIcons: "#5A616A",
+                  textDark: "#000000",
+                  textLight: "#FFFFFF",
+                  link: "#0078FF",
+                  action: "#FF620C",
+                  inactiveTabIcon: "#0E2F5A",
+                  error: "#F44235",
+                  inProgress: "#0078FF",
+                  complete: "#20B832",
+                  sourceBg: "#E4EBF1",
+                },
+              },
+            }}
+          >
+            {({ open }) => (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => open()}
+                disabled={isLoading}
+                className="flex items-center gap-2"
+              >
+                <Camera className="h-4 w-4" />
+                {isLoading ? "Uploading..." : "Change Profile Picture"}
+              </Button>
+            )}
+          </CldUploadWidget>
+        </div>
+
+        {/* Form Fields */}
+        <div className="space-y-6">
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-sm font-medium">Full Name</label>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleEdit("name")}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="text-gray-700 p-3 bg-gray-50 rounded-lg">
+              {userData.name || "Not set"}
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-sm font-medium">Gender</label>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleEdit("gender")}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="text-gray-700 p-3 bg-gray-50 rounded-lg capitalize">
+              {userData.gender || "Not set"}
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-sm font-medium">Phone Number</label>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleEdit("phone")}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="text-gray-700 p-3 bg-gray-50 rounded-lg">
+              {userData.phone || "Not set"}
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-sm font-medium">Date of birth</label>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleEdit("birthday")}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="text-gray-700 p-3 bg-gray-50 rounded-lg">
+              {userData.birthday || "Not set"}
+            </div>
+            <p className="text-sm text-gray-500 mt-1">
+              Your date of birth is used to calculate your age.
+            </p>
+          </div>
+        </div>
+
+        {/* Edit Dialog - Keep existing dialog component */}
+        {renderEditDialog()}
+      </div>
     </div>
   );
 };

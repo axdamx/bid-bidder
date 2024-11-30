@@ -9,9 +9,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <Provider>
-      <QueryClientProvider client={queryClient}>
+      {/* <QueryClientProvider client={queryClient}>
         <NotificationProvider>{children}</NotificationProvider>
-      </QueryClientProvider>
+      </QueryClientProvider> */}
+      {children}
     </Provider>
   );
 }

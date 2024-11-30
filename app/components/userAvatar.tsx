@@ -10,13 +10,13 @@ import {
 import { Loader2, LogOut, Settings, User } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { handleSignOut, signOutWithGoogle } from "../action";
+// import { handleSignOut, signOutWithGoogle } from "../action";
 import { createClientSupabase } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useAtom } from "jotai";
 import { userAtom } from "../atom/userAtom";
 import { usePathname, useRouter } from "next/navigation";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { set } from "date-fns";
 // import { supabase } from "@/lib/utils";
 
@@ -31,7 +31,7 @@ export default function UserAvatar({
   email: string;
   userId: string;
 }) {
-  // console.log("name", name);
+  console.log("name", name);
   const supabase = createClientSupabase();
   const [, setUser] = useAtom(userAtom);
   const [isNavigating, setIsNavigating] = useState(false);
@@ -39,13 +39,13 @@ export default function UserAvatar({
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
 
-  const initials =
-    name ||
-    ""
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase();
+  const initials = name.includes("@")
+    ? name.split("@")[0].charAt(0).toUpperCase()
+    : name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase();
 
   // Add this effect to reset navigation state when pathname changes
   useEffect(() => {
@@ -67,6 +67,7 @@ export default function UserAvatar({
   return (
     <>
       <Dialog open={isNavigating} modal>
+        <DialogTitle className="[&>button]:hidden" />
         <DialogContent className="[&>button]:hidden">
           <div className="flex flex-col items-center justify-center space-y-4">
             <Loader2 className="h-8 w-8 animate-spin" />

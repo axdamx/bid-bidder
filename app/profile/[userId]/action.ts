@@ -27,8 +27,6 @@ export async function followUser(followerId: string, followingId: string) {
   try {
     // const supabase = createClientSupabase();
     // const supabase = createServerSupabase();
-    console.log("🚀 ~ followUser ~ followerId:", followerId);
-    console.log("🚀 ~ followUser ~ followingId:", followingId);
     const { error } = await supabase
       .from("follows")
       .insert([{ followerId, followingId }]);
@@ -109,80 +107,6 @@ export async function getFollowCounts(userId: string) {
   } catch (error) {
     console.error("Error fetching follow counts:", error);
     return { followersCount: 0, followingCount: 0, error };
-  }
-}
-
-// Notification actions
-export async function getFollowersForNotification(
-  authorId: string
-): Promise<NotificationFollower[]> {
-  try {
-    // const supabase = createClientSupabase();
-    // const supabase = createServerSupabase();
-    const { data, error } = await supabase
-      .from("follows")
-      .select("users(id, email, name)")
-      .eq("followingId", authorId)
-      .innerJoin("users", "users.id", "follows.followerId");
-
-    if (error) throw error;
-
-    return data.map((follower) => ({
-      id: follower.users.id,
-      email: follower.users.email ?? "",
-      name: follower.users.name,
-    }));
-  } catch (error) {
-    console.error("Error fetching followers for notification:", error);
-    return [];
-  }
-}
-
-// Create item with notification
-export async function createItemWithNotification(
-  userId: string,
-  data: CreateItemData
-) {
-  try {
-    // const supabase = createClientSupabase();
-    // 1. Create the item
-    // const supabase = createServerSupabase();
-    const { data: newItem, error: itemError } = await supabase
-      .from("items")
-      .insert([
-        {
-          userId,
-          name: data.name,
-          startingPrice: data.startingPrice,
-          currentBid: 0,
-          bidInterval: data.bidInterval,
-          endDate: data.endDate,
-          description: data.description,
-          imageId: data.imageId,
-          status: "active",
-        },
-      ])
-      .single();
-
-    if (itemError) throw itemError;
-
-    // 2. Get all followers
-    const followers = await getFollowersForNotification(userId);
-
-    // 3. Send email notifications (implement your email service)
-    await notifyFollowers({
-      followers,
-      item: newItem,
-      authorId: userId,
-    });
-
-    revalidatePath("/items");
-    revalidatePath(`/profile/${userId}`);
-
-    return { success: true, item: newItem };
-  } catch (error) {
-    console.error("Error in createItemWithNotification:", error);
-    return { success: false, error };
   }
 }
 

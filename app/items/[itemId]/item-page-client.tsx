@@ -56,6 +56,7 @@ import { createClientSupabase } from "@/lib/supabase/client";
 import { userAtom } from "@/app/atom/userAtom";
 import { useAtom } from "jotai";
 import { useRouter } from "next/navigation";
+import { AnimatePresence, motion } from "framer-motion";
 
 // export function formatTimestamp(timestamp: string) {
 //   return formatDistance(new Date(), timestamp, { addSuffix: true });
@@ -612,7 +613,17 @@ export default function AuctionItem({
                 <div className="break-words">
                   <p className="text-sm text-muted-foreground">Current Bid</p>
                   <p className="text-2xl font-bold">
-                    {formatCurrency(highestBid ?? 0)}
+                    <AnimatePresence mode="wait">
+                      <motion.span
+                        key={highestBid}
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: -20, opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        {formatCurrency(highestBid ?? 0)}
+                      </motion.span>
+                    </AnimatePresence>
                   </p>
                 </div>
                 <div className="break-words">
@@ -629,7 +640,19 @@ export default function AuctionItem({
                 </div>
                 <div className="break-words">
                   <p className="text-sm text-muted-foreground">Total Bids</p>
-                  <p className="text-lg">{bids.length}</p>
+                  <p className="text-lg">
+                    <AnimatePresence mode="wait">
+                      <motion.span
+                        key={bids.length}
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: -20, opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        {bids.length}
+                      </motion.span>
+                    </AnimatePresence>
+                  </p>
                 </div>
                 <div className="break-words">
                   <p className="text-sm text-muted-foreground">End Date</p>

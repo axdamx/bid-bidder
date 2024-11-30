@@ -17,7 +17,7 @@ import { ItemWithUser, User as UserType } from "./items";
 import { formatCurrency } from "@/lib/utils";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
 interface ItemCardProps {
   item: ItemWithUser;
@@ -32,20 +32,17 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, user }) => {
   // Add this effect to reset navigation state when pathname changes
   useEffect(() => {
     setIsNavigating(false);
-    // setIsOpen(false);
   }, [pathname]);
 
-  const handleLinkClick = async (e: React.MouseEvent, path: string) => {
+  const handleLinkClick = (e: React.MouseEvent, path: string) => {
     e.preventDefault();
-    // setIsOpen(false);
     // Don't navigate if we're already on the target path
     if (path === pathname) {
       return;
     }
     setIsNavigating(true);
-    await router.push(path);
+    router.push(path);
   };
-
   const isItemEnded = isBidOver(item.endDate);
 
   function isBidOver(endDate: Date) {
@@ -55,6 +52,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, user }) => {
   return (
     <>
       <Dialog open={isNavigating} modal>
+        <DialogTitle className="[&>button]:hidden" />
         <DialogContent className="[&>button]:hidden">
           <div className="flex flex-col items-center justify-center space-y-4">
             <Loader2 className="h-8 w-8 animate-spin" />

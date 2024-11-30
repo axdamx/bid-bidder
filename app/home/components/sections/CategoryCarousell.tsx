@@ -141,7 +141,7 @@ export default function OptimizedCategoriesCarousel() {
           >
             <CarouselContent
               ref={api}
-              className="transition-transform duration-[2000ms] ease-linear"
+              // className="transition-transform duration-[2000ms] ease-linear"
             >
               {items.map((category, index) => (
                 <CarouselItem

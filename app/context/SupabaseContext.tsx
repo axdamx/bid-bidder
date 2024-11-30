@@ -7,8 +7,10 @@ import React, {
   ReactNode,
 } from "react";
 import { Session } from "@supabase/supabase-js";
-import { supabase } from "@/lib/utils";
+import { createClientSupabase } from "@/lib/supabase/client";
+// import { supabase } from "@/lib/utils";
 
+const supabase = createClientSupabase();
 type SupabaseContextType = {
   session: Session | null;
   supabase: typeof supabase;

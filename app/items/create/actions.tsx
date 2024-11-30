@@ -3,7 +3,7 @@
 import { images, items } from "@/src/db/schema";
 import { revalidatePath } from "next/cache";
 import { database } from "@/src/db/database";
-import { auth } from "@/app/auth";
+// import { auth } from "@/app/auth";
 import { redirect } from "next/navigation";
 // import { supabase } from "@/lib/utils";
 import { useSupabase } from "@/app/context/SupabaseContext";

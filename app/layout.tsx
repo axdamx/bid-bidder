@@ -4,13 +4,9 @@ import { Inter as FontSans } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { Header } from "./header";
 import { Footer } from "./footer";
-import { SupabaseProvider } from "./context/SupabaseContext";
-import QueryProvider from "@/lib/QueryClientComponentWrapper";
-import SessionProvider from "@/lib/supabase/SessionProvider";
-import { Providers } from "./atom/providers";
-import { createStore, Provider } from "jotai";
-import { DevTools } from "jotai-devtools";
-import { NotificationProvider } from "./context/NotificationContext";
+import { createStore } from "jotai";
+import { Providers } from "./Providers";
+import { AnimatedBackground } from "./AnimatedBackground";
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -33,10 +29,12 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={cn(
-          "min-h-screen text-base md:text-xl font-serif tracking-wide overflow-x-hidden bg-gradient-to-r from-orange-100 via-white to-pink-100",
+          "min-h-screen text-base md:text-xl font-serif tracking-wide overflow-x-hidden",
+          "bg-gradient-to-br from-slate-400 via-slate-200 to-purple-200", // This is the lighter version
           fontSans.variable
         )}
       >
+        {/* <AnimatedBackground /> */}
         <Providers>
           <div className="flex flex-col min-h-screen w-full">
             <Header />

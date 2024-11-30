@@ -18,7 +18,8 @@ import { useAtom } from "jotai";
 //   return <DashboardClient initialUser={initialUser} />;
 // }
 export default function DashboardPage() {
-  const [user] = useAtom(userAtom);
+  const [user, setUser] = useAtom(userAtom);
+  console.log("user page", user);
   // const { session } = useSupabase(); // Use the hook to get session data
   // const userId = session?.user?.id || ""; // Extract user ID from session
 
@@ -40,20 +41,23 @@ export default function DashboardPage() {
   //   }
   // }, [userId]);
 
-  const { data: initialUser, error } = useQuery({
-    queryKey: ["getUserById", user?.id],
-    queryFn: () => getUserById(user?.id || ""),
-    staleTime: 0, // Set to 0 to always check for updates
-    refetchOnMount: true, // Refetch when component mounts
-  });
+  // const { data: initialUser, error } = useQuery({
+  //   queryKey: ["getUserById", user?.id],
+  //   queryFn: () => getUserById(user?.id || ""),
+  //   staleTime: 0, // Set to 0 to always check for updates
+  //   refetchOnMount: true, // Refetch when component
+  // });
 
-  if (error) {
-    return <div>Error: {error.message}</div>;
-  }
+  // console.log("initialUser dalam dashboard page", initialUser);
 
-  if (!initialUser) {
+  // if (error) {
+  //   return <div>Error: {error.message}</div>;
+  // }
+
+  console.log("user dalam dashboard page", user);
+  if (!user) {
     return <SkeletonLoading />;
   }
 
-  return <DashboardClient initialUser={initialUser} />;
+  return <DashboardClient initialUser={user} />;
 }

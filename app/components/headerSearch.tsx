@@ -8,12 +8,17 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { Search } from "lucide-react";
+import { Loader2, Search } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { searchItems } from "../action";
 import { CldImage } from "next-cloudinary";
-import { DialogContent, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { formatCurrency } from "@/lib/utils";
 
 interface SearchResult {
@@ -46,6 +51,27 @@ export default function SearchCommand() {
   const [loading, setLoading] = useState(false); // New state for loading
   const router = useRouter();
   const debouncedQuery = useDebounce(query, 500); // Use the debounced query
+  const [isNavigating, setIsNavigating] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const pathname = usePathname();
+
+  // Add this effect to reset navigation state when pathname changes
+  useEffect(() => {
+    setIsNavigating(false);
+    setIsOpen(false);
+  }, [pathname]);
+
+  const handleLinkClick = (e: React.MouseEvent, path: string) => {
+    e.preventDefault();
+    setOpen(false);
+    setIsOpen(false);
+    // Don't navigate if we're already on the target path
+    if (path === pathname) {
+      return;
+    }
+    setIsNavigating(true);
+    router.push(path);
+  };
 
   useEffect(() => {
     const handleSearch = async () => {
@@ -85,6 +111,16 @@ export default function SearchCommand() {
 
   return (
     <div>
+      <Dialog open={isNavigating} modal>
+        <DialogTitle className="[&>button]:hidden" />
+        <DialogContent className="[&>button]:hidden">
+          <div className="flex flex-col items-center justify-center space-y-4">
+            <Loader2 className="h-8 w-8 animate-spin" />
+            <p>Loading...</p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <button
         onClick={() => setOpen(true)}
         className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors"
@@ -103,6 +139,7 @@ export default function SearchCommand() {
           onValueChange={setQuery}
         />
         <DialogTitle className="sr-only">Search items</DialogTitle>
+        <DialogDescription className="sr-only" />
         <CommandList className="max-h-[300px] overflow-y-auto">
           {loading ? (
             <div className="flex justify-center py-4">
@@ -124,10 +161,14 @@ export default function SearchCommand() {
                 {results.map((item) => (
                   <CommandItem
                     key={item.id}
-                    value={`${item.name}-${item.id}`} // Combine name and id for uniqueness while maintaining searchability
+                    value={`${item.name}-${item.id}`}
                     onSelect={() => {
-                      router.push(`/items/${item.id}`);
-                      setOpen(false);
+                      // Create a synthetic React MouseEvent
+                      const syntheticEvent = {
+                        preventDefault: () => {},
+                      } as React.MouseEvent;
+
+                      handleLinkClick(syntheticEvent, `/items/${item.id}`);
                     }}
                     className="flex items-center justify-between py-2"
                   >

@@ -3,7 +3,7 @@
 
 import { createServerSupabase } from "@/lib/supabase/server";
 // import { supabase } from "@/lib/utils";
-import { auth } from "../auth";
+// import { auth } from "../auth";
 
 export const getUserData = async () => {
   const supabase = createServerSupabase();

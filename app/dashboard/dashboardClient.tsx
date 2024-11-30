@@ -58,9 +58,9 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   // const [activeContent, setActiveContent] = useState("userDetails");
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const [user] = useAtom(userAtom);
+  // const [user] = useAtom(userAtom);
 
-  // console.log("initialUser", initialUser);
+  // console.log("user dashboard", user);
 
   if (!initialUser) {
     return null;
@@ -77,7 +77,7 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
     router.push(`/dashboard?tab=${tabId}`);
   };
 
-  const initials = user?.name
+  const initials = initialUser?.name
     .split(" ")
     .map((n) => n[0])
     .join("")
@@ -130,7 +130,7 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
                     Manage your personal information
                   </CardDescription>
                 </CardHeader>
-                <UserDetailsPage initialUser={user} />
+                <UserDetailsPage initialUser={initialUser} />
               </Card>
             </div>
           </MotionGrid>
@@ -251,7 +251,7 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
       <div className="p-4 border-b">
         <div className="flex items-center gap-4 mb-2">
           <Avatar className="h-10 w-10">
-            <AvatarImage src={user?.image} alt="User" />
+            <AvatarImage src={initialUser?.image} alt="User" />
             <AvatarFallback>{initials}</AvatarFallback>
           </Avatar>
           {isSidebarOpen && (
@@ -262,8 +262,10 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
               transition={{ duration: 0.2 }}
             >
               <div>
-                <p className="font-semibold text-sm">{user?.name}</p>
-                <p className="text-xs text-muted-foreground">{user?.email}</p>
+                <p className="font-semibold text-sm">{initialUser?.name}</p>
+                <p className="text-xs text-muted-foreground">
+                  {initialUser?.email}
+                </p>
               </div>
             </motion.div>
           )}

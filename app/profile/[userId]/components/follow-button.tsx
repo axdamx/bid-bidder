@@ -4,35 +4,40 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { followUser, unfollowUser } from "../action";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
 
 export function FollowButton({
   targetUserId,
   currentUserId,
   initialIsFollowing,
+  followersCount,
 }: {
   targetUserId: string;
   currentUserId: string | null;
   initialIsFollowing: boolean;
+  followersCount: number;
 }) {
   // Initialize the state with the initialIsFollowing prop
   const [isFollowing, setIsFollowing] = useState<boolean>(initialIsFollowing);
-  const [isPending, setIsPending] = useState(false);
+  // const [isPending, setIsPending] = useState(false);
 
+  console.log("currentUserId", currentUserId);
+  console.log("targetUserId", targetUserId);
   const queryClient = useQueryClient();
 
-  // Replace the manual mutation handling with React Query mutations
   const followMutation = useMutation({
     mutationFn: () => followUser(currentUserId!, targetUserId),
     onSuccess: () => {
-      console.log("followMutation onSuccess");
       setIsFollowing(true);
-      // Invalidate and refetch relevant queries
-      queryClient.invalidateQueries({
-        queryKey: ["followData", currentUserId, targetUserId],
-      });
-    },
-    onError: (error) => {
-      console.error("Follow failed:", error);
+      // Immediately update the cache with the new followers count
+      queryClient.setQueryData(
+        ["followData", currentUserId, targetUserId],
+        (old: any) => ({
+          ...old,
+          followersCount: followersCount + 1,
+          isFollowing: true,
+        })
+      );
     },
   });
 
@@ -40,13 +45,15 @@ export function FollowButton({
     mutationFn: () => unfollowUser(currentUserId!, targetUserId),
     onSuccess: () => {
       setIsFollowing(false);
-      // Invalidate and refetch relevant queries
-      queryClient.invalidateQueries({
-        queryKey: ["followData", currentUserId, targetUserId],
-      });
-    },
-    onError: (error) => {
-      console.error("Unfollow failed:", error);
+      // Immediately update the cache with the new followers count
+      queryClient.setQueryData(
+        ["followData", currentUserId, targetUserId],
+        (old: any) => ({
+          ...old,
+          followersCount: followersCount - 1,
+          isFollowing: false,
+        })
+      );
     },
   });
 
@@ -66,10 +73,21 @@ export function FollowButton({
   return (
     <Button
       onClick={handleFollow}
-      disabled={isPending || !currentUserId}
+      disabled={
+        followMutation.isPending || unfollowMutation.isPending || !currentUserId
+      }
       variant={isFollowing ? "outline" : "default"}
     >
-      {isPending ? "Loading..." : isFollowing ? "Unfollow" : "Follow"}
+      {followMutation.isPending || unfollowMutation.isPending ? (
+        <>
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          Loading
+        </>
+      ) : isFollowing ? (
+        "Unfollow"
+      ) : (
+        "Follow"
+      )}
     </Button>
   );
 }

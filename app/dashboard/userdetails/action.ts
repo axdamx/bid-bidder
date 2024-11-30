@@ -43,7 +43,14 @@ export async function updateUserField(
     }
 
     // Only allow updating specific fields
-    const allowedFields = ["name", "email", "phone", "gender", "birthday"];
+    const allowedFields = [
+      "name",
+      "email",
+      "phone",
+      "gender",
+      "birthday",
+      "image",
+    ];
     if (!allowedFields.includes(field)) {
       return {
         success: false,
@@ -71,6 +78,42 @@ export async function updateUserField(
     return {
       success: false,
       error: `Failed to update ${field}`,
+    };
+  }
+}
+
+export async function updateProfilePicture(
+  userId: string,
+  imageUrl: string
+): Promise<ActionResponse> {
+  try {
+    if (!userId || !imageUrl) {
+      return {
+        success: false,
+        error: "Missing user ID or image URL",
+      };
+    }
+
+    const { error } = await supabase
+      .from("users")
+      .update({ image: imageUrl })
+      .eq("id", userId);
+
+    if (error) {
+      console.error("Error updating profile picture:", error);
+      return {
+        success: false,
+        error: "Failed to update profile picture",
+      };
+    }
+
+    revalidatePath("/dashboard");
+    return { success: true };
+  } catch (error) {
+    console.error("Unexpected error updating profile picture:", error);
+    return {
+      success: false,
+      error: "Failed to update profile picture",
     };
   }
 }
