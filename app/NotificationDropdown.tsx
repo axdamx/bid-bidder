@@ -55,6 +55,9 @@ export function NotificationDropdown() {
         case "new_item":
           router.push(`/items/${notification.itemId}`);
           break;
+        case "order_created":
+          router.push(`/dashboard?tab=orders`);
+          break;
         default:
           console.warn(`Unknown notification type: ${notification.type}`);
           break;

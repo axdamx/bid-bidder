@@ -123,7 +123,7 @@ export default function OrderDetails() {
     queryFn: () => getOrders(user?.id!),
     enabled: !!user?.id,
     // refetchOnWindowFocus: false, // Prevent refetch on window focus
-    refetchOnMount: false, // Prevent refetch on component mount
+    refetchOnMount: true, // Prevent refetch on component mount
   });
 
   // Mutation for updating order status
@@ -353,7 +353,6 @@ export default function OrderDetails() {
           </div>
           {totalPages > 1 && (
             <Pagination className="justify-center p-4">
-              {" "}
               {/* Added padding to the pagination */}
               <PaginationContent>
                 <PaginationItem>

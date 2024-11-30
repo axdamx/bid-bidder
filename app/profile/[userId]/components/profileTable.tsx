@@ -39,6 +39,14 @@ import { MotionGrid } from "@/app/components/motionGrid";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 export default function ProfileTable(ownedItems) {
   const [view, setView] = React.useState("grid");
@@ -271,7 +279,7 @@ export default function ProfileTable(ownedItems) {
 
         {renderContent()}
 
-        {totalPages > 1 && (
+        {/* {totalPages > 1 && (
           <div className="mt-6 flex items-center justify-between mb-6">
             <Button
               variant="outline"
@@ -292,7 +300,53 @@ export default function ProfileTable(ownedItems) {
             >
               Next <ChevronRight className="ml-2 h-4 w-4" />
             </Button>
-          </div>
+          </div>  
+        )} */}
+        {totalPages > 1 && (
+          <Pagination className="justify-center p-4">
+            {/* Added padding to the pagination */}
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
+                  className={
+                    currentPage === 1
+                      ? "pointer-events-none opacity-50"
+                      : "cursor-pointer"
+                  }
+                />
+              </PaginationItem>
+
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                (pageNumber) => (
+                  <PaginationItem key={pageNumber}>
+                    <PaginationLink
+                      onClick={() => setCurrentPage(pageNumber)}
+                      isActive={pageNumber === currentPage}
+                      className="cursor-pointer opacity-100"
+                    >
+                      {pageNumber}
+                    </PaginationLink>
+                  </PaginationItem>
+                )
+              )}
+
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                  }
+                  className={
+                    currentPage === totalPages
+                      ? "pointer-events-none opacity-50"
+                      : "cursor-pointer"
+                  }
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
         )}
       </div>
     </>

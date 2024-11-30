@@ -1,0 +1,53 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+
+interface CountdownTimerProps {
+  createdAt: string;
+}
+
+export default function CountdownTimer({ createdAt }: CountdownTimerProps) {
+  const [timeRemaining, setTimeRemaining] = useState<string>("");
+  const timerRef = useRef<NodeJS.Timeout>();
+
+  useEffect(() => {
+    const calculateTime = () => {
+      const created = new Date(createdAt);
+      const deadline = new Date(created.getTime() + 60 * 60 * 1000); // 1 hour after creation
+      const now = new Date();
+      const diff = deadline.getTime() - now.getTime();
+
+      if (diff <= 0) {
+        setTimeRemaining("Time expired");
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+        }
+        return;
+      }
+
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      setTimeRemaining(`${minutes}m ${seconds}s`);
+    };
+
+    calculateTime(); // Initial calculation
+    timerRef.current = setInterval(calculateTime, 1000);
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, [createdAt]);
+
+  if (!timeRemaining) return null;
+
+  return (
+    <div className="mt-4 text-center">
+      <p className="text-sm text-muted-foreground">
+        Time remaining to complete order:
+      </p>
+      <p className="text-lg font-bold text-primary">{timeRemaining}</p>
+    </div>
+  );
+}

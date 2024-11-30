@@ -29,6 +29,14 @@ import { FollowButton } from "./components/follow-button";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 export default function ProfilePage({
   params: { userId: ownerId },
@@ -213,7 +221,7 @@ export default function ProfilePage({
                 </MotionGrid>
               )}
             </div>
-            {paginatedItems?.length > 0 && (
+            {/* {paginatedItems?.length > 0 && (
               <div className="flex justify-center gap-2 mt-8">
                 <Button
                   variant="outline"
@@ -233,6 +241,50 @@ export default function ProfilePage({
                   Next <ChevronRight className="ml-2 h-4 w-4" />
                 </Button>
               </div>
+            )} */}
+            {paginatedItems.length > 0 && (
+              <Pagination className="justify-center p-4">
+                {/* Added padding to the pagination */}
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+                      className={
+                        page === 1
+                          ? "pointer-events-none opacity-50"
+                          : "cursor-pointer"
+                      }
+                    />
+                  </PaginationItem>
+
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                    (pageNumber) => (
+                      <PaginationItem key={pageNumber}>
+                        <PaginationLink
+                          onClick={() => setPage(pageNumber)}
+                          isActive={pageNumber === page}
+                          className="cursor-pointer opacity-100"
+                        >
+                          {pageNumber}
+                        </PaginationLink>
+                      </PaginationItem>
+                    )
+                  )}
+
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() =>
+                        setPage((prev) => Math.min(prev + 1, totalPages))
+                      }
+                      className={
+                        page === totalPages
+                          ? "pointer-events-none opacity-50"
+                          : "cursor-pointer"
+                      }
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
             )}
           </TabsContent>
 

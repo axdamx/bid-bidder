@@ -190,7 +190,7 @@ export default function CreatePage() {
               <div
                 className={`grid gap-4 mt-4 ${
                   imageIds.length === 1
-                    ? "grid-cols-1"
+                    ? "grid-cols-1 max-w-2xl mx-auto" // Added max-width and center alignment for single image
                     : imageIds.length === 2
                     ? "grid-cols-2"
                     : "grid-cols-1 md:grid-cols-2"
@@ -205,7 +205,7 @@ export default function CreatePage() {
                       alt="Uploaded image"
                       className={`rounded-lg object-cover w-full ${
                         imageIds.length === 1
-                          ? "min-h-[400px]"
+                          ? "max-h-[400px] object-contain" // Changed to object-contain and max-height
                           : imageIds.length === 2
                           ? "min-h-[300px]"
                           : "min-h-[200px]"
@@ -298,14 +298,14 @@ export default function CreatePage() {
               <div>
                 <Label htmlFor="endDate">End Date</Label>
                 <div className="relative">
-                  {/* <DateTimePicker
+                  <DateTimePicker
                     onChange={(date: Date | undefined) => {
                       setValue("endDate", date ? date.toISOString() : "", {
                         shouldValidate: true,
                       });
                       trigger(); // Add this to re-validate the form
                     }}
-                  /> */}
+                  />
                 </div>
                 {errors.endDate && (
                   <p className="text-sm text-red-500 mt-1">

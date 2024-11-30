@@ -40,6 +40,7 @@ import CheckoutSkeleton from "../components/CheckoutSkeleton";
 import { useQuery } from "@tanstack/react-query";
 import { useAtom } from "jotai";
 import { userAtom } from "@/app/atom/userAtom";
+import CountdownTimer from "../components/CheckoutCountdownTimer";
 
 const addressSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -95,12 +96,6 @@ export default function CheckoutPage({
     enabled: !!user?.id, // Only run query when user.id exists
   });
 
-  // console.log("checkoutItems", checkoutItems);
-
-  const shippingCost = 20;
-  const buyersPremium = checkoutItems?.currentBid! * 0.07;
-  const totalPrice = checkoutItems?.currentBid! + shippingCost + buyersPremium;
-
   const steps = [
     { id: "address", label: "Address" },
     { id: "billing", label: "Billing" },
@@ -118,18 +113,34 @@ export default function CheckoutPage({
     defaultValues: formData,
   });
 
-  const onSubmit = (data: Partial<FormData>) => {
-    setFormData({ ...formData, ...data });
-    if (step === "address") setStep("billing");
-    else if (step === "billing") setStep("payment");
-  };
-
   const progress =
     ((steps.findIndex((s) => s.id === step) + 1) / steps.length) * 100;
 
   if (isLoading) {
     return <CheckoutSkeleton />;
   }
+
+  const { order, item } = checkoutItems || {};
+
+  console.log("checkoutItems", checkoutItems); // Add check for buyer ID
+  if (!order) {
+    return (
+      <div className="container mx-auto py-12 text-center">
+        <h2 className="text-xl font-semibold">NO item found</h2>
+        <p className="mt-2 text-muted-foreground">You cannot view this page.</p>
+      </div>
+    );
+  }
+
+  const shippingCost = 20;
+  const buyersPremium = item?.currentBid! * 0.07;
+  const totalPrice = item?.currentBid! + shippingCost + buyersPremium;
+
+  const onSubmit = (data: Partial<FormData>) => {
+    setFormData({ ...formData, ...data });
+    if (step === "address") setStep("billing");
+    else if (step === "billing") setStep("payment");
+  };
 
   return (
     <div className="container mx-auto py-12 rounded-xl">
@@ -157,6 +168,7 @@ export default function CheckoutPage({
               </div>
             ))}
           </div>
+          {order?.createdAt && <CountdownTimer createdAt={order.createdAt} />}
         </div>
 
         <div className="grid gap-8 lg:grid-cols-3">
@@ -593,14 +605,14 @@ export default function CheckoutPage({
               <CardContent className="space-y-6">
                 <div className="flex space-x-4">
                   <CldImage
-                    src={checkoutItems?.imageId}
+                    src={item?.imageId}
                     alt="Alana Double Bed"
                     className="h-36 w-36 rounded-md object-cover"
                     width={96}
                     height={96}
                   />
                   <div>
-                    <h3 className="font-medium">{checkoutItems?.name}</h3>
+                    <h3 className="font-medium">{item?.name}</h3>
                     {/* <p className="text-sm text-muted-foreground">Qty: 1</p> */}
                     {/* <p className="mt-1 font-medium">£399.00</p> */}
                   </div>
@@ -609,7 +621,7 @@ export default function CheckoutPage({
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span>Sold Price</span>
-                    <span>{formatCurrency(checkoutItems?.currentBid)}</span>
+                    <span>{formatCurrency(item?.currentBid)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Service fee (7%)</span>
