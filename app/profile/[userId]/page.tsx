@@ -94,14 +94,14 @@ export default function ProfilePage({
     (ownedItemsQuery.data?.length || 0) / itemsPerPage
   );
 
-  console.log("userQuery.data", userQuery.data);
+  // console.log("userQuery.data", userQuery.data);
 
   if (isLoading) return <SkeletonLoaderProfile />;
   if (!userQuery.data) return <div>User not found</div>;
 
-  console.log("userQuery.data", userQuery.data);
-  console.log("followDataQuery.data", followDataQuery.data);
-  console.log("ownedItemsQuery.data", ownedItemsQuery.data);
+  // console.log("userQuery.data", userQuery.data);
+  // console.log("followDataQuery.data", followDataQuery.data);
+  // console.log("ownedItemsQuery.data", ownedItemsQuery.data);
 
   return (
     <div className="min-h-screen">
@@ -304,7 +304,7 @@ export default function ProfilePage({
                   <div>
                     <h3 className="font-semibold">About Me</h3>
                     {userQuery.data.about && (
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm text-muted-foreground mt-3">
                         {userQuery.data.about}
                       </p>
                     )}

@@ -80,11 +80,41 @@ export default function AuthModals({
   // console.log("userAtom", userAtom);
 
   useEffect(() => {
+    // Check session on component mount
+    const initializeAuth = async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error) {
+        console.error("Error checking session:", error);
+        return;
+      }
+      if (session?.user) {
+        console.log("Session found on mount:", session.user);
+        upsertUser(session.user);
+      }
+    };
+
+    initializeAuth();
+
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
+        console.log("Auth state changed:", event, session?.user);
         if (session?.user) {
-          // console.log("User signed in:", session.user);
-          upsertUser(session.user);
+          if (event === "SIGNED_IN") {
+            console.log("User signed in:", session.user);
+            const { data: user } = await supabase
+              .from("users")
+              .select("*")
+              .eq("id", session.user.id)
+              .single();
+
+            if (user) {
+              console.log("Existing user found:", user);
+              setUser(user);
+              if (!user.onboardingCompleted) {
+                router.push("/onboarding");
+              }
+            }
+          }
         }
       }
     );
@@ -93,6 +123,42 @@ export default function AuthModals({
       authListener?.subscription.unsubscribe();
     };
   }, []);
+
+  async function upsertUser(user: any) {
+    console.log("Upserting user:", user);
+    // Only handle existing users in upsertUser
+    const { data: existingUser, error: userError } = await supabase
+      .from("users")
+      .select("*")
+      .eq("id", user.id)
+      .single();
+
+    if (userError && userError.code !== "PGRST116") {
+      console.error("Error checking user existence:", userError.message);
+      return;
+    }
+
+    // Only update if user exists
+    if (existingUser) {
+      console.log("Updating existing user:", existingUser);
+      const { data: updatedUser, error: updateError } = await supabase
+        .from("users")
+        .update({
+          email: user.email,
+          image: user.user_metadata?.avatar_url,
+        })
+        .eq("id", user.id)
+        .select()
+        .single();
+
+      if (updateError) {
+        console.error("Error updating user:", updateError.message);
+      } else {
+        console.log("User updated:", updatedUser);
+        setUser(updatedUser);
+      }
+    }
+  }
 
   const handleOAuthSignIn = async () => {
     setIsLoading(true);
@@ -122,58 +188,6 @@ export default function AuthModals({
       setIsLoading(false);
     }
   };
-
-  async function upsertUser(user: any) {
-    const { data: existingUser, error: selectError } = await supabase
-      .from("users")
-      .select("*")
-      .eq("id", user.id)
-      .single();
-
-    if (selectError && selectError.code !== "PGRST116") {
-      console.error("Error checking user existence:", selectError.message);
-      return;
-    }
-
-    if (!existingUser) {
-      const userData = {
-        id: user.id,
-        email: user.email,
-        name: user.user_metadata.full_name || user.email,
-        image: user.user_metadata.avatar_url,
-        createdAt: user.created_at,
-      };
-      // Insert new user
-      const { data: newUser, error: insertError } = await supabase
-        .from("users")
-        .insert([userData])
-        .select()
-        .single();
-
-      if (insertError) {
-        console.error("Error inserting user:", insertError.message);
-      } else {
-        setUser(newUser);
-      }
-    } else {
-      // Update existing user
-      const { data: updatedUser, error: updateError } = await supabase
-        .from("users")
-        .update({
-          email: user.email,
-          image: user.user_metadata.avatar_url,
-        })
-        .eq("id", user.id)
-        .select()
-        .single();
-
-      if (updateError) {
-        console.error("Error updating user:", updateError.message);
-      } else {
-        setUser(updatedUser);
-      }
-    }
-  }
 
   const signInForm = useForm<SignInFormValues>({
     resolver: zodResolver(signInSchema),
@@ -211,28 +225,81 @@ export default function AuthModals({
   const onSignInSubmit = async (data: SignInFormValues) => {
     setIsLoading(true);
     try {
-      const { error, data: signInData } =
+      const { error: signInError, data: signInData } =
         await supabase.auth.signInWithPassword({
           email: data.email,
           password: data.password,
         });
-      if (error) throw error;
+      if (signInError) throw signInError;
 
-      const { data: userData, error: userError } = await supabase
-        .from("users")
-        .select("*")
-        .eq("id", signInData.user.id)
-        .single();
+      // Get or create user record with retry
+      let userData = null;
+      let retryCount = 0;
+      const maxRetries = 3;
 
-      if (userError) throw userError;
+      while (!userData && retryCount < maxRetries) {
+        const { data: existingUser, error: userError } = await supabase
+          .from("users")
+          .select("*")
+          .eq("id", signInData.user.id)
+          .single();
+
+        if (userError && userError.code !== "PGRST116") {
+          console.error("Error fetching user:", userError);
+          retryCount++;
+          await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+          continue;
+        }
+
+        if (existingUser) {
+          userData = existingUser;
+        } else {
+          // Create user record if it doesn't exist
+          const { data: newUser, error: createError } = await supabase
+            .from("users")
+            .insert([
+              {
+                id: signInData.user.id,
+                email: data.email,
+                name: signInData.user.email?.split('@')[0] || 'User',
+                createdAt: new Date().toISOString(),
+                onboardingCompleted: false,
+              },
+            ])
+            .select()
+            .single();
+
+          if (createError) {
+            console.error("Error creating user:", createError);
+            retryCount++;
+            await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+            continue;
+          }
+
+          userData = newUser;
+        }
+      }
+
+      if (!userData) {
+        throw new Error("Failed to get or create user record");
+      }
 
       setUser(userData);
       toast.success("Sign in successful");
       handleClose();
       router.refresh();
-    } catch (error) {
+
+      // Check if onboarding is needed
+      if (!userData.onboardingCompleted) {
+        router.push("/onboarding");
+      }
+    } catch (error: any) {
       console.error("Error signing in:", error);
-      toast.error("Sign in failed. Please check your email and password.");
+      toast.error(
+        error.message === "Invalid login credentials"
+          ? "Invalid email or password"
+          : "Sign in failed. Please try again."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -241,72 +308,111 @@ export default function AuthModals({
   const onSignUpSubmit = async (data: SignUpFormValues) => {
     setIsLoading(true);
     try {
-      const { error, data: signUpData } = await supabase.auth.signUp({
+      // First check if user already exists to prevent race conditions
+      const { data: existingUser, error: checkError } = await supabase
+        .from("users")
+        .select("id")
+        .eq("email", data.email)
+        .maybeSingle();
+
+      if (checkError && checkError.code !== "PGRST116") {
+        throw checkError;
+      }
+
+      if (existingUser) {
+        toast.error("An account with this email already exists");
+        return;
+      }
+
+      // Sign up with Supabase Auth
+      const { error: signUpError, data: signUpData } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          data: {
+            email: data.email,
+          }
+        }
       });
-      if (error) throw error;
+      
+      if (signUpError) throw signUpError;
+      
       const user = signUpData.user;
+      if (!user) {
+        throw new Error("No user returned from signup");
+      }
 
-      if (user) {
-        // Try to get existing user first
-        const { data: existingUser, error: userError } = await supabase
-          .from("users")
-          .select("*")
-          .eq("id", user.id)
-          .single();
+      // Atomic upsert operation for user record
+      const { data: newUser, error: upsertError } = await supabase
+        .from("users")
+        .upsert(
+          {
+            id: user.id,
+            email: data.email,
+            name: user.email?.split('@')[0] || 'User',
+            createdAt: new Date().toISOString(),
+            onboardingCompleted: false,
+          },
+          {
+            onConflict: 'id',
+            ignoreDuplicates: false,
+          }
+        )
+        .select()
+        .single();
 
-        if (userError && userError.code !== "PGRST116") {
-          throw userError;
+      if (upsertError) {
+        console.error("Error creating user:", upsertError);
+        throw upsertError;
+      }
+
+      console.log("New user created:", newUser);
+      setUser(newUser);
+
+      // Check session establishment with retry
+      let session = null;
+      let retryCount = 0;
+      const maxRetries = 3;
+
+      while (!session && retryCount < maxRetries) {
+        const {
+          data: { session: currentSession },
+          error: sessionError,
+        } = await supabase.auth.getSession();
+
+        if (sessionError) {
+          console.error("Error getting session:", sessionError);
+          retryCount++;
+          await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+          continue;
         }
 
-        // If user doesn't exist, create them
-        if (!existingUser) {
-          const { data: insertedUser, error: insertError } = await supabase
-            .from("users")
-            .insert([
-              {
-                id: user.id,
-                email: data.email,
-                // created_at: new Date().toISOString(),
-              },
-            ])
-            .select()
-            .single();
+        session = currentSession;
+        break;
+      }
 
-          if (insertError) throw insertError;
-          setUser(insertedUser);
-        } else {
-          // User exists but might need to be updated
-          const { data: updatedUser, error: updateError } = await supabase
-            .from("users")
-            .update({ email: data.email })
-            .eq("id", user.id)
-            .select()
-            .single();
-
-          if (updateError) throw updateError;
-          setUser(updatedUser);
-        }
-
+      if (session) {
         handleClose();
         toast.success("Account created! Redirecting to onboarding...");
         router.push("/onboarding");
+      } else {
+        handleClose();
+        toast.success(
+          "Account created! Please check your email to confirm your account."
+        );
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error signing up:", error);
-      toast.error("Sign up failed. Please try again.");
+      toast.error(
+        error.message === "User already registered"
+          ? "An account with this email already exists"
+          : "Sign up failed. Please try again."
+      );
     } finally {
       setIsLoading(false);
     }
   };
-
-  // const handleOnboardingComplete = () => {
-  //   // setShowOnboarding(false);
-  //   toast.success("Welcome to Renown!");
-  //   handleClose();
-  //   router.refresh();
-  // };
 
   const onForgotPasswordSubmit = async (data: ForgotPasswordFormValues) => {
     setIsLoading(true);

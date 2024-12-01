@@ -76,7 +76,7 @@ export default function ProfileTable(ownedItems) {
     await router.push(path);
   };
 
-  console.log("ownedItems", ownedItems);
+  // console.log("ownedItems", ownedItems);
 
   const filteredAndSortedItems = React.useMemo(() => {
     return ownedItems.items

@@ -19,7 +19,7 @@ import { useAtom } from "jotai";
 // }
 export default function DashboardPage() {
   const [user, setUser] = useAtom(userAtom);
-  console.log("user page", user);
+  // console.log("user page", user);
   // const { session } = useSupabase(); // Use the hook to get session data
   // const userId = session?.user?.id || ""; // Extract user ID from session
 
@@ -54,7 +54,7 @@ export default function DashboardPage() {
   //   return <div>Error: {error.message}</div>;
   // }
 
-  console.log("user dalam dashboard page", user);
+  // console.log("user dalam dashboard page", user);
   if (!user) {
     return <SkeletonLoading />;
   }

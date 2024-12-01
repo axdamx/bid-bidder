@@ -31,7 +31,7 @@ export default function UserAvatar({
   email: string;
   userId: string;
 }) {
-  console.log("name", name);
+  // console.log("name", name);
   const supabase = createClientSupabase();
   const [, setUser] = useAtom(userAtom);
   const [isNavigating, setIsNavigating] = useState(false);

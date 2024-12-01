@@ -46,7 +46,7 @@ export function Header() {
   //   },
   // });
 
-  console.log("user header", user);
+  // console.log("user header", user);
   // console.log("initialUser header", dbUser);
 
   // Add this effect to reset navigation state when pathname changes

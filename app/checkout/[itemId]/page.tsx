@@ -33,7 +33,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useSupabase } from "@/app/context/SupabaseContext";
-import { getCheckoutItems } from "./actions";
+import { getCheckoutItems, createPayment } from "./actions";
 import { CldImage } from "next-cloudinary";
 import { formatCurrency } from "@/lib/utils";
 import CheckoutSkeleton from "../components/CheckoutSkeleton";
@@ -41,6 +41,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAtom } from "jotai";
 import { userAtom } from "@/app/atom/userAtom";
 import CountdownTimer from "../components/CheckoutCountdownTimer";
+import toast from "react-hot-toast";
 
 const addressSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -122,7 +123,7 @@ export default function CheckoutPage({
 
   const { order, item } = checkoutItems || {};
 
-  console.log("checkoutItems", checkoutItems); // Add check for buyer ID
+  // console.log("checkoutItems", checkoutItems); // Add check for buyer ID
   if (!order) {
     return (
       <div className="container mx-auto py-12 text-center">
@@ -136,10 +137,38 @@ export default function CheckoutPage({
   const buyersPremium = item?.currentBid! * 0.07;
   const totalPrice = item?.currentBid! + shippingCost + buyersPremium;
 
-  const onSubmit = (data: Partial<FormData>) => {
+  const onSubmit = async (data: Partial<FormData>) => {
     setFormData({ ...formData, ...data });
-    if (step === "address") setStep("billing");
-    else if (step === "billing") setStep("payment");
+
+    if (step === "address") {
+      setStep("billing");
+    } else if (step === "billing") {
+      setStep("payment");
+    } else if (step === "payment") {
+      try {
+        // Initialize CHIP-IN payment using server action
+        const { checkout_url } = await createPayment({
+          itemId,
+          amount: totalPrice,
+          customerDetails: {
+            email: formData.email!,
+            phone: formData.phone!,
+            firstName: formData.firstName!,
+            lastName: formData.lastName!,
+          },
+        });
+
+        if (checkout_url) {
+          // Redirect to CHIP-IN checkout page
+          window.location.href = checkout_url;
+        } else {
+          toast.error("Failed to initialize payment");
+        }
+      } catch (error) {
+        console.error("Payment error:", error);
+        toast.error("Payment initialization failed");
+      }
+    }
   };
 
   return (

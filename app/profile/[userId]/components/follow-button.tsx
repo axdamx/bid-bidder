@@ -23,8 +23,8 @@ export function FollowButton({
   const [isFollowing, setIsFollowing] = useState<boolean>(initialIsFollowing);
   // const [isPending, setIsPending] = useState(false);
 
-  console.log("currentUserId", currentUserId);
-  console.log("targetUserId", targetUserId);
+  // console.log("currentUserId", currentUserId);
+  // console.log("targetUserId", targetUserId);
   const queryClient = useQueryClient();
 
   const followMutation = useMutation({
@@ -62,7 +62,7 @@ export function FollowButton({
   const handleFollow = async () => {
     if (!currentUserId) return;
 
-    console.log("isFollowing", isFollowing);
+    // console.log("isFollowing", isFollowing);
     if (isFollowing) {
       unfollowMutation.mutate();
     } else {

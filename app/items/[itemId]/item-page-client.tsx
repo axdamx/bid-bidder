@@ -210,7 +210,7 @@ export default function AuctionItem({
       toast.error("Failed to create order. Please contact support.");
     },
     onSuccess: (payload) => {
-      console.log("Apa ni, masuktak", payload);
+      // console.log("Apa ni, masuktak", payload);
     },
   });
 
@@ -273,7 +273,7 @@ export default function AuctionItem({
     // } else {
     //   console.log("User is not the winner or no bids placed.");
     // }
-    console.log("Checking auction end conditions...", orderExists);
+    // console.log("Checking auction end conditions...", orderExists);
     if (orderExists) {
       return; // Do not show any modal if the user has an order
     }
@@ -295,7 +295,7 @@ export default function AuctionItem({
         toast.error("Failed to proceed to checkout. Please try again.");
       },
       onSuccess: () => {
-        console.log("we sure only winner can see this flow, so ");
+        // console.log("we sure only winner can see this flow, so ");
         createOrder(); // Ensure this is being called
       },
     }

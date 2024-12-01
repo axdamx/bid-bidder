@@ -68,13 +68,13 @@ export default function OnboardingFlow({
   onComplete: () => void;
   setUser: (user: any) => void;
 }) {
-  console.log("OnboardingFlow rendered with user:", user);
-  const [step, setStep] = useState(3);
+  // console.log("OnboardingFlow rendered with user:", user);
+  const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const supabase = createClientSupabase();
 
-  console.log("user", user);
+  // console.log("user", user);
 
   // Add this new component for the progress steps
   const ProgressSteps = ({ currentStep }: { currentStep: number }) => {
@@ -223,7 +223,7 @@ export default function OnboardingFlow({
   };
 
   const handleUpload = async (result: any) => {
-    console.log("Upload result:", result);
+    // console.log("Upload result:", result);
     try {
       let imageUrl = result.info.secure_url;
 

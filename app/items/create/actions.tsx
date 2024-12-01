@@ -45,7 +45,7 @@ export async function createItemAction(
       endDate: new Date(formData.get("endDate") as string).toISOString(),
       description: formData.get("description") as string,
       imageId: imageIds[0],
-      status: "PENDING",
+      status: "LIVE",
       createdAt: new Date().toISOString(),
     };
 

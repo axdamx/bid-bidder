@@ -14,14 +14,18 @@ export default function OnboardingPage() {
 
   useEffect(() => {
     const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session) {
         router.push("/");
       }
     };
-    
+
     checkUser();
   }, [router]);
+
+  console.log("user", user);
 
   const handleOnboardingComplete = () => {
     router.push("/");

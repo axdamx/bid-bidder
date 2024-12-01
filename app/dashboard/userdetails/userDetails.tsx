@@ -54,10 +54,10 @@ const UserDetailsPage = ({ initialUser }) => {
   const [, setUser] = useAtom(userAtom);
   const [profilePicPreview, setProfilePicPreview] = useState(null);
 
-  console.log("user dalam userDetails", userData);
+  // console.log("user dalam userDetails", userData);
 
   const handleUpload = async (result) => {
-    console.log("Upload result:", result);
+    // console.log("Upload result:", result);
     setIsLoading(true);
     try {
       let imageUrl = result.info.secure_url;
@@ -77,7 +77,7 @@ const UserDetailsPage = ({ initialUser }) => {
         );
       }
 
-      console.log("Final image URL:", imageUrl);
+      // console.log("Final image URL:", imageUrl);
 
       setProfilePicPreview(imageUrl);
       const updateResult = await updateProfilePicture(userData.id, imageUrl);
@@ -299,7 +299,7 @@ const UserDetailsPage = ({ initialUser }) => {
     </div>
   );
 
-  console.log("profilePicPreview", profilePicPreview);
+  // console.log("profilePicPreview", profilePicPreview);
 
   return (
     <div className="max-w-2xl mx-auto p-6">

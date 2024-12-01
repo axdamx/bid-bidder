@@ -12,6 +12,7 @@ import {
   LogOut,
   LayoutGridIcon,
   List,
+  Package,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,7 @@ import Addresses from "./address/addressDetails";
 import PaymentsAndPayouts from "./payment/paymentDetails";
 import OrderDetails from "./orders/ordersDetails";
 import HelpDetails from "./help/helpDetails";
+import ItemsDetails from "./items/itemsDetails";
 import { MotionGrid } from "../components/motionGrid";
 import { userAtom } from "../atom/userAtom";
 import { useAtom } from "jotai";
@@ -113,6 +115,12 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
       icon: HelpCircle,
       id: "help",
       description: "Get support and find answers to common questions",
+    },
+    {
+      name: "Items",
+      icon: Package,
+      id: "items",
+      description: "Manage your items",
     },
   ];
 
@@ -220,6 +228,22 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
                   </CardDescription>
                 </CardHeader>
                 <HelpDetails />
+              </Card>
+            </div>
+          </MotionGrid>
+        );
+      case "items":
+        return (
+          <MotionGrid>
+            <div className="p-2 sm:p-6">
+              <Card>
+                <CardHeader className="p-4">
+                  <CardTitle className="text-lg">Items</CardTitle>
+                  <CardDescription className="text-sm">
+                    Manage your items
+                  </CardDescription>
+                </CardHeader>
+                <ItemsDetails />
               </Card>
             </div>
           </MotionGrid>
