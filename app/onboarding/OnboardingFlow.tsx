@@ -28,8 +28,18 @@ import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { CldImage, CldUploadWidget } from "next-cloudinary";
-import toast from "react-hot-toast";
 import Link from "next/link";
+// import { LoadingModal } from "@/components/LoadingModal";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { LoadingModal } from "../components/LoadingModal";
 
 const userDetailsSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters" }),
@@ -68,15 +78,25 @@ export default function OnboardingFlow({
   onComplete: () => void;
   setUser: (user: any) => void;
 }) {
-  // console.log("OnboardingFlow rendered with user:", user);
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [isPageLoading, setIsPageLoading] = useState(true);
+  const [alertState, setAlertState] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    type: "success" | "error";
+    action?: "complete" | "upload" | undefined;
+  }>({
+    isOpen: false,
+    title: "",
+    description: "",
+    type: "success",
+    action: undefined,
+  });
   const router = useRouter();
   const supabase = createClientSupabase();
 
-  // console.log("user", user);
-
-  // Add this new component for the progress steps
   const ProgressSteps = ({ currentStep }: { currentStep: number }) => {
     const steps = ["Details", "Role", "Profile"];
     return (
@@ -128,6 +148,12 @@ export default function OnboardingFlow({
       userDetailsForm.setValue("email", user.email || "");
     }
   }, [user]);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setIsPageLoading(false);
+    }, 1000);
+  }, []);
 
   const userRoleForm = useForm({
     resolver: zodResolver(userRoleSchema),
@@ -202,7 +228,6 @@ export default function OnboardingFlow({
 
       if (error) throw error;
 
-      // Update the user atom with the new data
       const { data: userData } = await supabase
         .from("users")
         .select("*")
@@ -213,21 +238,31 @@ export default function OnboardingFlow({
         setUser(userData);
       }
 
-      onComplete();
+      setAlertState({
+        isOpen: true,
+        title: "Profile Updated!",
+        description:
+          "Welcome onboard! You're all set to start using our platform.",
+        type: "success",
+        action: "complete",
+      });
     } catch (error) {
       console.error("Error updating user profile:", error);
-      toast.error("Failed to update profile");
+      setAlertState({
+        isOpen: true,
+        title: "Error",
+        description: "Failed to update profile. Please try again.",
+        type: "error",
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleUpload = async (result: any) => {
-    // console.log("Upload result:", result);
     try {
       let imageUrl = result.info.secure_url;
 
-      // Check for custom coordinates array
       if (result.info.coordinates?.custom?.[0]) {
         const [x, y, width, height] = result.info.coordinates.custom[0];
         imageUrl = imageUrl.replace(
@@ -235,7 +270,6 @@ export default function OnboardingFlow({
           `/upload/c_crop,x_${x},y_${y},w_${width},h_${height}/c_fill,g_face,w_400,h_400,q_auto/`
         );
       } else {
-        // Fallback to basic transformations if no coordinates
         imageUrl = imageUrl.replace(
           "/upload/",
           "/upload/c_fill,g_face,w_400,h_400,q_auto/"
@@ -243,52 +277,79 @@ export default function OnboardingFlow({
       }
 
       userProfileForm.setValue("image", imageUrl);
-      toast.success("Profile picture updated successfully");
+      setAlertState({
+        isOpen: true,
+        title: "Success",
+        description: "Profile picture updated successfully",
+        type: "success",
+        action: "upload",
+      });
     } catch (error) {
       console.error("Upload error:", error);
-      toast.error("Failed to upload profile picture");
+      setAlertState({
+        isOpen: true,
+        title: "Error",
+        description: "Failed to upload profile picture",
+        type: "error",
+      });
     }
   };
 
   if (user.onboardingCompleted) {
     return (
-      <div className="w-full max-w-4xl mx-auto">
-        <div className="border rounded-lg p-6 bg-white">
-          <div className="max-h-[80vh] overflow-y-auto px-4">
-            <h2 className="text-2xl font-bold tracking-tight">
-              Onboarding Completed
-            </h2>
-            <p className="text-muted-foreground">
+      <AlertDialog open={true}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Onboarding Completed</AlertDialogTitle>
+            <AlertDialogDescription>
               You have completed the onboarding process.
-            </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
             <Link href="/">
-              <Button className="mt-4">Go to Home</Button>
+              <AlertDialogAction>Go to Home</AlertDialogAction>
             </Link>
-          </div>
-        </div>
-      </div>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     );
   }
-
   return (
-    <div className="w-full max-w-4xl mx-auto">
-      <div className="border rounded-lg p-6 bg-white">
-        <div className="max-h-[80vh] overflow-y-auto px-4">
-          <ProgressSteps currentStep={step} />
+    <>
+      <LoadingModal isOpen={isPageLoading} message="Loading onboarding..." />
+      <AlertDialog
+        open={alertState.isOpen}
+        onOpenChange={(open) => {
+          setAlertState((prev) => ({ ...prev, isOpen: open }));
+          if (
+            !open &&
+            alertState.type === "success" &&
+            alertState.action === "complete"
+          ) {
+            onComplete();
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{alertState.title}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {alertState.description}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction>OK</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <div className={isPageLoading ? "hidden" : ""}>
+        <div className="w-full max-w-4xl mx-auto">
+          <div className="border rounded-lg p-6 bg-white">
+            <div className="max-h-[80vh] overflow-y-auto px-4">
+              <ProgressSteps currentStep={step} />
 
-          {step === 1 && (
-            <div className="space-y-8">
-              <div>
-                <h2 className="text-2xl font-bold tracking-tight">
-                  Personal Details
-                </h2>
-                <p className="text-muted-foreground">
-                  Please fill in your personal information
-                </p>
-              </div>
-
-              <Card className="w-full">
-                <CardContent className="space-y-6 pt-6">
+              {step === 1 && (
+                <div className="space-y-8">
                   <Form {...userDetailsForm}>
                     <form
                       onSubmit={userDetailsForm.handleSubmit(onSubmitDetails)}
@@ -458,7 +519,15 @@ export default function OnboardingFlow({
                         </div>
                       </div>
 
-                      <Button type="submit" disabled={isLoading}>
+                      <Button
+                        type="submit"
+                        disabled={
+                          isLoading ||
+                          !userDetailsForm.formState.isValid ||
+                          Object.keys(userDetailsForm.formState.dirtyFields)
+                            .length === 0
+                        }
+                      >
                         {isLoading ? (
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         ) : null}
@@ -466,24 +535,11 @@ export default function OnboardingFlow({
                       </Button>
                     </form>
                   </Form>
-                </CardContent>
-              </Card>
-            </div>
-          )}
+                </div>
+              )}
 
-          {step === 2 && (
-            <div className="space-y-8">
-              <div>
-                <h2 className="text-2xl font-bold tracking-tight">
-                  How will you use Renown?
-                </h2>
-                <p className="text-muted-foreground">
-                  Select your primary role on the platform
-                </p>
-              </div>
-
-              <Card className="w-full">
-                <CardContent className="space-y-6 pt-6">
+              {step === 2 && (
+                <div className="space-y-8">
                   <Form {...userRoleForm}>
                     <form
                       onSubmit={userRoleForm.handleSubmit(onSubmitRole)}
@@ -517,7 +573,15 @@ export default function OnboardingFlow({
                         <Button variant="outline" onClick={() => setStep(1)}>
                           Back
                         </Button>
-                        <Button type="submit" disabled={isLoading}>
+                        <Button
+                          type="submit"
+                          disabled={
+                            isLoading ||
+                            !userRoleForm.formState.isValid ||
+                            Object.keys(userRoleForm.formState.dirtyFields)
+                              .length === 0
+                          }
+                        >
                           {isLoading ? (
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                           ) : null}
@@ -526,144 +590,142 @@ export default function OnboardingFlow({
                       </div>
                     </form>
                   </Form>
-                </CardContent>
-              </Card>
-            </div>
-          )}
+                </div>
+              )}
 
-          {step === 3 && (
-            <div className="space-y-8">
-              <div>
-                <h2 className="text-2xl font-bold tracking-tight">
-                  Profile Setup
-                </h2>
-                <p className="text-muted-foreground">
-                  Add a profile picture and tell us about yourself
-                </p>
-              </div>
-
-              <Form {...userProfileForm}>
-                <form
-                  onSubmit={userProfileForm.handleSubmit(onSubmitProfile)}
-                  className="space-y-6"
-                >
-                  <FormField
-                    control={userProfileForm.control}
-                    name="image"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col items-center">
-                        <FormLabel>Profile Picture</FormLabel>
-                        <FormControl>
-                          <div className="flex flex-col items-center gap-4">
-                            <Avatar className="w-32 h-32">
-                              <AvatarImage src={field.value} />
-                              <AvatarFallback>
-                                {user?.user_metadata?.name?.charAt(0) ||
-                                  user?.email?.charAt(0)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <CldUploadWidget
-                              uploadPreset="jzhhmoah"
-                              onSuccess={handleUpload}
-                              options={{
-                                maxFiles: 1,
-                                sources: ["local", "camera"],
-                                resourceType: "image",
-                                cropping: true,
-                                croppingAspectRatio: 1,
-                                croppingShowDimensions: true,
-                                croppingValidateDimensions: true,
-                                croppingShowBackButton: true,
-                                transformation: [
-                                  {
-                                    width: 400,
-                                    height: 400,
-                                    crop: "fill",
-                                    gravity: "face",
-                                    quality: "auto",
-                                  },
-                                ],
-                                // croppingCoordinatesMode: "custom", // Add this line
-                                styles: {
-                                  palette: {
-                                    window: "#FFFFFF",
-                                    windowBorder: "#90A0B3",
-                                    tabIcon: "#0078FF",
-                                    menuIcons: "#5A616A",
-                                    textDark: "#000000",
-                                    textLight: "#FFFFFF",
-                                    link: "#0078FF",
-                                    action: "#FF620C",
-                                    inactiveTabIcon: "#0E2F5A",
-                                    error: "#F44235",
-                                    inProgress: "#0078FF",
-                                    complete: "#20B832",
-                                    sourceBg: "#E4EBF1",
-                                  },
-                                },
-                              }}
-                            >
-                              {({ open }) => (
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  onClick={() => open()}
-                                  disabled={isLoading}
-                                  className="flex items-center gap-2"
-                                >
-                                  <Camera className="h-4 w-4" />
-                                  {isLoading
-                                    ? "Uploading..."
-                                    : "Change Profile Picture"}
-                                </Button>
-                              )}
-                            </CldUploadWidget>
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={userProfileForm.control}
-                    name="about"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>About</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder="Tell us about yourself..."
-                            className="resize-none"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className="flex justify-between">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setStep(2)}
+              {step === 3 && (
+                <div className="space-y-8">
+                  <Form {...userProfileForm}>
+                    <form
+                      onSubmit={userProfileForm.handleSubmit(onSubmitProfile)}
+                      className="space-y-6"
                     >
-                      Previous
-                    </Button>
-                    <Button type="submit" disabled={isLoading}>
-                      {isLoading ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      ) : null}
-                      Complete
-                    </Button>
-                  </div>
-                </form>
-              </Form>
+                      <FormField
+                        control={userProfileForm.control}
+                        name="image"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-col items-center">
+                            <FormLabel>Profile Picture</FormLabel>
+                            <FormControl>
+                              <div className="flex flex-col items-center gap-4">
+                                <Avatar className="w-32 h-32">
+                                  <AvatarImage src={field.value} />
+                                  <AvatarFallback>
+                                    {user?.user_metadata?.name?.charAt(0) ||
+                                      user?.email?.charAt(0)}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <CldUploadWidget
+                                  uploadPreset="jzhhmoah"
+                                  onSuccess={handleUpload}
+                                  options={{
+                                    maxFiles: 1,
+                                    sources: ["local", "camera"],
+                                    resourceType: "image",
+                                    cropping: true,
+                                    croppingAspectRatio: 1,
+                                    croppingShowDimensions: true,
+                                    croppingValidateDimensions: true,
+                                    croppingShowBackButton: true,
+                                    transformation: [
+                                      {
+                                        width: 400,
+                                        height: 400,
+                                        crop: "fill",
+                                        gravity: "face",
+                                        quality: "auto",
+                                      },
+                                    ],
+                                    styles: {
+                                      palette: {
+                                        window: "#FFFFFF",
+                                        windowBorder: "#90A0B3",
+                                        tabIcon: "#0078FF",
+                                        menuIcons: "#5A616A",
+                                        textDark: "#000000",
+                                        textLight: "#FFFFFF",
+                                        link: "#0078FF",
+                                        action: "#FF620C",
+                                        inactiveTabIcon: "#0E2F5A",
+                                        error: "#F44235",
+                                        inProgress: "#0078FF",
+                                        complete: "#20B832",
+                                        sourceBg: "#E4EBF1",
+                                      },
+                                    },
+                                  }}
+                                >
+                                  {({ open }) => (
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      onClick={() => open()}
+                                      disabled={isLoading}
+                                      className="flex items-center gap-2"
+                                    >
+                                      <Camera className="h-4 w-4" />
+                                      {isLoading
+                                        ? "Uploading..."
+                                        : "Change Profile Picture"}
+                                    </Button>
+                                  )}
+                                </CldUploadWidget>
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={userProfileForm.control}
+                        name="about"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>About</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Tell us about yourself..."
+                                className="resize-none"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <div className="flex justify-between">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setStep(2)}
+                        >
+                          Previous
+                        </Button>
+                        <Button
+                          type="submit"
+                          disabled={
+                            isLoading ||
+                            !userProfileForm.formState.isValid ||
+                            Object.keys(userProfileForm.formState.dirtyFields)
+                              .length === 0
+                          }
+                        >
+                          {isLoading ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          ) : null}
+                          Complete
+                        </Button>
+                      </div>
+                    </form>
+                  </Form>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

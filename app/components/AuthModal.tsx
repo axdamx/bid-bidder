@@ -82,7 +82,10 @@ export default function AuthModals({
   useEffect(() => {
     // Check session on component mount
     const initializeAuth = async () => {
-      const { data: { session }, error } = await supabase.auth.getSession();
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.getSession();
       if (error) {
         console.error("Error checking session:", error);
         return;
@@ -110,9 +113,10 @@ export default function AuthModals({
             if (user) {
               console.log("Existing user found:", user);
               setUser(user);
-              if (!user.onboardingCompleted) {
-                router.push("/onboarding");
-              }
+              // Only redirect to onboarding if the field exists and is false
+              // if (user.onboardingCompleted === false) {
+              //   router.push("/onboarding");
+              // }
             }
           }
         }
@@ -247,7 +251,9 @@ export default function AuthModals({
         if (userError && userError.code !== "PGRST116") {
           console.error("Error fetching user:", userError);
           retryCount++;
-          await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+          await new Promise((resolve) =>
+            setTimeout(resolve, 1000 * retryCount)
+          );
           continue;
         }
 
@@ -261,7 +267,7 @@ export default function AuthModals({
               {
                 id: signInData.user.id,
                 email: data.email,
-                name: signInData.user.email?.split('@')[0] || 'User',
+                name: signInData.user.email?.split("@")[0] || "User",
                 createdAt: new Date().toISOString(),
                 onboardingCompleted: false,
               },
@@ -272,7 +278,9 @@ export default function AuthModals({
           if (createError) {
             console.error("Error creating user:", createError);
             retryCount++;
-            await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+            await new Promise((resolve) =>
+              setTimeout(resolve, 1000 * retryCount)
+            );
             continue;
           }
 
@@ -290,9 +298,9 @@ export default function AuthModals({
       router.refresh();
 
       // Check if onboarding is needed
-      if (!userData.onboardingCompleted) {
-        router.push("/onboarding");
-      }
+      // if (!userData.onboardingCompleted) {
+      //   router.push("/onboarding");
+      // }
     } catch (error: any) {
       console.error("Error signing in:", error);
       toast.error(
@@ -325,19 +333,20 @@ export default function AuthModals({
       }
 
       // Sign up with Supabase Auth
-      const { error: signUpError, data: signUpData } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-          data: {
-            email: data.email,
-          }
-        }
-      });
-      
+      const { error: signUpError, data: signUpData } =
+        await supabase.auth.signUp({
+          email: data.email,
+          password: data.password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
+            data: {
+              email: data.email,
+            },
+          },
+        });
+
       if (signUpError) throw signUpError;
-      
+
       const user = signUpData.user;
       if (!user) {
         throw new Error("No user returned from signup");
@@ -350,12 +359,12 @@ export default function AuthModals({
           {
             id: user.id,
             email: data.email,
-            name: user.email?.split('@')[0] || 'User',
+            name: user.email?.split("@")[0] || "User",
             createdAt: new Date().toISOString(),
             onboardingCompleted: false,
           },
           {
-            onConflict: 'id',
+            onConflict: "id",
             ignoreDuplicates: false,
           }
         )
@@ -384,7 +393,9 @@ export default function AuthModals({
         if (sessionError) {
           console.error("Error getting session:", sessionError);
           retryCount++;
-          await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+          await new Promise((resolve) =>
+            setTimeout(resolve, 1000 * retryCount)
+          );
           continue;
         }
 
