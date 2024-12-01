@@ -36,3 +36,47 @@ export async function getCheckoutItems(userId: string, itemId: string) {
     return null;
   }
 }
+
+export async function updateOrderStatusToCancelled(orderId: number, userId: string) {
+  const supabase = createServerSupabase();
+
+  try {
+    // First, get the order to verify the buyer
+    const { data: order } = await supabase
+      .from("orders")
+      .select("*")
+      .eq("id", orderId)
+      .single();
+
+    if (!order) {
+      throw new Error("Order not found");
+    }
+
+    // Verify that the user is the buyer
+    if (order.buyerId !== userId) {
+      throw new Error("Unauthorized: User is not the buyer");
+    }
+
+    // Check if the order is already expired (more than 1 hour old)
+    const created = new Date(order.createdAt);
+    const deadline = new Date(created.getTime() + 60 * 60 * 1000); // 1 hour after creation
+    const now = new Date();
+
+    if (now > deadline) {
+      // Update the order status to cancelled
+      const { error } = await supabase
+        .from("orders")
+        .update({ orderStatus: "cancelled" })
+        .eq("id", orderId);
+
+      if (error) throw error;
+
+      return { success: true, message: "Order cancelled successfully" };
+    }
+
+    return { success: false, message: "Order is not yet expired" };
+  } catch (error) {
+    console.error("Error updating order status:", error);
+    throw error;
+  }
+}

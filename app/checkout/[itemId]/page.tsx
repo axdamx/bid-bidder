@@ -168,7 +168,13 @@ export default function CheckoutPage({
               </div>
             ))}
           </div>
-          {order?.createdAt && <CountdownTimer createdAt={order.createdAt} />}
+          {order?.createdAt && (
+            <CountdownTimer
+              createdAt={order.createdAt}
+              orderId={order.id}
+              userId={user?.id!}
+            />
+          )}
         </div>
 
         <div className="grid gap-8 lg:grid-cols-3">

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Loader2, Upload } from "lucide-react";
+import { Camera, Loader2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -27,14 +27,25 @@ import { createClientSupabase } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
+import { CldImage, CldUploadWidget } from "next-cloudinary";
+import toast from "react-hot-toast";
+import Link from "next/link";
 
 const userDetailsSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters" }),
   email: z.string().email(),
-  address: z
+  addressLine1: z
     .string()
-    .min(5, { message: "Address must be at least 5 characters" }),
-  timezone: z.string(),
+    .min(5, { message: "Address line 1 must be at least 5 characters" }),
+  addressLine2: z.string().optional(),
+  city: z.string().min(2, { message: "City must be at least 2 characters" }),
+  state: z.string().min(2, { message: "State must be at least 2 characters" }),
+  postcode: z
+    .string()
+    .min(2, { message: "Postcode must be at least 2 characters" }),
+  country: z
+    .string()
+    .min(2, { message: "Country must be at least 2 characters" }),
 });
 
 const userRoleSchema = z.object({
@@ -51,14 +62,19 @@ const userProfileSchema = z.object({
 export default function OnboardingFlow({
   user,
   onComplete,
+  setUser,
 }: {
   user: any;
   onComplete: () => void;
+  setUser: (user: any) => void;
 }) {
+  console.log("OnboardingFlow rendered with user:", user);
   const [step, setStep] = useState(3);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const supabase = createClientSupabase();
+
+  console.log("user", user);
 
   // Add this new component for the progress steps
   const ProgressSteps = ({ currentStep }: { currentStep: number }) => {
@@ -95,12 +111,23 @@ export default function OnboardingFlow({
   const userDetailsForm = useForm({
     resolver: zodResolver(userDetailsSchema),
     defaultValues: {
-      name: user?.user_metadata?.full_name || "",
-      email: user?.email || "",
-      address: "",
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      name: "",
+      email: "",
+      addressLine1: "",
+      addressLine2: "",
+      city: "",
+      state: "",
+      postcode: "",
+      country: "",
     },
   });
+
+  useEffect(() => {
+    if (user) {
+      userDetailsForm.setValue("name", user.user_metadata?.full_name || "");
+      userDetailsForm.setValue("email", user.email || "");
+    }
+  }, [user]);
 
   const userRoleForm = useForm({
     resolver: zodResolver(userRoleSchema),
@@ -112,7 +139,7 @@ export default function OnboardingFlow({
   const userProfileForm = useForm({
     resolver: zodResolver(userProfileSchema),
     defaultValues: {
-      image: user?.user_metadata?.avatar_url || "",
+      image: user?.image || "",
       about: "",
     },
   });
@@ -124,8 +151,12 @@ export default function OnboardingFlow({
         .from("users")
         .update({
           name: data.name,
-          address: data.address,
-          timezone: data.timezone,
+          addressLine1: data.addressLine1,
+          addressLine2: data.addressLine2,
+          city: data.city,
+          state: data.state,
+          postcode: data.postcode,
+          country: data.country,
         })
         .eq("id", user.id);
 
@@ -165,216 +196,434 @@ export default function OnboardingFlow({
         .update({
           image: data.image,
           about: data.about,
-          onboarding_completed: true,
+          onboardingCompleted: true,
         })
         .eq("id", user.id);
 
       if (error) throw error;
+
+      // Update the user atom with the new data
+      const { data: userData } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+
+      if (userData) {
+        setUser(userData);
+      }
+
       onComplete();
     } catch (error) {
       console.error("Error updating user profile:", error);
+      toast.error("Failed to update profile");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const handleUpload = async (result: any) => {
+    console.log("Upload result:", result);
     try {
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${user.id}-${Math.random()}.${fileExt}`;
-      const { error: uploadError, data } = await supabase.storage
-        .from("avatars")
-        .upload(fileName, file);
+      let imageUrl = result.info.secure_url;
 
-      if (uploadError) throw uploadError;
+      // Check for custom coordinates array
+      if (result.info.coordinates?.custom?.[0]) {
+        const [x, y, width, height] = result.info.coordinates.custom[0];
+        imageUrl = imageUrl.replace(
+          "/upload/",
+          `/upload/c_crop,x_${x},y_${y},w_${width},h_${height}/c_fill,g_face,w_400,h_400,q_auto/`
+        );
+      } else {
+        // Fallback to basic transformations if no coordinates
+        imageUrl = imageUrl.replace(
+          "/upload/",
+          "/upload/c_fill,g_face,w_400,h_400,q_auto/"
+        );
+      }
 
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("avatars").getPublicUrl(fileName);
-
-      userProfileForm.setValue("image", publicUrl);
+      userProfileForm.setValue("image", imageUrl);
+      toast.success("Profile picture updated successfully");
     } catch (error) {
-      console.error("Error uploading image:", error);
+      console.error("Upload error:", error);
+      toast.error("Failed to upload profile picture");
     }
   };
 
-  return (
-    <div className="w-full max-w-full p-4">
-      <ProgressSteps currentStep={step} />
-
-      {/* <Card className="w-full"> */}
-      {step === 1 && (
-        <div className="space-y-6">
-          <div>
-            <h2 className="text-2xl font-bold">
-              Welcome! Let's get you set up
+  if (user.onboardingCompleted) {
+    return (
+      <div className="w-full max-w-4xl mx-auto">
+        <div className="border rounded-lg p-6 bg-white">
+          <div className="max-h-[80vh] overflow-y-auto px-4">
+            <h2 className="text-2xl font-bold tracking-tight">
+              Onboarding Completed
             </h2>
             <p className="text-muted-foreground">
-              First, we need some basic information about you
+              You have completed the onboarding process.
             </p>
+            <Link href="/">
+              <Button className="mt-4">Go to Home</Button>
+            </Link>
           </div>
-
-          <Card className="w-full">
-            <CardContent className="space-y-6 pt-6">
-              <Form {...userDetailsForm}>
-                <form
-                  onSubmit={userDetailsForm.handleSubmit(onSubmitDetails)}
-                  className="space-y-4"
-                >
-                  <FormField
-                    control={userDetailsForm.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Full Name</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={userDetailsForm.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="email" disabled />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={userDetailsForm.control}
-                    name="address"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Address</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="Enter your address" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={userDetailsForm.control}
-                    name="timezone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Timezone</FormLabel>
-                        <FormControl>
-                          <Input {...field} disabled />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <Button type="submit" disabled={isLoading}>
-                    {isLoading ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : null}
-                    Continue
-                  </Button>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
         </div>
-      )}
+      </div>
+    );
+  }
 
-      {step === 2 && (
-        <div className="space-y-6">
-          <div>
-            <h2 className="text-2xl font-bold">How will you use Renown?</h2>
-            <p className="text-muted-foreground">
-              Select your primary role on the platform
-            </p>
-          </div>
+  return (
+    <div className="w-full max-w-4xl mx-auto">
+      <div className="border rounded-lg p-6 bg-white">
+        <div className="max-h-[80vh] overflow-y-auto px-4">
+          <ProgressSteps currentStep={step} />
 
-          <Card className="w-full">
-            <CardContent className="space-y-6 pt-6">
-              <Form {...userRoleForm}>
-                <form
-                  onSubmit={userRoleForm.handleSubmit(onSubmitRole)}
-                  className="space-y-4"
-                >
-                  <FormField
-                    control={userRoleForm.control}
-                    name="role"
-                    render={({ field }) => (
-                      <FormItem>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select your role" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="seller">Seller</SelectItem>
-                            <SelectItem value="bidder">Bidder</SelectItem>
-                            <SelectItem value="both">Both</SelectItem>
-                            <SelectItem value="none">Just Browsing</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormItem>
-                    )}
-                  />
-                  <div className="flex gap-4">
-                    <Button variant="outline" onClick={() => setStep(1)}>
-                      Back
-                    </Button>
-                    <Button type="submit" disabled={isLoading}>
-                      {isLoading ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      ) : null}
-                      Continue
-                    </Button>
-                  </div>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+          {step === 1 && (
+            <div className="space-y-8">
+              <div>
+                <h2 className="text-2xl font-bold tracking-tight">
+                  Personal Details
+                </h2>
+                <p className="text-muted-foreground">
+                  Please fill in your personal information
+                </p>
+              </div>
 
-      {step === 3 && (
-        <div className="space-y-6">
-          <div>
-            <h2 className="text-2xl font-bold">Nearly there!</h2>
-            <p className="text-muted-foreground">
-              Last thing, a brief description about you and a photo really helps
-              you get bookings and let people know who they're booking with.
-            </p>
-          </div>
-          <Card className="w-full">
-            <CardContent className="space-y-6 pt-6">
+              <Card className="w-full">
+                <CardContent className="space-y-6 pt-6">
+                  <Form {...userDetailsForm}>
+                    <form
+                      onSubmit={userDetailsForm.handleSubmit(onSubmitDetails)}
+                      className="space-y-6"
+                    >
+                      <FormField
+                        control={userDetailsForm.control}
+                        name="name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Name</FormLabel>
+                            <FormControl>
+                              <Input {...field} placeholder="Enter your name" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={userDetailsForm.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email</FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                placeholder="Enter your email"
+                                disabled
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-medium">Address Details</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <FormField
+                            control={userDetailsForm.control}
+                            name="addressLine1"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Address Line 1</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    {...field}
+                                    placeholder="Enter your address"
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={userDetailsForm.control}
+                            name="addressLine2"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Address Line 2</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    {...field}
+                                    placeholder="Apartment, suite, etc."
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={userDetailsForm.control}
+                            name="city"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>City</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    {...field}
+                                    placeholder="Enter your city"
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={userDetailsForm.control}
+                            name="state"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>State</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    {...field}
+                                    placeholder="Enter your state"
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={userDetailsForm.control}
+                            name="postcode"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Postcode</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    {...field}
+                                    placeholder="Enter your postcode"
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={userDetailsForm.control}
+                            name="country"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Country</FormLabel>
+                                <FormControl>
+                                  <Select
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select your country" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="MY">
+                                        Malaysia
+                                      </SelectItem>
+                                      <SelectItem value="SG">
+                                        Singapore
+                                      </SelectItem>
+                                      <SelectItem value="ID">
+                                        Indonesia
+                                      </SelectItem>
+                                      <SelectItem value="TH">
+                                        Thailand
+                                      </SelectItem>
+                                      <SelectItem value="VN">
+                                        Vietnam
+                                      </SelectItem>
+                                      <SelectItem value="PH">
+                                        Philippines
+                                      </SelectItem>
+                                      <SelectItem value="BN">Brunei</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </div>
+
+                      <Button type="submit" disabled={isLoading}>
+                        {isLoading ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : null}
+                        Continue
+                      </Button>
+                    </form>
+                  </Form>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {step === 2 && (
+            <div className="space-y-8">
+              <div>
+                <h2 className="text-2xl font-bold tracking-tight">
+                  How will you use Renown?
+                </h2>
+                <p className="text-muted-foreground">
+                  Select your primary role on the platform
+                </p>
+              </div>
+
+              <Card className="w-full">
+                <CardContent className="space-y-6 pt-6">
+                  <Form {...userRoleForm}>
+                    <form
+                      onSubmit={userRoleForm.handleSubmit(onSubmitRole)}
+                      className="space-y-4"
+                    >
+                      <FormField
+                        control={userRoleForm.control}
+                        name="role"
+                        render={({ field }) => (
+                          <FormItem>
+                            <Select
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select your role" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="seller">Seller</SelectItem>
+                                <SelectItem value="bidder">Bidder</SelectItem>
+                                <SelectItem value="both">Both</SelectItem>
+                                <SelectItem value="none">
+                                  Just Browsing
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </FormItem>
+                        )}
+                      />
+                      <div className="flex gap-4">
+                        <Button variant="outline" onClick={() => setStep(1)}>
+                          Back
+                        </Button>
+                        <Button type="submit" disabled={isLoading}>
+                          {isLoading ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          ) : null}
+                          Continue
+                        </Button>
+                      </div>
+                    </form>
+                  </Form>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {step === 3 && (
+            <div className="space-y-8">
+              <div>
+                <h2 className="text-2xl font-bold tracking-tight">
+                  Profile Setup
+                </h2>
+                <p className="text-muted-foreground">
+                  Add a profile picture and tell us about yourself
+                </p>
+              </div>
+
               <Form {...userProfileForm}>
                 <form
                   onSubmit={userProfileForm.handleSubmit(onSubmitProfile)}
-                  className="space-y-4"
+                  className="space-y-6"
                 >
-                  <div className="flex items-center gap-4">
-                    <Avatar className="w-20 h-20">
-                      <AvatarImage src={userProfileForm.watch("image")} />
-                      <AvatarFallback>
-                        {user?.name?.charAt(0) || user?.email?.charAt(0)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <Input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      className="max-w-[200px]"
-                    />
-                  </div>
+                  <FormField
+                    control={userProfileForm.control}
+                    name="image"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col items-center">
+                        <FormLabel>Profile Picture</FormLabel>
+                        <FormControl>
+                          <div className="flex flex-col items-center gap-4">
+                            <Avatar className="w-32 h-32">
+                              <AvatarImage src={field.value} />
+                              <AvatarFallback>
+                                {user?.user_metadata?.name?.charAt(0) ||
+                                  user?.email?.charAt(0)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <CldUploadWidget
+                              uploadPreset="jzhhmoah"
+                              onSuccess={handleUpload}
+                              options={{
+                                maxFiles: 1,
+                                sources: ["local", "camera"],
+                                resourceType: "image",
+                                cropping: true,
+                                croppingAspectRatio: 1,
+                                croppingShowDimensions: true,
+                                croppingValidateDimensions: true,
+                                croppingShowBackButton: true,
+                                transformation: [
+                                  {
+                                    width: 400,
+                                    height: 400,
+                                    crop: "fill",
+                                    gravity: "face",
+                                    quality: "auto",
+                                  },
+                                ],
+                                // croppingCoordinatesMode: "custom", // Add this line
+                                styles: {
+                                  palette: {
+                                    window: "#FFFFFF",
+                                    windowBorder: "#90A0B3",
+                                    tabIcon: "#0078FF",
+                                    menuIcons: "#5A616A",
+                                    textDark: "#000000",
+                                    textLight: "#FFFFFF",
+                                    link: "#0078FF",
+                                    action: "#FF620C",
+                                    inactiveTabIcon: "#0E2F5A",
+                                    error: "#F44235",
+                                    inProgress: "#0078FF",
+                                    complete: "#20B832",
+                                    sourceBg: "#E4EBF1",
+                                  },
+                                },
+                              }}
+                            >
+                              {({ open }) => (
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  onClick={() => open()}
+                                  disabled={isLoading}
+                                  className="flex items-center gap-2"
+                                >
+                                  <Camera className="h-4 w-4" />
+                                  {isLoading
+                                    ? "Uploading..."
+                                    : "Change Profile Picture"}
+                                </Button>
+                              )}
+                            </CldUploadWidget>
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
                   <FormField
                     control={userProfileForm.control}
@@ -385,6 +634,7 @@ export default function OnboardingFlow({
                         <FormControl>
                           <Textarea
                             placeholder="Tell us about yourself..."
+                            className="resize-none"
                             {...field}
                           />
                         </FormControl>
@@ -393,23 +643,27 @@ export default function OnboardingFlow({
                     )}
                   />
 
-                  <div className="flex gap-4">
-                    <Button variant="outline" onClick={() => setStep(2)}>
-                      Back
+                  <div className="flex justify-between">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setStep(2)}
+                    >
+                      Previous
                     </Button>
                     <Button type="submit" disabled={isLoading}>
                       {isLoading ? (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       ) : null}
-                      Complete Setup
+                      Complete
                     </Button>
                   </div>
                 </form>
               </Form>
-            </CardContent>
-          </Card>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

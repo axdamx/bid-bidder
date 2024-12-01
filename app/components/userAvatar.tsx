@@ -39,7 +39,9 @@ export default function UserAvatar({
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
 
-  const initials = name.includes("@")
+  const initials = !name
+    ? "?"
+    : name.includes("@")
     ? name.split("@")[0].charAt(0).toUpperCase()
     : name
         .split(" ")

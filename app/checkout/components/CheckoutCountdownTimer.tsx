@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { updateOrderStatusToCancelled } from "../[itemId]/actions";
 
 interface CountdownTimerProps {
   createdAt: string;
+  orderId: number;
+  userId: string;
 }
 
-export default function CountdownTimer({ createdAt }: CountdownTimerProps) {
+export default function CountdownTimer({ createdAt, orderId, userId }: CountdownTimerProps) {
   const [timeRemaining, setTimeRemaining] = useState<string>("");
   const timerRef = useRef<NodeJS.Timeout>();
 
@@ -22,6 +25,9 @@ export default function CountdownTimer({ createdAt }: CountdownTimerProps) {
         if (timerRef.current) {
           clearInterval(timerRef.current);
         }
+        // Call the server action to update order status
+        updateOrderStatusToCancelled(orderId, userId)
+          .catch(error => console.error("Failed to update order status:", error));
         return;
       }
 
@@ -38,7 +44,7 @@ export default function CountdownTimer({ createdAt }: CountdownTimerProps) {
         clearInterval(timerRef.current);
       }
     };
-  }, [createdAt]);
+  }, [createdAt, orderId, userId]);
 
   if (!timeRemaining) return null;
 

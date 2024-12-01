@@ -1,221 +1,4 @@
-// import { useState } from "react";
-// import { Button } from "@/components/ui/button";
-// import { Separator } from "@/components/ui/separator";
-// import {
-//   Dialog,
-//   DialogContent,
-//   DialogDescription,
-//   DialogTitle,
-//   DialogTrigger,
-// } from "@/components/ui/dialog";
-// import { Label } from "@/components/ui/label";
-// import { Input } from "@/components/ui/input";
-// import {
-//   Select,
-//   SelectContent,
-//   SelectItem,
-//   SelectTrigger,
-// } from "@/components/ui/select";
-// // Adjust imports as necessary
-
-// const AddressSection = ({ title, name, addressLines }) => {
-//   return (
-//     <div className="flex justify-between items-start w-full">
-//       <div>
-//         <h2 className="font-semibold text-lg mb-2">{title}</h2>
-//         <p className="font-medium mb-1">{name}</p>
-//         {addressLines.map((line, index) => (
-//           <p key={index} className="text-gray-700">
-//             {line}
-//           </p>
-//         ))}
-//       </div>
-//       <Dialog>
-//         <DialogTrigger asChild>
-//           <Button
-//             variant="link"
-//             className="text-sm text-gray-500 hover:text-gray-700 ml-4"
-//           >
-//             Change
-//           </Button>
-//         </DialogTrigger>
-//         <DialogContent className="max-w-lg p-6 rounded-lg shadow-lg">
-//           <DialogTitle className="font-semibold text-lg mb-2">
-//             Add New Address
-//           </DialogTitle>
-//           <DialogDescription className="text-sm text-gray-500 mb-6">
-//             * Required Fields
-//           </DialogDescription>
-//           <AddressForm />
-//         </DialogContent>
-//       </Dialog>
-//     </div>
-//   );
-// };
-
-// const AddressForm = () => {
-//   const [address, setAddress] = useState({
-//     firstName: "",
-//     lastName: "",
-//     contactNumber: "",
-//     addressLine1: "United Kingdom",
-//     addressLine2: "",
-//     city: "",
-//     state: "",
-//     postcode: "",
-//     country: "United Kingdom",
-//   });
-
-//   const handleInputChange = (field, value) => {
-//     setAddress((prevState) => ({
-//       ...prevState,
-//       [field]: value,
-//     }));
-//   };
-//   const handleCountryChange = (value) => {
-//     handleInputChange("country", value);
-//   };
-
-//   return (
-//     <div className="space-y-4">
-//       <div>
-//         <Label htmlFor="firstName">First Name*</Label>
-//         <Input
-//           id="firstName"
-//           placeholder="Mohd"
-//           value={address.firstName}
-//           onChange={(e) => handleInputChange("firstName", e.target.value)}
-//         />
-//       </div>
-//       <div>
-//         <Label htmlFor="lastName">Last Name*</Label>
-//         <Input
-//           id="lastName"
-//           placeholder="Adam"
-//           value={address.lastName}
-//           onChange={(e) => handleInputChange("lastName", e.target.value)}
-//         />
-//       </div>
-//       <div>
-//         <Label htmlFor="contactNumber">Contact Number*</Label>
-//         <Input
-//           id="contactNumber"
-//           placeholder="We'll only contact you regarding your order"
-//           value={address.contactNumber}
-//           onChange={(e) => handleInputChange("contactNumber", e.target.value)}
-//         />
-//       </div>
-//       <div>
-//         <Label htmlFor="addressLine1">Address Line 1*</Label>
-//         <Input
-//           id="addressLine1"
-//           placeholder="Enter your address"
-//           value={address.addressLine1}
-//           onChange={(e) => handleInputChange("addressLine1", e.target.value)}
-//         />
-//       </div>
-//       <div>
-//         <Label htmlFor="addressLine2">Address Line 2</Label>
-//         <Input
-//           id="addressLine2"
-//           placeholder="Optional"
-//           value={address.addressLine2}
-//           onChange={(e) => handleInputChange("addressLine2", e.target.value)}
-//         />
-//       </div>
-//       <div className="flex gap-4">
-//         <div className="flex-1">
-//           <Label htmlFor="city">Town / City*</Label>
-//           <Input
-//             id="city"
-//             placeholder="Enter city"
-//             value={address.city}
-//             onChange={(e) => handleInputChange("city", e.target.value)}
-//           />
-//         </div>
-//         <div className="flex-1">
-//           <Label htmlFor="state">State / Province / County</Label>
-//           <Input
-//             id="state"
-//             placeholder="Optional"
-//             value={address.state}
-//             onChange={(e) => handleInputChange("state", e.target.value)}
-//           />
-//         </div>
-//       </div>
-//       <div className="flex gap-4">
-//         <div className="flex-1">
-//           <Label htmlFor="postcode">Postcode*</Label>
-//           <Input
-//             id="postcode"
-//             placeholder="Enter postcode"
-//             value={address.postcode}
-//             onChange={(e) => handleInputChange("postcode", e.target.value)}
-//           />
-//         </div>
-//         <div className="flex-1">
-//           <Label htmlFor="country">Country*</Label>
-//           <Select onValueChange={handleCountryChange}>
-//             <SelectTrigger id="country">{address.country}</SelectTrigger>
-//             <SelectContent>
-//               <SelectItem value="United Kingdom">United Kingdom</SelectItem>
-//               <SelectItem value="United States">United States</SelectItem>
-//               <SelectItem value="Canada">Canada</SelectItem>
-//               <SelectItem value="Malaysia">Malaysia</SelectItem>
-//             </SelectContent>
-//           </Select>
-//         </div>
-//       </div>
-//       <Button variant="default" className="w-full mt-6">
-//         Save Address
-//       </Button>
-//     </div>
-//   );
-// };
-
-// const Addresses = () => {
-//   const shippingAddress = {
-//     title: "Shipping Address",
-//     name: "MOHAMMAD ADAM",
-//     addressLines: [
-//       "Emerald 9 Cheras",
-//       "Block B, Persiaran Awana",
-//       "Cheras",
-//       "Selangor",
-//       "43200",
-//       "Malaysia",
-//     ],
-//   };
-
-//   const billingAddress = {
-//     title: "Billing Address",
-//     name: "Mohd Adam",
-//     addressLines: [
-//       "No 15, Jalan Intan 6",
-//       "Taman Cheras Permata 2",
-//       "Cheras",
-//       "43200",
-//       "Malaysia",
-//     ],
-//   };
-
-//   return (
-//     <div className="max-w-lg mx-auto space-y-8 p-4 bg-white rounded-lg shadow mb-5">
-//       {/* Shipping Address */}
-//       <AddressSection {...shippingAddress} />
-
-//       {/* Separator */}
-//       <Separator className="my-4" />
-
-//       {/* Billing Address */}
-//       <AddressSection {...billingAddress} />
-//     </div>
-//   );
-// };
-
-// export default Addresses;
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -254,9 +37,26 @@ import {
   Mail,
   Globe,
 } from "lucide-react";
+import { createClientSupabase } from "@/lib/supabase/client";
 
-const AddressSection = ({ title, name, addressLines, icon: Icon }) => {
+const AddressSection = ({
+  title,
+  name,
+  address,
+  icon: Icon,
+  onEdit,
+  addressType,
+}) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const prefix = addressType === "primary" ? "" : `${addressType}_`;
+
+  const hasAddress =
+    address &&
+    Object.entries(address)
+      .filter(([key]) => key.startsWith(prefix))
+      .some(([_, value]) => value !== null);
+
+  const getAddressValue = (field) => address?.[`${prefix}${field}`];
 
   return (
     <Card>
@@ -268,40 +68,51 @@ const AddressSection = ({ title, name, addressLines, icon: Icon }) => {
             </div>
             <div>
               <CardTitle className="text-lg">{title}</CardTitle>
-              <CardDescription>
-                Manage your {title.toLowerCase()}
-              </CardDescription>
+              {hasAddress ? (
+                <CardDescription>
+                  {getAddressValue("addressLine1")}
+                  {getAddressValue("addressLine2") && <br />}
+                  {getAddressValue("addressLine2")}
+                  <br />
+                  {getAddressValue("city")}, {getAddressValue("state")}{" "}
+                  {getAddressValue("postcode")}
+                  <br />
+                  {getAddressValue("country")}
+                </CardDescription>
+              ) : (
+                <CardDescription className="text-muted-foreground">
+                  No address added yet
+                </CardDescription>
+              )}
             </div>
           </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="sm">
-                Change
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px]">
-              <DialogHeader>
-                <DialogTitle>Update {title}</DialogTitle>
-                <DialogDescription>
-                  Make changes to your {title.toLowerCase()}. Required fields
-                  are marked with an asterisk (*).
-                </DialogDescription>
-              </DialogHeader>
-              <AddressForm onSuccess={() => setIsDialogOpen(false)} />
-            </DialogContent>
-          </Dialog>
+          <Button variant="outline" onClick={() => setIsDialogOpen(true)}>
+            {hasAddress ? "Edit" : "Add"}
+          </Button>
         </div>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-1 rounded-lg bg-muted p-4">
-          <p className="font-medium text-primary">{name}</p>
-          {addressLines.map((line, index) => (
-            <p key={index} className="text-sm text-muted-foreground">
-              {line}
-            </p>
-          ))}
-        </div>
-      </CardContent>
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>
+              {hasAddress ? "Edit" : "Add"} {title}
+            </DialogTitle>
+            <DialogDescription>
+              {hasAddress
+                ? "Update your address details below"
+                : "Enter your address details below"}
+            </DialogDescription>
+          </DialogHeader>
+          <AddressForm
+            initialData={address}
+            addressType={addressType}
+            onSuccess={() => {
+              setIsDialogOpen(false);
+              if (onEdit) onEdit();
+            }}
+          />
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
@@ -319,118 +130,128 @@ const FormField = ({ label, icon: Icon, children, required }) => (
   </div>
 );
 
-const AddressForm = ({ onSuccess }) => {
-  const [address, setAddress] = useState({
-    firstName: "",
-    lastName: "",
-    contactNumber: "",
-    addressLine1: "",
-    addressLine2: "",
-    city: "",
-    state: "",
-    postcode: "",
-    country: "United Kingdom",
+const AddressForm = ({ onSuccess, initialData, addressType }) => {
+  const [formData, setFormData] = useState({
+    [`${addressType}AddressLine1`]:
+      initialData?.[`${addressType}AddressLine1`] || "",
+    [`${addressType}AddressLine2`]:
+      initialData?.[`${addressType}AddressLine2`] || "",
+    [`${addressType}City`]: initialData?.[`${addressType}City`] || "",
+    [`${addressType}State`]: initialData?.[`${addressType}State`] || "",
+    [`${addressType}Postcode`]: initialData?.[`${addressType}Postcode`] || "",
+    [`${addressType}Country`]: initialData?.[`${addressType}Country`] || "",
   });
+  const [loading, setLoading] = useState(false);
+  const supabase = createClientSupabase();
 
-  const handleInputChange = (field, value) => {
-    setAddress((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle form submission
-    onSuccess?.();
+    setLoading(true);
+
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("No user found");
+
+      const { error } = await supabase
+        .from("users")
+        .update({
+          ...formData,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", user.id);
+
+      if (error) throw error;
+
+      if (onSuccess) onSuccess();
+    } catch (error) {
+      console.error("Error saving address:", error);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const prefix = addressType === "primary" ? "Primary" : "Billing";
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FormField label="First Name" icon={User} required>
+    <form onSubmit={handleSubmit}>
+      <div className="grid gap-4 py-4">
+        <FormField label={`${prefix} Address Line 1`} icon={Home} required>
           <Input
-            placeholder="Enter first name"
-            value={address.firstName}
-            onChange={(e) => handleInputChange("firstName", e.target.value)}
+            required
+            value={formData[`${addressType}AddressLine1`]}
+            onChange={(e) =>
+              setFormData((prev) => ({
+                ...prev,
+                [`${addressType}AddressLine1`]: e.target.value,
+              }))
+            }
           />
         </FormField>
-        <FormField label="Last Name" icon={User} required>
+        <FormField label={`${prefix} Address Line 2`} icon={Building}>
           <Input
-            placeholder="Enter last name"
-            value={address.lastName}
-            onChange={(e) => handleInputChange("lastName", e.target.value)}
+            value={formData[`${addressType}AddressLine2`]}
+            onChange={(e) =>
+              setFormData((prev) => ({
+                ...prev,
+                [`${addressType}AddressLine2`]: e.target.value,
+              }))
+            }
+          />
+        </FormField>
+        <FormField label={`${prefix} City`} icon={MapPin} required>
+          <Input
+            required
+            value={formData[`${addressType}City`]}
+            onChange={(e) =>
+              setFormData((prev) => ({
+                ...prev,
+                [`${addressType}City`]: e.target.value,
+              }))
+            }
+          />
+        </FormField>
+        <FormField label={`${prefix} State/Province`} icon={MapPin} required>
+          <Input
+            required
+            value={formData[`${addressType}State`]}
+            onChange={(e) =>
+              setFormData((prev) => ({
+                ...prev,
+                [`${addressType}State`]: e.target.value,
+              }))
+            }
+          />
+        </FormField>
+        <FormField label={`${prefix} Postcode`} icon={MapPin} required>
+          <Input
+            required
+            value={formData[`${addressType}Postcode`]}
+            onChange={(e) =>
+              setFormData((prev) => ({
+                ...prev,
+                [`${addressType}Postcode`]: e.target.value,
+              }))
+            }
+          />
+        </FormField>
+        <FormField label={`${prefix} Country`} icon={Globe} required>
+          <Input
+            required
+            value={formData[`${addressType}Country`]}
+            onChange={(e) =>
+              setFormData((prev) => ({
+                ...prev,
+                [`${addressType}Country`]: e.target.value,
+              }))
+            }
           />
         </FormField>
       </div>
-
-      <FormField label="Contact Number" icon={Phone} required>
-        <Input
-          placeholder="We'll only contact you regarding your order"
-          value={address.contactNumber}
-          onChange={(e) => handleInputChange("contactNumber", e.target.value)}
-        />
-      </FormField>
-
-      <FormField label="Address Line 1" icon={Building} required>
-        <Input
-          placeholder="Enter your address"
-          value={address.addressLine1}
-          onChange={(e) => handleInputChange("addressLine1", e.target.value)}
-        />
-      </FormField>
-
-      <FormField label="Address Line 2" icon={Building}>
-        <Input
-          placeholder="Optional"
-          value={address.addressLine2}
-          onChange={(e) => handleInputChange("addressLine2", e.target.value)}
-        />
-      </FormField>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FormField label="Town / City" icon={MapPin} required>
-          <Input
-            placeholder="Enter city"
-            value={address.city}
-            onChange={(e) => handleInputChange("city", e.target.value)}
-          />
-        </FormField>
-        <FormField label="State / Province" icon={MapPin}>
-          <Input
-            placeholder="Optional"
-            value={address.state}
-            onChange={(e) => handleInputChange("state", e.target.value)}
-          />
-        </FormField>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FormField label="Postcode" icon={Mail} required>
-          <Input
-            placeholder="Enter postcode"
-            value={address.postcode}
-            onChange={(e) => handleInputChange("postcode", e.target.value)}
-          />
-        </FormField>
-        <FormField label="Country" icon={Globe} required>
-          <Select
-            value={address.country}
-            onValueChange={(value) => handleInputChange("country", value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select country" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="United Kingdom">United Kingdom</SelectItem>
-              <SelectItem value="United States">United States</SelectItem>
-              <SelectItem value="Canada">Canada</SelectItem>
-              <SelectItem value="Malaysia">Malaysia</SelectItem>
-            </SelectContent>
-          </Select>
-        </FormField>
-      </div>
-
       <DialogFooter>
-        <Button type="submit" className="w-full">
-          Save Address
+        <Button type="submit" disabled={loading}>
+          {loading ? "Saving..." : "Save Address"}
         </Button>
       </DialogFooter>
     </form>
@@ -438,58 +259,80 @@ const AddressForm = ({ onSuccess }) => {
 };
 
 const Addresses = () => {
-  const addresses = {
-    shipping: {
-      title: "Shipping Address",
-      name: "MOHAMMAD ADAM",
-      addressLines: [
-        "Emerald 9 Cheras",
-        "Block B, Persiaran Awana",
-        "Cheras",
-        "Selangor",
-        "43200",
-        "Malaysia",
-      ],
-      icon: Home,
-    },
-    billing: {
-      title: "Billing Address",
-      name: "Mohd Adam",
-      addressLines: [
-        "No 15, Jalan Intan 6",
-        "Taman Cheras Permata 2",
-        "Cheras",
-        "43200",
-        "Malaysia",
-      ],
-      icon: CreditCard,
-    },
+  const [address, setAddress] = useState(null);
+  const supabase = createClientSupabase();
+
+  const fetchAddress = async () => {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from("users")
+        .select(
+          `
+          addressLine1, addressLine2, city, state, postcode, country
+          `
+        )
+        .eq("id", user.id)
+        .single();
+
+      if (error) {
+        console.error("Error fetching address:", error);
+        return;
+      }
+
+      setAddress(data);
+    } catch (error) {
+      console.error("Error fetching address:", error);
+    }
   };
 
+  useEffect(() => {
+    fetchAddress();
+  }, []);
+
   return (
-    <div className="max-w-4xl mx-auto p-4">
-      {/* <Card className="mb-8"> */}
-      {/* <CardHeader>
-          <CardTitle>Manage Addresses</CardTitle>
-          <CardDescription>
-            Update your shipping and billing addresses
-          </CardDescription>
-        </CardHeader> */}
-      <CardContent>
-        <Tabs defaultValue="shipping" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="shipping">Shipping Address</TabsTrigger>
-            <TabsTrigger value="billing">Billing Address</TabsTrigger>
-          </TabsList>
-          <TabsContent value="shipping" className="mt-4">
-            <AddressSection {...addresses.shipping} />
-          </TabsContent>
-          <TabsContent value="billing" className="mt-4">
-            <AddressSection {...addresses.billing} />
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-      {/* </Card> */}
+    <div className="space-y-6">
+      {/* <div>
+        <h3 className="text-lg font-medium">Addresses</h3>
+        <p className="text-sm text-muted-foreground">
+          Manage your shipping and billing addresses
+        </p>
+      </div> */}
+      <Separator />
+      <Tabs defaultValue="primary" className="w-full p-4">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="primary">Primary Address</TabsTrigger>
+          <TabsTrigger value="billing" disabled>
+            Billing Address (Coming Soon)
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="primary" className="mt-4">
+          <AddressSection
+            title="Primary Address"
+            name="primary"
+            address={address}
+            icon={Home}
+            onEdit={fetchAddress}
+            addressType="primary"
+          />
+        </TabsContent>
+        <TabsContent value="billing" className="mt-4">
+          <div className="flex flex-col items-center justify-center p-8 text-center">
+            <CreditCard className="h-10 w-10 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium mb-2">
+              Billing Address Coming Soon
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              The ability to add a separate billing address will be available
+              soon.
+            </p>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

@@ -94,6 +94,8 @@ export default function ProfilePage({
     (ownedItemsQuery.data?.length || 0) / itemsPerPage
   );
 
+  console.log("userQuery.data", userQuery.data);
+
   if (isLoading) return <SkeletonLoaderProfile />;
   if (!userQuery.data) return <div>User not found</div>;
 
@@ -301,21 +303,35 @@ export default function ProfilePage({
                 <CardContent className="grid gap-4 p-6">
                   <div>
                     <h3 className="font-semibold">About Me</h3>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Passionate collector and seller of vintage timepieces. I
-                      specialize in rare and unique watches from the
-                      1950s-1970s. Every piece in my collection has been
-                      carefully authenticated and restored when necessary.
-                    </p>
+                    {userQuery.data.about && (
+                      <p className="text-sm text-muted-foreground">
+                        {userQuery.data.about}
+                      </p>
+                    )}
                   </div>
                   <Separator />
                   <div className="flex items-center gap-2">
                     <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">San Francisco, CA</span>
+                    {userQuery.data.city && (
+                      <p className="text-sm text-muted-foreground">
+                        {userQuery.data.city}, {userQuery.data.country}
+                      </p>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     <CalendarDays className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">Member since Sep 2021</span>
+                    {userQuery.data.createdAt && (
+                      <p className="text-sm text-muted-foreground">
+                        Member since{" "}
+                        {new Date(userQuery.data.createdAt).toLocaleDateString(
+                          "en-US",
+                          {
+                            month: "long",
+                            year: "numeric",
+                          }
+                        )}
+                      </p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
