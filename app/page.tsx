@@ -113,7 +113,7 @@ export default function Home() {
         </section>
 
         {/* Upcoming Auctions - Notable Drops */}
-        <section className="container px-4 md:px-6 bg-muted/30 py-12">
+        <section className="container px-4 md:px-6">
           <Suspense
             fallback={<LoadingSection message="Loading upcoming auctions..." />}
           >

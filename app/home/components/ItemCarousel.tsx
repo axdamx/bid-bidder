@@ -75,7 +75,7 @@ export function ItemCarousel({
         </DialogContent>
       </Dialog>
 
-      <section className="w-full py-12">
+      <div className="w-full py-12">
         <div className="container">
           <Carousel
             opts={{
@@ -176,7 +176,7 @@ export function ItemCarousel({
               <CarouselNext className="absolute -right-12 top-1/2 -translate-y-1/2" /> */}
           </Carousel>
         </div>
-      </section>
+      </div>
     </>
   );
 }

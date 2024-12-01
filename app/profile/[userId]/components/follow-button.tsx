@@ -11,11 +11,13 @@ export function FollowButton({
   currentUserId,
   initialIsFollowing,
   followersCount,
+  className,
 }: {
   targetUserId: string;
   currentUserId: string | null;
   initialIsFollowing: boolean;
   followersCount: number;
+  className?: string;
 }) {
   // Initialize the state with the initialIsFollowing prop
   const [isFollowing, setIsFollowing] = useState<boolean>(initialIsFollowing);
@@ -77,6 +79,7 @@ export function FollowButton({
         followMutation.isPending || unfollowMutation.isPending || !currentUserId
       }
       variant={isFollowing ? "outline" : "default"}
+      className={`w-full mt-4 sm:mt-0 sm:w-auto ${className || ""}`}
     >
       {followMutation.isPending || unfollowMutation.isPending ? (
         <>

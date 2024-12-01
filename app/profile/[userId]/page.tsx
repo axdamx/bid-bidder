@@ -159,12 +159,14 @@ export default function ProfilePage({
             </div>
           </div>
           {user?.id !== ownerId && (
-            <FollowButton
-              targetUserId={ownerId}
-              currentUserId={user?.id || ""}
-              initialIsFollowing={followDataQuery.data?.isFollowing || false}
-              followersCount={followDataQuery.data?.followersCount || 0}
-            />
+            <div className="w-full sm:w-auto">
+              <FollowButton
+                targetUserId={ownerId}
+                currentUserId={user?.id || ""}
+                initialIsFollowing={followDataQuery.data?.isFollowing || false}
+                followersCount={followDataQuery.data?.followersCount || 0}
+              />
+            </div>
           )}
         </div>
       </div>
