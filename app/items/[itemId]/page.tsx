@@ -130,7 +130,7 @@ export default function ItemPage({
   // Bid acknowledgment query
   const bidAckQuery = useQuery({
     queryKey: ["bidAcknowledgment", itemId, user?.id],
-    queryFn: () => checkBidAcknowledgmentAction(itemId, user?.id),
+    queryFn: () => checkBidAcknowledgmentAction(itemId, user?.id ?? null),
     enabled: !!user?.id,
     staleTime: Infinity,
   });

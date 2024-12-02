@@ -1,8 +1,8 @@
 "use client";
 
-import { Item } from "@/src/db/schema";
+// import { Item } from "@/src/db/schema";
 import { CldImage } from "next-cloudinary";
-
+// @ts-ignore
 export default function ItemImage({ item }: { item: Item }) {
   return (
     <div>

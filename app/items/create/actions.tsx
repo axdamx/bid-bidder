@@ -1,8 +1,8 @@
 "use server";
 
-import { images, items } from "@/src/db/schema";
+// import { images, items } from "@/src/db/schema";
 import { revalidatePath } from "next/cache";
-import { database } from "@/src/db/database";
+// import { database } from "@/src/db/database";
 // import { auth } from "@/app/auth";
 import { redirect } from "next/navigation";
 // import { supabase } from "@/lib/utils";

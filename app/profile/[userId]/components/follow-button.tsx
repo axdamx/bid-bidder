@@ -10,13 +10,13 @@ export function FollowButton({
   targetUserId,
   currentUserId,
   initialIsFollowing,
-  followersCount,
+  followersCount = 0,
   className,
 }: {
   targetUserId: string;
   currentUserId: string | null;
   initialIsFollowing: boolean;
-  followersCount: number;
+  followersCount?: number;
   className?: string;
 }) {
   // Initialize the state with the initialIsFollowing prop

@@ -4,8 +4,8 @@
 import { useSupabase } from "@/app/context/SupabaseContext";
 import { createServerSupabase } from "@/lib/supabase/server";
 // import { supabase } from "@/lib/utils";
-import { database } from "@/src/db/database";
-import { bidAcknowledgments, bids, items, users } from "@/src/db/schema";
+// import { database } from "@/src/db/database";
+// import { bidAcknowledgments, bids, items, users } from "@/src/db/schema";
 import { desc, eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";

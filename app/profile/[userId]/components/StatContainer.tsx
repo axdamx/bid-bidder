@@ -1,6 +1,15 @@
 import { Card } from "@/components/ui/card";
 import { FollowButton } from "./follow-button";
 
+interface StatsProps {
+  itemsCount: number;
+  followersCount: number;
+  followingCount: number;
+  userId: string;
+  currentUserId?: string;
+  isFollowing?: boolean;
+}
+
 export const Stats = ({
   itemsCount,
   followersCount,
@@ -8,7 +17,7 @@ export const Stats = ({
   userId,
   currentUserId,
   isFollowing,
-}) => {
+}: StatsProps) => {
   // const numberOfItems = items.length;
   return (
     <Card className="p-4 text-center" style={{ overflowWrap: "break-word" }}>
@@ -30,7 +39,7 @@ export const Stats = ({
             <FollowButton
               targetUserId={userId}
               currentUserId={currentUserId}
-              initialIsFollowing={isFollowing}
+              initialIsFollowing={isFollowing ?? false}
             />
           )}
         </div>

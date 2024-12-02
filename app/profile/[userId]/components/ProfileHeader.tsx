@@ -1,6 +1,12 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-export const ProfileHeader = ({ user }) => {
+interface User {
+  image: string;
+  name: string;
+  email: string;
+}
+
+export const ProfileHeader = ({ user }: { user: User }) => {
   return (
     <div
       className="relative w-full h-64 bg-cover bg-center rounded-lg overflow-hidden"

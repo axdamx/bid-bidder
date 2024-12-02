@@ -7,13 +7,10 @@ import { createServerSupabase } from "@/lib/supabase/server";
 // import { supabase } from "@/lib/utils";
 // import { supabase } from "@/lib/utils";
 
-const supabase = createServerSupabase();
-
 export async function getUserById(userId: string) {
-  // const supabase = createServerSupabase();
   if (!userId) return null;
 
-  // const supabase = createServerSupabase(); // Create Supabase client
+  const supabase = createServerSupabase(); // Create client inside function
 
   try {
     const { data: user, error } = await supabase
@@ -35,6 +32,8 @@ export async function getUserById(userId: string) {
 }
 
 export const getItemsWithUsers = cache(async () => {
+  const supabase = createServerSupabase(); // Create client inside function
+  
   try {
     // Verify supabase connection
     if (!supabase) {
@@ -66,6 +65,7 @@ export const getItemsWithUsers = cache(async () => {
 
 // export const
 export const getLiveAuctions = cache(async () => {
+  const supabase = createServerSupabase(); // Create client inside function
   const { items } = await getItemsWithUsers();
   return items
     .filter(
@@ -82,6 +82,7 @@ export const getLiveAuctions = cache(async () => {
 });
 
 export const getEndedAuctions = cache(async () => {
+  const supabase = createServerSupabase(); // Create client inside function
   const { items } = await getItemsWithUsers();
   return items.filter(
     (item) =>
@@ -93,6 +94,7 @@ export const getEndedAuctions = cache(async () => {
 });
 
 export const getUpcomingAuctions = cache(async (limit: number = 2) => {
+  const supabase = createServerSupabase(); // Create client inside function
   const { items } = await getItemsWithUsers();
   // For upcoming auctions, we should only show items that:
   // 1. Haven't started yet
@@ -101,7 +103,7 @@ export const getUpcomingAuctions = cache(async (limit: number = 2) => {
 });
 
 export async function searchItems(query: string) {
-  // const supabase = createServerSupabase();
+  const supabase = createServerSupabase(); // Create client inside function
   if (!query) {
     return [];
   }
@@ -132,9 +134,7 @@ export async function searchItems(query: string) {
 
 // Sign In
 export const handleSignOut = async () => {
-  // const supabase = createClientSupabase(); // Use client-side Supabase
-  // const supabase = createServerSupabase();
-  // const supabase = createServerSupabase();
+  const supabase = createServerSupabase(); // Create client inside function
 
   const { error } = await supabase.auth.signOut();
   if (error) {

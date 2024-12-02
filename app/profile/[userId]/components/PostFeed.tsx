@@ -8,8 +8,9 @@ import ItemCard from "@/app/item-card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
+import { ItemWithUser } from "@/app/items";
 
-export default function PostFeed({ ownedItems }) {
+export default function PostFeed({ ownedItems }: { ownedItems: ItemWithUser[] }) {
   const [page, setPage] = useState(1);
   const itemsPerPage = 9;
   const hasItems = ownedItems.length > 0;

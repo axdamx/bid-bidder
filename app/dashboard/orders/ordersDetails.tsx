@@ -38,7 +38,7 @@ import {
 import { userAtom } from "@/app/atom/userAtom";
 import { useAtom } from "jotai";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getOrders, Order, updateOrderStatus } from "./action";
+import { getOrders, updateOrderStatus } from "./action";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/lib/utils";
 import { LoadingModal } from "@/app/components/LoadingModal";
@@ -64,31 +64,42 @@ import {
 
 // Extended mock data
 
-const StatusBadge = ({ status }) => {
+interface Order {
+  id: number;
+  orderStatus: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  item: {
+    name: string;
+  };
+  orderDate: string;
+  amount: number;
+  itemId: number;
+}
+
+const StatusBadge = ({ status }: { status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' }) => {
   const statusConfig = {
     pending: {
       label: "Pending",
-      variant: "outline",
+      variant: "default" as const,
       icon: Clock,
     },
     processing: {
       label: "Processing",
-      variant: "secondary",
+      variant: "secondary" as const,
       icon: Package,
     },
     shipped: {
       label: "Shipped",
-      variant: "default",
+      variant: "default" as const,
       icon: Truck,
     },
     delivered: {
       label: "Delivered",
-      variant: "success",
+      variant: "default" as const,
       icon: CheckCircle2,
     },
     cancelled: {
       label: "Cancelled",
-      variant: "destructive",
+      variant: "destructive" as const,
       icon: XCircle,
     },
   };
@@ -156,7 +167,13 @@ export default function OrderDetails() {
     updateStatus({ orderId, status: newStatus });
   };
 
-  const OrdersTable = ({ orders, showStatusUpdate = false }) => {
+  const OrdersTable = ({ 
+    orders, 
+    showStatusUpdate = false 
+  }: { 
+    orders?: Order[]; 
+    showStatusUpdate?: boolean 
+  }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 5;
 

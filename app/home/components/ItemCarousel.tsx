@@ -16,14 +16,25 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Loader2 } from "lucide-react";
+import { ItemWithUser } from "@/app/items";
 
 interface Item {
   id: string;
-  // ... other item properties
+  userId: string;
+  name: string;
+  currentBid: number;
+  startingPrice: number;
+  imageId: string | null;
+  bidInterval: number;
+  endDate: Date;
+  description: string | null;
+  status: string | null;
+  winnerId: string | null;
+  isBoughtOut?: boolean;
 }
 
 interface ItemCarouselProps {
-  items: Item[];
+  items: ItemWithUser[];
   isLoading: boolean;
   title: string;
   description: string;
