@@ -48,7 +48,23 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 
-export default function ProfileTable(ownedItems) {
+interface Item {
+  id: string;
+  name: string;
+  startingPrice: number;
+  currentBid: number;
+  createdAt: string;
+  endDate: string;
+  isBoughtOut: boolean;
+  imageId: string;
+  backgroundColor: string;
+}
+
+interface OwnedItemsProps {
+  items: Item[];
+}
+
+export default function ProfileTable({ items }: OwnedItemsProps) {
   const [view, setView] = React.useState("grid");
   const [searchTerm, setSearchTerm] = React.useState("");
   const [sortOrder, setSortOrder] = React.useState("low");
@@ -79,7 +95,7 @@ export default function ProfileTable(ownedItems) {
   // console.log("ownedItems", ownedItems);
 
   const filteredAndSortedItems = React.useMemo(() => {
-    return ownedItems.items
+    return items
       .filter((item) =>
         item.name.toLowerCase().includes(searchTerm.toLowerCase())
       )
@@ -97,7 +113,7 @@ export default function ProfileTable(ownedItems) {
             return 0;
         }
       });
-  }, [ownedItems, searchTerm, sortOrder]);
+  }, [items, searchTerm, sortOrder]);
 
   const totalPages = Math.ceil(filteredAndSortedItems.length / itemsPerPage);
   const paginatedItems = filteredAndSortedItems.slice(
@@ -220,7 +236,7 @@ export default function ProfileTable(ownedItems) {
   };
 
   // Update the rendering to handle empty states
-  if (ownedItems.items.length === 0) {
+  if (items.length === 0) {
     return (
       <div className="text-center py-12">
         <p className="text-muted-foreground">No items found</p>

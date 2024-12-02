@@ -1,3 +1,4 @@
+// disabled typescript for this file
 "use client";
 
 import React, { useState } from "react";
@@ -33,7 +34,13 @@ import { useRouter } from "next/navigation";
 import LoadingButton from "@/app/components/LoadingButton";
 import { userAtom } from "@/app/atom/userAtom";
 import { useAtom } from "jotai";
-import { CldImage, CldUploadWidget } from "next-cloudinary";
+import {
+  CldImage,
+  CldUploadWidget,
+  CloudinaryUploadWidgetResults,
+  CloudinaryUploadWidgetInfo,
+  CloudinaryUploadWidgetOptions,
+} from "next-cloudinary";
 
 // Add type for User at the top
 interface User {
@@ -41,9 +48,29 @@ interface User {
   email: string;
   name: string;
   image?: string;
+  gender?: string;
+  phone?: string;
+  birthday?: string;
+  role?: string;
 }
 
-const UserDetailsPage = ({ initialUser }) => {
+interface CloudinaryCoordinates {
+  custom?: number[][];
+}
+
+interface CloudinaryUploadWidgetInfoWithCoordinates
+  extends CloudinaryUploadWidgetInfo {
+  coordinates?: {
+    custom?: number[][];
+  };
+}
+
+interface ExtendedCloudinaryUploadWidgetOptions
+  extends CloudinaryUploadWidgetOptions {
+  transformation: any;
+}
+
+const UserDetailsPage = ({ initialUser }: { initialUser: User }) => {
   const [userData, setUserData] = useState(initialUser);
   const [editingField, setEditingField] = useState("");
   const [editValue, setEditValue] = useState("");
@@ -51,20 +78,21 @@ const UserDetailsPage = ({ initialUser }) => {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter(); // Initialize useRouter
   // const queryClient = useQueryClient();
-  const [, setUser] = useAtom(userAtom);
+  const [user, setUser] = useAtom(userAtom);
   const [profilePicPreview, setProfilePicPreview] = useState(null);
 
   // console.log("user dalam userDetails", userData);
 
-  const handleUpload = async (result) => {
-    // console.log("Upload result:", result);
+  const handleUpload = async (results: CloudinaryUploadWidgetResults) => {
+    // console.log("Upload result:", results);
     setIsLoading(true);
     try {
-      let imageUrl = result.info.secure_url;
+      const result = results.info as CloudinaryUploadWidgetInfoWithCoordinates;
+      let imageUrl = result.secure_url;
 
-      // Check for custom coordinates array
-      if (result.info.coordinates?.custom?.[0]) {
-        const [x, y, width, height] = result.info.coordinates.custom[0];
+      // Safely check for custom coordinates
+      if (result.coordinates?.custom && result.coordinates.custom.length > 0) {
+        const [x, y, width, height] = result.coordinates.custom[0];
         imageUrl = imageUrl.replace(
           "/upload/",
           `/upload/c_crop,x_${x},y_${y},w_${width},h_${height}/c_fill,g_face,w_400,h_400,q_auto/`
@@ -78,7 +106,7 @@ const UserDetailsPage = ({ initialUser }) => {
       }
 
       // console.log("Final image URL:", imageUrl);
-
+      // @ts-ignore
       setProfilePicPreview(imageUrl);
       const updateResult = await updateProfilePicture(userData.id, imageUrl);
 
@@ -87,26 +115,27 @@ const UserDetailsPage = ({ initialUser }) => {
           ...prev,
           image: imageUrl,
         }));
-        setUser((prev) => ({
-          ...prev,
-          image: imageUrl,
-        }));
+        setUser((prev) => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            image: imageUrl,
+          };
+        });
         toast.success("Profile picture updated successfully");
-        router.refresh();
+        setIsDialogOpen(false);
       } else {
-        setProfilePicPreview(null);
-        toast.error(updateResult.error || "Failed to update profile picture");
+        toast.error("Failed to update profile picture");
       }
     } catch (error) {
-      setProfilePicPreview(null);
-      toast.error("An unexpected error occurred");
       console.error("Upload error:", error);
+      toast.error("An error occurred during upload");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleEdit = (field) => {
+  const handleEdit = (field: keyof User) => {
     setEditingField(field);
     setEditValue(userData[field] || "");
     setIsDialogOpen(true);
@@ -131,13 +160,16 @@ const UserDetailsPage = ({ initialUser }) => {
         router.refresh();
         // console.log("result.data", result.data);
         // this is for atom
-        setUser((prev) => {
-          if (!prev) return prev;
-          return {
-            ...prev,
-            [editingField]: editValue,
-          } as User;
-        });
+        setUser((prev) =>
+          prev
+            ? { ...prev, [editingField]: editValue }
+            : ({
+                id: "",
+                email: "",
+                name: "",
+                [editingField]: editValue,
+              } as User)
+        );
         // queryClient.invalidateQueries({ queryKey: ["user"] });
         // window.location.reload(); // Replace router.refresh() with this
       } else {
@@ -193,7 +225,9 @@ const UserDetailsPage = ({ initialUser }) => {
   const renderEditDialog = () => {
     const config = Object.values(fieldConfig)
       .map((section) => section.fields)
-      .reduce((acc, curr) => ({ ...acc, ...curr }), {})[editingField];
+      .reduce((acc, curr) => ({ ...acc, ...curr }), {} as Record<string, any>)[
+      editingField
+    ];
 
     if (!config) return null;
 
@@ -273,31 +307,34 @@ const UserDetailsPage = ({ initialUser }) => {
     );
   };
 
-  const renderField = (field, config) => (
-    <div className="flex items-center justify-between p-4 rounded-lg bg-secondary/10 mb-2">
-      <div className="flex items-center gap-3">
-        <div className="p-2 bg-primary/10 rounded-full text-primary">
-          {config.icon}
-        </div>
-        <div>
-          <Label className="text-sm text-muted-foreground">
-            {config.label}
-          </Label>
-          <div className="font-medium">{userData[field] || "Not set"}</div>
-        </div>
-      </div>
-      {field !== "email" && (
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => handleEdit(field)}
-          className="hover:bg-primary/10"
-        >
-          <Pencil className="h-4 w-4" />
-        </Button>
-      )}
-    </div>
-  );
+  // const renderField = (field: string, config: {
+  //   icon: React.ReactNode;
+  //   label: string
+  // }) => (
+  //   <div className="flex items-center justify-between p-4 rounded-lg bg-secondary/10 mb-2">
+  //     <div className="flex items-center gap-3">
+  //       <div className="p-2 bg-primary/10 rounded-full text-primary">
+  //         {config.icon}
+  //       </div>
+  //       <div>
+  //         <Label className="text-sm text-muted-foreground">
+  //           {config.label}
+  //         </Label>
+  //         <div className="font-medium">{userData[field] || "Not set"}</div>
+  //       </div>
+  //     </div>
+  //     {field !== "email" && (
+  //       <Button
+  //         variant="ghost"
+  //         size="icon"
+  //         onClick={() => handleEdit(field)}
+  //         className="hover:bg-primary/10"
+  //       >
+  //         <Pencil className="h-4 w-4" />
+  //       </Button>
+  //     )}
+  //   </div>
+  // );
 
   // console.log("profilePicPreview", profilePicPreview);
 
@@ -308,9 +345,9 @@ const UserDetailsPage = ({ initialUser }) => {
         <div className="flex flex-col items-center mb-8">
           <div className="relative mb-4">
             <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-100">
-              {profilePicPreview || userData.image ? ( // Changed from profilePicture to image
+              {(profilePicPreview || userData.image) && (
                 <CldImage
-                  src={profilePicPreview || userData.image}
+                  src={profilePicPreview || userData.image || ""}
                   alt="Profile"
                   className="w-full h-full object-cover"
                   width={150}
@@ -318,12 +355,8 @@ const UserDetailsPage = ({ initialUser }) => {
                   crop="fill"
                   gravity="face"
                   quality="auto"
-                  preserveTransformations={true} // Add this line
+                  preserveTransformations={true}
                 />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <User className="w-16 h-16 text-gray-400" />
-                </div>
               )}
             </div>
           </div>
@@ -339,16 +372,15 @@ const UserDetailsPage = ({ initialUser }) => {
               croppingShowDimensions: true,
               croppingValidateDimensions: true,
               croppingShowBackButton: true,
-              transformation: [
-                {
-                  width: 400,
-                  height: 400,
-                  crop: "fill",
-                  gravity: "face",
-                  quality: "auto",
-                },
-              ],
-              // croppingCoordinatesMode: "custom", // Add this line
+              // transformation: [
+              //   {
+              //     width: 400,
+              //     height: 400,
+              //     crop: "fill",
+              //     gravity: "face",
+              //     quality: "auto",
+              //   },
+              // ],
               styles: {
                 palette: {
                   window: "#FFFFFF",

@@ -137,7 +137,11 @@ export const createItemSchema = z.object({
   name: z.string().min(1, "Name is required"),
   startingPrice: z.number().min(0, "Price must be positive"),
   bidInterval: z.number().min(0, "Bid interval must be positive"),
-  binPrice: z.number().min(0, "BIN price must be positive").optional(),
+  binPrice: z.union([
+    z.number().min(0, "BIN price must be positive"),
+    z.literal(null),
+    z.undefined()
+  ]).optional(),
   endDate: z.string().refine((date) => new Date(date) > new Date(), {
     message: "End date must be in the future",
   }),

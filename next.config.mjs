@@ -11,7 +11,7 @@ const nextConfig = {
     reactStrictMode: false,
     transpilePackages: ['jotai-devtools'],
     images: {
-        domains: ['hnqqxpwdrdlvuzccxola.supabase.co']
+        domains: ['hnqqxpwdrdlvuzccxola.supabase.co', 'res.cloudinary.com']
       }
 };
 

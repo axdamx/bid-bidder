@@ -36,16 +36,18 @@ import Addresses from "./address/addressDetails";
 import PaymentsAndPayouts from "./payment/paymentDetails";
 import OrderDetails from "./orders/ordersDetails";
 import HelpDetails from "./help/helpDetails";
-import ItemsDetails from "./items/itemsDetails";
+// import ItemsDetails from "./items/itemsDetails";
 import { MotionGrid } from "../components/motionGrid";
 import { userAtom } from "../atom/userAtom";
 import { useAtom } from "jotai";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
+import ItemsDetails from "./items/itemsDetails";
 
 type User = {
-  name?: string;
-  email?: string;
+  id: string;
+  name: string;
+  email: string;
   image?: string;
 } | null;
 
@@ -58,20 +60,14 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
   const router = useRouter();
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  // const [activeContent, setActiveContent] = useState("userDetails");
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-  // const [user] = useAtom(userAtom);
-
-  // console.log("user dashboard", user);
+  const [activeContent, setActiveContent] = useState(
+    searchParams.get("tab") || "userDetails"
+  );
 
   if (!initialUser) {
     return null;
   }
-
-  // Get the tab from URL params or default to "userDetails"
-  const [activeContent, setActiveContent] = useState(
-    searchParams.get("tab") || "userDetails"
-  );
 
   // Update URL when tab changes
   const handleTabChange = (tabId: string) => {
@@ -79,11 +75,13 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
     router.push(`/dashboard?tab=${tabId}`);
   };
 
-  const initials = initialUser?.name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase();
+  const initials =
+    initialUser?.name ||
+    ""
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase();
 
   const navigation = [
     {

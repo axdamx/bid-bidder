@@ -39,7 +39,26 @@ import {
 } from "lucide-react";
 import { createClientSupabase } from "@/lib/supabase/client";
 
-const AddressSection = ({
+interface Address {
+  [key: string]: string | null;
+  addressLine1: string | null;
+  addressLine2: string | null;
+  city: string | null;
+  state: string | null;
+  postcode: string | null;
+  country: string | null;
+}
+
+interface AddressSectionProps {
+  title: string;
+  name: string;
+  address: Address | null;
+  icon: React.ElementType;
+  onEdit?: () => void;
+  addressType: "primary" | "billing" | "shipping";
+}
+
+const AddressSection: React.FC<AddressSectionProps> = ({
   title,
   name,
   address,
@@ -56,7 +75,7 @@ const AddressSection = ({
       .filter(([key]) => key.startsWith(prefix))
       .some(([_, value]) => value !== null);
 
-  const getAddressValue = (field) => address?.[`${prefix}${field}`];
+  const getAddressValue = (field: string) => address?.[`${prefix}${field}`];
 
   return (
     <Card>
@@ -117,7 +136,19 @@ const AddressSection = ({
   );
 };
 
-const FormField = ({ label, icon: Icon, children, required }) => (
+interface FormFieldProps {
+  label: string;
+  icon: React.ElementType;
+  children: React.ReactNode;
+  required?: boolean;
+}
+
+const FormField: React.FC<FormFieldProps> = ({
+  label,
+  icon: Icon,
+  children,
+  required,
+}) => (
   <div className="space-y-1.5">
     <Label className="flex items-center space-x-2">
       <Icon className="h-4 w-4" />
@@ -130,8 +161,22 @@ const FormField = ({ label, icon: Icon, children, required }) => (
   </div>
 );
 
-const AddressForm = ({ onSuccess, initialData, addressType }) => {
-  const [formData, setFormData] = useState({
+interface AddressFormData {
+  [key: string]: string;
+}
+
+interface AddressFormProps {
+  onSuccess?: () => void;
+  initialData: Address | null;
+  addressType: "primary" | "billing" | "shipping";
+}
+
+const AddressForm: React.FC<AddressFormProps> = ({
+  onSuccess,
+  initialData,
+  addressType,
+}) => {
+  const [formData, setFormData] = useState<AddressFormData>({
     [`${addressType}AddressLine1`]:
       initialData?.[`${addressType}AddressLine1`] || "",
     [`${addressType}AddressLine2`]:
@@ -144,7 +189,7 @@ const AddressForm = ({ onSuccess, initialData, addressType }) => {
   const [loading, setLoading] = useState(false);
   const supabase = createClientSupabase();
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
     setLoading(true);
 
@@ -259,7 +304,7 @@ const AddressForm = ({ onSuccess, initialData, addressType }) => {
 };
 
 const Addresses = () => {
-  const [address, setAddress] = useState(null);
+  const [address, setAddress] = useState<Address | null>(null);
   const supabase = createClientSupabase();
 
   const fetchAddress = async () => {

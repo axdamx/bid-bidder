@@ -1,4 +1,8 @@
-import { handlers } from "@/app/auth";
+// NextAuth route not needed - using Supabase auth instead
+export async function GET() {
+  return new Response(null, { status: 404 });
+}
 
-// Referring to the auth.ts we just created
-export const { GET, POST } = handlers
+export async function POST() {
+  return new Response(null, { status: 404 });
+}

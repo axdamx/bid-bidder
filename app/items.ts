@@ -20,6 +20,7 @@ export type Item = {
   description: string | null;
   status: string | null;
   winnerId: string | null;
+  isBoughtOut?: boolean;
 };
 
 export type ItemWithUser = Item & {

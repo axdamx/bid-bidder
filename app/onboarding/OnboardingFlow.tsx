@@ -627,15 +627,15 @@ export default function OnboardingFlow({
                                     croppingShowDimensions: true,
                                     croppingValidateDimensions: true,
                                     croppingShowBackButton: true,
-                                    transformation: [
-                                      {
-                                        width: 400,
-                                        height: 400,
-                                        crop: "fill",
-                                        gravity: "face",
-                                        quality: "auto",
-                                      },
-                                    ],
+                                    // transformation: [
+                                    //   {
+                                    //     width: 400,
+                                    //     height: 400,
+                                    //     crop: "fill",
+                                    //     gravity: "face",
+                                    //     quality: "auto",
+                                    //   },
+                                    // ],
                                     styles: {
                                       palette: {
                                         window: "#FFFFFF",

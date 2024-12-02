@@ -58,7 +58,24 @@ export default function ItemsDetails() {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState(null);
+  // Define the type for items
+  type ItemStatus = "LIVE" | "PENDING" | "ACTIVE" | "ENDED" | "CANCELLED";
+
+  interface Item {
+    id: number;
+    status: ItemStatus;
+    name: string;
+    imageId: string;
+    startingPrice: number;
+    createdAt: string;
+    winner?: {
+      id: number;
+      name: string;
+    };
+    currentBid: number;
+  };
+
+  const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const itemsPerPage = 9;
   const [isNavigating, setIsNavigating] = useState(false);
   const pathname = usePathname();
@@ -169,23 +186,25 @@ export default function ItemsDetails() {
     currentPage * itemsPerPage
   );
 
-  const getStatusBadge = (item) => {
+  const getStatusBadge = (item: Item) => {
     if (item.status === "CANCELLED") {
       return <Badge variant="destructive">Cancelled</Badge>;
     }
 
-    const variants = {
+    const variants: Record<ItemStatus, "default" | "destructive" | "outline" | "secondary"> = {
       LIVE: "default",
       PENDING: "secondary",
       ACTIVE: "default",
       ENDED: "destructive",
+      CANCELLED: "destructive",
     };
+
     return (
       <Badge variant={variants[item.status] || "default"}>{item.status}</Badge>
     );
   };
 
-  const canReopen = (item) => {
+  const canReopen = (item: Item) => {
     return item.status === "CANCELLED" || item.status === "ENDED";
   };
 

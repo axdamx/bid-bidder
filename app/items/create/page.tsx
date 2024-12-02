@@ -75,7 +75,7 @@ export default function CreatePage() {
     const formData = new FormData();
     Object.entries(data).forEach(([key, value]) => {
       if (key !== "images") {
-        formData.append(key, value.toString());
+        formData.append(key, value?.toString() || "");
       }
     });
     imageIds.forEach((id) => formData.append("images[]", id));
@@ -303,7 +303,10 @@ export default function CreatePage() {
                     type="number"
                     className="pl-8"
                     {...register("binPrice", {
-                      valueAsNumber: true,
+                      setValueAs: (value: string) => {
+                        const num = parseFloat(value);
+                        return value === "" ? null : isNaN(num) ? null : num;
+                      },
                     })}
                     placeholder="0.00"
                   />

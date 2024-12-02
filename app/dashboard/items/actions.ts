@@ -11,10 +11,12 @@ export async function fetchUserItems(userId: string) {
     // First get all items for the user
     const { data: items, error: itemsError } = await supabase
       .from("items")
-      .select(`
+      .select(
+        `
         *,
         winner:users!inner(id, name, email)
-      `)
+      `
+      )
       .eq("userId", userId)
       .order("createdAt", { ascending: false });
 
@@ -24,13 +26,13 @@ export async function fetchUserItems(userId: string) {
     const itemsWithWinners = await Promise.all(
       items.map(async (item) => {
         if (!item.winnerId) return { ...item, winner: null };
-        
+
         const { data: winner } = await supabase
           .from("users")
           .select("id, name, email")
           .eq("id", item.winnerId)
           .single();
-          
+
         return { ...item, winner };
       })
     );
@@ -45,10 +47,10 @@ export async function fetchUserItems(userId: string) {
     if (ordersError) throw ordersError;
 
     // Create a map of itemId to orderStatus
-    const orderStatusMap = orders.reduce((acc, order) => {
+    const orderStatusMap: { [key: number]: string | null } = orders.reduce((acc, order) => {
       acc[order.itemId] = order.orderStatus;
       return acc;
-    }, {});
+    }, {} as { [key: number]: string | null });
 
     // Combine the data
     const processedData = itemsWithWinners.map((item) => ({
@@ -72,6 +74,7 @@ export async function updateItemEndDate(itemId: number, endDate: string) {
         endDate,
         status: "ACTIVE",
         winnerId: null,
+        isBoughtOut: false,
       })
       .eq("id", itemId);
 
