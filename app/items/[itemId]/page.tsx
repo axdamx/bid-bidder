@@ -144,12 +144,12 @@ export default function ItemPage({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Image Gallery Skeleton */}
           <div className="space-y-4">
-            <div className="relative aspect-square bg-gray-300 animate-pulse rounded-lg"></div>
+            <div className="relative aspect-square bg-gray-300 animate-enhanced-pulse rounded-lg"></div>
             <div className="grid grid-cols-5 gap-2">
               {Array.from({ length: 5 }).map((_, index) => (
                 <div
                   key={index}
-                  className="aspect-square bg-gray-300 animate-pulse rounded-md"
+                  className="aspect-square bg-gray-300 animate-enhanced-pulse rounded-md"
                 ></div>
               ))}
             </div>
@@ -158,30 +158,30 @@ export default function ItemPage({
           {/* Auction Details Skeleton */}
           <div className="space-y-6">
             <div className="bg-white p-6 rounded-lg shadow-md space-y-4">
-              <div className="h-8 bg-gray-300 animate-pulse rounded"></div>
-              <div className="h-6 bg-gray-300 animate-pulse rounded w-1/2"></div>
+              <div className="h-8 bg-gray-300 animate-enhanced-pulse rounded"></div>
+              <div className="h-6 bg-gray-300 animate-enhanced-pulse rounded w-1/2"></div>
               <div className="grid grid-cols-2 gap-8 w-full">
                 {Array.from({ length: 4 }).map((_, index) => (
                   <div key={index} className="space-y-2">
-                    <div className="h-4 bg-gray-300 animate-pulse rounded w-3/4"></div>
-                    <div className="h-6 bg-gray-300 animate-pulse rounded"></div>
+                    <div className="h-4 bg-gray-300 animate-enhanced-pulse rounded w-3/4"></div>
+                    <div className="h-6 bg-gray-300 animate-enhanced-pulse rounded"></div>
                   </div>
                 ))}
               </div>
-              <div className="h-32 bg-gray-300 animate-pulse rounded"></div>
-              <div className="h-10 bg-gray-300 animate-pulse rounded w-full"></div>
+              <div className="h-32 bg-gray-300 animate-enhanced-pulse rounded"></div>
+              <div className="h-10 bg-gray-300 animate-enhanced-pulse rounded w-full"></div>
             </div>
           </div>
 
           {/* Table Skeleton */}
           <div className="mt-8 bg-white p-6 rounded-lg shadow-md space-y-4">
-            <div className="h-8 bg-gray-300 animate-pulse rounded w-1/4"></div>
+            <div className="h-8 bg-gray-300 animate-enhanced-pulse rounded w-1/4"></div>
             <div className="space-y-2">
               {Array.from({ length: 2 }).map((_, index) => (
                 <div key={index} className="flex space-x-4">
-                  <div className="h-6 bg-gray-300 animate-pulse rounded w-full"></div>
-                  <div className="h-6 bg-gray-300 animate-pulse rounded w-full"></div>
-                  <div className="h-6 bg-gray-300 animate-pulse rounded w-full"></div>
+                  <div className="h-6 bg-gray-300 animate-enhanced-pulse rounded w-full"></div>
+                  <div className="h-6 bg-gray-300 animate-enhanced-pulse rounded w-full"></div>
+                  <div className="h-6 bg-gray-300 animate-enhanced-pulse rounded w-full"></div>
                 </div>
               ))}
             </div>

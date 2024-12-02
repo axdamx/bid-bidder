@@ -30,7 +30,7 @@ export default function RootLayout({
       <body
         className={cn(
           "min-h-screen text-base md:text-xl font-serif tracking-wide overflow-x-hidden",
-          "bg-gradient-to-br from-slate-400 via-slate-200 to-purple-200", // This is the lighter version
+          "bg-gradient-to-br from-purple-100 via-slate-200 to-slate-400", // This is the lighter version
           fontSans.variable
         )}
       >

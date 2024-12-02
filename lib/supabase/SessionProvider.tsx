@@ -183,28 +183,28 @@ function SkeletonLoader() {
   return (
     <div className="w-full min-h-screen bg-gray-100">
       <header className="flex items-center justify-between p-4 border-b bg-white">
-        <div className="w-12 h-12 bg-gray-300 animate-pulse rounded" />
-        <div className="w-64 h-10 bg-gray-300 animate-pulse rounded-md" />
-        <div className="w-24 h-10 bg-gray-300 animate-pulse rounded-md" />
+        <div className="w-12 h-12 bg-gray-300 animate-enhanced-pulse rounded" />
+        <div className="w-64 h-10 bg-gray-300 animate-enhanced-pulse rounded-md" />
+        <div className="w-24 h-10 bg-gray-300 animate-enhanced-pulse rounded-md" />
       </header>
 
       <div className="container mx-auto px-4 py-12 grid md:grid-cols-2 gap-8 items-center">
         <div className="space-y-6">
           <div className="space-y-4">
-            <div className="h-12 bg-gray-300 animate-pulse rounded w-3/4" />
-            <div className="h-12 bg-gray-300 animate-pulse rounded w-full" />
-            <div className="h-12 bg-gray-300 animate-pulse rounded w-2/3" />
+            <div className="h-12 bg-gray-300 animate-enhanced-pulse rounded w-3/4" />
+            <div className="h-12 bg-gray-300 animate-enhanced-pulse rounded w-full" />
+            <div className="h-12 bg-gray-300 animate-enhanced-pulse rounded w-2/3" />
           </div>
-          <div className="h-6 bg-gray-300 animate-pulse rounded w-2/3" />
+          <div className="h-6 bg-gray-300 animate-enhanced-pulse rounded w-2/3" />
           <div className="flex gap-4">
-            <div className="h-12 bg-red-300 animate-pulse rounded w-32" />
-            <div className="h-12 bg-gray-300 animate-pulse rounded w-32" />
+            <div className="h-12 bg-red-300 animate-enhanced-pulse rounded w-32" />
+            <div className="h-12 bg-gray-300 animate-enhanced-pulse rounded w-32" />
           </div>
           <div className="flex gap-8">
             {[1, 2, 3].map((i) => (
               <div key={i} className="space-y-2">
-                <div className="h-8 bg-gray-300 animate-pulse rounded w-16" />
-                <div className="h-4 bg-gray-300 animate-pulse rounded w-12" />
+                <div className="h-8 bg-gray-300 animate-enhanced-pulse rounded w-16" />
+                <div className="h-4 bg-gray-300 animate-enhanced-pulse rounded w-12" />
               </div>
             ))}
           </div>
@@ -213,29 +213,29 @@ function SkeletonLoader() {
 
       <div className="container mx-auto px-4 py-12">
         <div className="flex justify-between items-center mb-8">
-          <div className="h-8 bg-gray-300 animate-pulse rounded w-32" />
-          <div className="h-6 bg-gray-300 animate-pulse rounded w-24" />
+          <div className="h-8 bg-gray-300 animate-enhanced-pulse rounded w-32" />
+          <div className="h-6 bg-gray-300 animate-enhanced-pulse rounded w-24" />
         </div>
 
         <div className="grid md:grid-cols-3 gap-6">
           {[1, 2, 3].map((i) => (
             <div key={i} className="border rounded-lg p-4 space-y-4 bg-white">
-              <div className="aspect-video bg-gray-300 animate-pulse rounded-lg" />
+              <div className="aspect-video bg-gray-300 animate-enhanced-pulse rounded-lg" />
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <div className="h-6 bg-gray-300 animate-pulse rounded w-1/2" />
-                  <div className="h-6 bg-gray-300 animate-pulse rounded w-24" />
+                  <div className="h-6 bg-gray-300 animate-enhanced-pulse rounded w-1/2" />
+                  <div className="h-6 bg-gray-300 animate-enhanced-pulse rounded w-24" />
                 </div>
-                <div className="h-8 bg-gray-300 animate-pulse rounded w-32" />
+                <div className="h-8 bg-gray-300 animate-enhanced-pulse rounded w-32" />
                 <div className="flex justify-between">
                   {[1, 2, 3, 4].map((j) => (
                     <div key={j} className="text-center space-y-1">
-                      <div className="h-6 bg-gray-300 animate-pulse rounded w-12" />
-                      <div className="h-4 bg-gray-300 animate-pulse rounded w-16" />
+                      <div className="h-6 bg-gray-300 animate-enhanced-pulse rounded w-12" />
+                      <div className="h-4 bg-gray-300 animate-enhanced-pulse rounded w-16" />
                     </div>
                   ))}
                 </div>
-                <div className="h-12 bg-gray-800 animate-pulse rounded-md w-full" />
+                <div className="h-12 bg-gray-800 animate-enhanced-pulse rounded-md w-full" />
               </div>
             </div>
           ))}
