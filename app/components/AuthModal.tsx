@@ -88,11 +88,14 @@ export default function AuthModals({
       } = await supabase.auth.getSession();
       if (error) {
         console.error("Error checking session:", error);
+        setUser(null); // Clear user state on error
         return;
       }
       if (session?.user) {
         console.log("Session found on mount:", session.user);
         upsertUser(session.user);
+      } else {
+        setUser(null); // Clear user state if no session
       }
     };
 
@@ -113,11 +116,14 @@ export default function AuthModals({
             if (user) {
               console.log("Existing user found:", user);
               setUser(user);
-              // Only redirect to onboarding if the field exists and is false
-              // if (user.onboardingCompleted === false) {
-              //   router.push("/onboarding");
-              // }
             }
+          }
+        } else {
+          // Handle cases where the user is signed out or deleted
+          if (event === "SIGNED_OUT") {
+            console.log("User signed out or deleted");
+            setUser(null);
+            setView("log-in");
           }
         }
       }
@@ -222,8 +228,16 @@ export default function AuthModals({
   };
 
   const handleClose = () => {
-    setIsOpen(false);
-    setView("log-in");
+    // Reset forms before closing
+    signInForm.reset({}, { keepDefaultValues: true });
+    signUpForm.reset({}, { keepDefaultValues: true });
+    forgotPasswordForm.reset({}, { keepDefaultValues: true });
+    
+    // Small timeout to ensure form state is cleaned up before closing
+    setTimeout(() => {
+      setIsOpen(false);
+      setView("log-in");
+    }, 0);
   };
 
   const onSignInSubmit = async (data: SignInFormValues) => {
