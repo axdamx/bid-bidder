@@ -74,6 +74,12 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, user }) => {
               />
             )}
             <Badge
+              variant="secondary"
+              className="absolute top-2 left-2"
+            >
+              LOT #{item.id}
+            </Badge>
+            <Badge
               variant={isItemEnded ? "destructive" : "default"}
               className="absolute top-2 right-2"
             >

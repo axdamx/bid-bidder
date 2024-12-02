@@ -11,14 +11,32 @@ export async function fetchUserItems(userId: string) {
     // First get all items for the user
     const { data: items, error: itemsError } = await supabase
       .from("items")
-      .select("*")
+      .select(`
+        *,
+        winner:users!inner(id, name, email)
+      `)
       .eq("userId", userId)
       .order("createdAt", { ascending: false });
 
     if (itemsError) throw itemsError;
 
+    // Get winner information for items with winnerId
+    const itemsWithWinners = await Promise.all(
+      items.map(async (item) => {
+        if (!item.winnerId) return { ...item, winner: null };
+        
+        const { data: winner } = await supabase
+          .from("users")
+          .select("id, name, email")
+          .eq("id", item.winnerId)
+          .single();
+          
+        return { ...item, winner };
+      })
+    );
+
     // Then get all orders for these items
-    const itemIds = items.map((item) => item.id);
+    const itemIds = itemsWithWinners.map((item) => item.id);
     const { data: orders, error: ordersError } = await supabase
       .from("orders")
       .select("itemId, orderStatus")
@@ -33,7 +51,7 @@ export async function fetchUserItems(userId: string) {
     }, {});
 
     // Combine the data
-    const processedData = items.map((item) => ({
+    const processedData = itemsWithWinners.map((item) => ({
       ...item,
       orderStatus: orderStatusMap[item.id] || null,
     }));

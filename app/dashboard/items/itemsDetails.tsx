@@ -90,7 +90,7 @@ export default function ItemsDetails() {
     retry: 1,
   });
 
-  // console.log("itemsData", itemsData);
+  console.log("itemsData", itemsData);
 
   // Mutation for updating item end date
   const updateEndDateMutation = useMutation({
@@ -270,6 +270,7 @@ export default function ItemsDetails() {
                   <TableHead>Starting Price</TableHead>
                   <TableHead>Created At</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Winner</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -299,6 +300,19 @@ export default function ItemsDetails() {
                     <TableCell>RM {item.startingPrice.toFixed(2)}</TableCell>
                     <TableCell>{formatTimestamp(item.createdAt)}</TableCell>
                     <TableCell>{getStatusBadge(item)}</TableCell>
+                    <TableCell>
+                      {item.winner ? (
+                        <Link
+                          href={`/profile/${item.winner.id}`}
+                          onClick={(e) => handleLinkClick(e, `/profile/${item.winner.id}`)}
+                          className="hover:underline text-primary"
+                        >
+                          {item.winner.name}
+                        </Link>
+                      ) : (
+                        "-"
+                      )}
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         {/* <Button variant="link" asChild className="p-0">
