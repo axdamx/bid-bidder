@@ -11,7 +11,6 @@ import {
 import { AdapterAccountType } from "next-auth/adapters";
 import { z } from "zod";
 
-
 export const users = pgTable("user", {
   id: text("id")
     .primaryKey()
@@ -79,13 +78,14 @@ export const items = pgTable("bb_item", {
   name: text("name").notNull(),
   currentBid: integer("currentBid").notNull().default(0),
   startingPrice: integer("startingPrice").notNull().default(0),
+  binPrice: integer("binPrice"), // Buy It Now price - optional
   imageId: text("imageId"), // New column for storing the image ID
   bidInterval: integer("bidInterval").notNull().default(0),
   endDate: timestamp("endDate", { mode: "date" }).notNull(),
   description: text("description"),
   status: text("status"),
   winnerId: text("winnerId"),
-  createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(), // Add this line
+  createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
 });
 
 export const bids = pgTable("bb_bids", {
@@ -137,6 +137,7 @@ export const createItemSchema = z.object({
   name: z.string().min(1, "Name is required"),
   startingPrice: z.number().min(0, "Price must be positive"),
   bidInterval: z.number().min(0, "Bid interval must be positive"),
+  binPrice: z.number().min(0, "BIN price must be positive").optional(),
   endDate: z.string().refine((date) => new Date(date) > new Date(), {
     message: "End date must be in the future",
   }),

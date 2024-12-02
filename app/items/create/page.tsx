@@ -98,6 +98,7 @@ export default function CreatePage() {
         description: "",
         endDate: "",
         images: [],
+        binPrice: undefined,
       });
       setImageIds([]);
     } catch (error) {
@@ -292,6 +293,27 @@ export default function CreatePage() {
                   </p>
                 )}
               </div>
+
+              <div>
+                <Label htmlFor="binPrice">Buy It Now Price (Optional)</Label>
+                <div className="relative">
+                  <DollarSign className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="binPrice"
+                    type="number"
+                    className="pl-8"
+                    {...register("binPrice", {
+                      valueAsNumber: true,
+                    })}
+                    placeholder="0.00"
+                  />
+                </div>
+                {errors.binPrice && (
+                  <p className="text-sm text-red-500">
+                    {errors.binPrice.message}
+                  </p>
+                )}
+              </div>
             </div>
 
             <div className="space-y-6">
@@ -323,7 +345,7 @@ export default function CreatePage() {
                     {...register("description")}
                     className="pl-10"
                     placeholder="Enter detailed description"
-                    rows={6}
+                    rows={10}
                   />
                 </div>
                 {errors.description && (

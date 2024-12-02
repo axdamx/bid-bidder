@@ -320,6 +320,14 @@ export async function createOrderAction(
       .single();
 
     if (error) throw error;
+    // Update the item's isBoughtOut status
+    const { error: updateError } = await supabase
+      .from("items")
+      .update({ isBoughtOut: true })
+      .eq("id", itemId);
+
+    if (updateError) throw updateError;
+
     return order;
   } catch (error) {
     console.error("Error creating order:", error);

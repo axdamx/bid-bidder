@@ -67,9 +67,14 @@ export const getItemsWithUsers = cache(async () => {
 // export const
 export const getLiveAuctions = cache(async () => {
   const { items } = await getItemsWithUsers();
-  // console.log('items', items)
   return items
-    .filter((item) => new Date(item.endDate + "Z") > new Date())
+    .filter(
+      (item) =>
+        // Auction is live if:
+        // 1. It hasn't reached end date AND
+        // 2. It hasn't been bought out
+        new Date(item.endDate + "Z") > new Date() && !item.isBoughtOut
+    )
     .sort(
       (a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -78,13 +83,23 @@ export const getLiveAuctions = cache(async () => {
 
 export const getEndedAuctions = cache(async () => {
   const { items } = await getItemsWithUsers();
-  return items.filter((item) => new Date(item.endDate + "Z") < new Date());
+  return items.filter(
+    (item) =>
+      // Auction is ended if:
+      // 1. It has reached end date OR
+      // 2. It has been bought out
+      new Date(item.endDate + "Z") < new Date() || item.isBoughtOut
+  );
 });
 
 export const getUpcomingAuctions = cache(async (limit: number = 2) => {
   const { items } = await getItemsWithUsers();
-  return items.slice(0, limit);
+  // For upcoming auctions, we should only show items that:
+  // 1. Haven't started yet
+  // 2. Haven't been bought out
+  return items.filter((item) => !item.isBoughtOut).slice(0, limit);
 });
+
 export async function searchItems(query: string) {
   // const supabase = createServerSupabase();
   if (!query) {

@@ -46,7 +46,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, user }) => {
   const isItemEnded = isBidOver(item.endDate);
 
   function isBidOver(endDate: Date) {
-    return new Date(endDate + "Z") < new Date();
+    return new Date(endDate + "Z") < new Date() || item.isBoughtOut;
   }
 
   return (
@@ -73,10 +73,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, user }) => {
                 className="w-full h-full object-cover transition-transform hover:scale-105"
               />
             )}
-            <Badge
-              variant="secondary"
-              className="absolute top-2 left-2"
-            >
+            <Badge variant="secondary" className="absolute top-2 left-2">
               LOT #{item.id}
             </Badge>
             <Badge
@@ -113,7 +110,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, user }) => {
             {!isItemEnded && (
               <p className="text-sm text-muted-foreground mb-1">Ends in</p>
             )}
-            <CountdownTimer endDate={item.endDate} />
+            <CountdownTimer endDate={item.endDate} isOver={isItemEnded} />
           </div>
           <Button
             asChild

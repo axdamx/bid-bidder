@@ -204,7 +204,10 @@ export default function ProfileTable(ownedItems) {
                           {/* {formatTimestamp(item.createdAt)} */}
                           {/* {new Date(item.createdAt).toLocaleString()} */}
                         </p>
-                        <CountdownTimer endDate={item.endDate} />
+                        <CountdownTimer
+                          endDate={item.endDate}
+                          isOver={item.isBoughtOut}
+                        />
                       </div>
                     </CardContent>
                   </Card>

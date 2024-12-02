@@ -58,6 +58,12 @@ import { useAtom } from "jotai";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 
+type PurchaseType = "auction" | "buyItNow";
+type PurchaseStatus = {
+  type: PurchaseType;
+  price: number;
+  isWinner: boolean;
+};
 // export function formatTimestamp(timestamp: string) {
 //   return formatDistance(new Date(), timestamp, { addSuffix: true });
 // }
@@ -128,7 +134,11 @@ export default function AuctionItem({
   // const { session } = useSupabase();
   // const currentSessionUserId = session?.user?.id;
   const [user] = useAtom(userAtom); // winner id
-
+  const [purchaseState, setPurchaseState] = useState<PurchaseStatus>({
+    type: "auction",
+    price: item.currentBid,
+    isWinner: false,
+  });
   const isOwner = item.users.id === userId;
   const images = item.images.map((img: { publicId: string }) => img.publicId);
   const latestBidderName = bids.length > 0 && bids[0].users.name;
@@ -138,37 +148,15 @@ export default function AuctionItem({
   }));
 
   const hasBids = bids.length > 0;
-  const isBidOver = new Date(item.endDate + "Z") < new Date();
-
-  // console.log("dalam item page", item);
-
-  // const supabase = createClientSupabase();
-  // console.log("whats good, supabase", supabase);
-
-  // useEffect(() => {
-  //   async function fetchUserData() {
-  //     try {
-  //       const fetchedUser = await getUserById(currentSessionUserId);
-  //       setCurrentUserData(fetchedUser);
-  //     } catch (err) {
-  //       // setError(err);
-  //     }
-  //   }
-
-  //   if (currentSessionUserId) {
-  //     fetchUserData();
-  //   }
-  // }, [currentSessionUserId]);
-  // const { data: currentUserData } = useQuery({
-  //   queryKey: ["user", user?.id],
-  //   queryFn: () => getUserById(user?.id || ""),
-  //   enabled: !!user?.id,
-  //   staleTime: Infinity,
-  // });
-
-  // console.log("current User Id", currentUserData);
+  const isBidOver =
+    new Date(item.endDate + "Z") < new Date() || item.isBoughtOut;
 
   const handleBidSubmit = async () => {
+    // setPurchaseState({
+    //   type: "buyItNow",
+    //   price: item.binPrice,
+    //   isWinner: true,
+    // });
     if (!userId) {
       setIsAuthModalsOpen(true); // Open the AuthModals
       return;
@@ -238,42 +226,30 @@ export default function AuctionItem({
     );
   };
 
-  // const handleNewBid = useCallback((newBid: any) => {
-  //   setHighestBid(newBid.newBid);
-  //   setBids((prevBids) => [newBid.bidInfo, ...prevBids]);
-  //   toast.success(
-  //     `New bid received: ${formatCurrency(newBid.newBid)} by ${
-  //       newBid.bidInfo.users.name
-  //     }`
-  //   );
-  // }, []);
+  const handleBuyItNowSubmit = async () => {
+    setPurchaseState({
+      type: "buyItNow",
+      price: item.binPrice,
+      isWinner: true,
+    });
+    if (!userId) {
+      setIsAuthModalsOpen(true); // Open the AuthModals
+      return;
+    }
 
-  // const handleAuctionEnd = useCallback(() => {
-  //   // Only attempt to create order if there are bids and current user is the winner
-  //   if (bids.length > 0 && bids[0].userId === userId) {
-  //     // Use React Query to handle the order creation
-  //     createOrder();
-  //   }
-
-  //   setShowWinnerModal(true);
-  // }, [bids, userId, item.id, highestBid]);
-  // console.log("Bids:", bids);
-  // console.log("Checking auction end conditions...");
-  // console.log("Bids:", bids);
-  // console.log("User ID:", userId);
+    if (!hasAcknowledgedBid) {
+      setShowDisclaimerModal(true);
+      return;
+    }
+    setShowWinnerModal(true);
+  };
 
   const handleAuctionEnd = useCallback(() => {
-    // console.log("Checking auction end conditions...");
-    // console.log("Bids:", bids);
-    // console.log("User ID:", userId);
-
-    // if (isWinner) {
-    //   console.log("User is the winner, creating order...");
-    //   createOrder(); // Ensure this is being called
-    // } else {
-    //   console.log("User is not the winner or no bids placed.");
-    // }
-    // console.log("Checking auction end conditions...", orderExists);
+    setPurchaseState({
+      type: "auction",
+      price: item.currentBid,
+      isWinner: true,
+    });
     if (orderExists) {
       return; // Do not show any modal if the user has an order
     }
@@ -300,93 +276,6 @@ export default function AuctionItem({
       },
     }
   );
-  // useEffect(() => {
-  //   const channel = supabase
-  //     .channel(`item-bids-${item.id}`)
-  //     .on(
-  //       "postgres_changes",
-  //       {
-  //         event: "INSERT",
-  //         schema: "public",
-  //         table: "bids",
-  //         filter: `itemId=eq.${item.id}`,
-  //       },
-  //       (payload: any) => {
-  //         console.log("payload", payload.new);
-  //         const newBid = payload.new;
-  //         // Update local state
-  //         setHighestBid(newBid.amount);
-  //         setBids((prevBids) => [newBid, ...prevBids]);
-
-  //         // Show toast notification
-  //         toast.success(
-  //           `New bid received: ${formatCurrency(newBid.amount)} by ${
-  //             newBid.users.name
-  //           }`
-  //         );
-
-  //         // Invalidate queries to refetch latest data
-  //         queryClient.invalidateQueries({ queryKey: ["bids", item.id] });
-  //         queryClient.invalidateQueries({ queryKey: ["item", item.id] });
-  //       }
-  //     )
-  //     .subscribe();
-
-  //   return () => {
-  //     supabase.removeChannel(channel);
-  //   };
-  // }, [item.id, queryClient, supabase]);
-
-  // console.log("orderExists?", orderExists);
-
-  // useEffect(() => {
-  //   const socket = io("http://localhost:8082", {
-  //     withCredentials: true,
-  //   });
-
-  //   socket.on("connect", () => {
-  //     console.log("Connected to Socket.IO server");
-  //     socket.emit("joinItem", item.id);
-  //   });
-
-  //   socket.on("newBid", (newBid) => {
-  //     console.log("Updating bid:", newBid);
-  //     handleNewBid(newBid);
-  //   });
-
-  //   socket.on("userCount", (count) => {
-  //     console.log("Connected users count:", count);
-  //     setUserCount(count);
-  //     // Show toast notification when a new user enters
-  //     // if (count > prevUserCountRef.current) {
-  //     //   toast("A new user has joined the auction");
-  //     // }
-
-  //     // // Update the ref and state
-  //     // prevUserCountRef.current = count;
-  //     // setUserCount(count);
-  //   });
-
-  //   socket.on("disconnect", () => {
-  //     console.log("Disconnected from Socket.IO server");
-  //   });
-
-  //   return () => {
-  //     socket.emit("leaveItem", item.id);
-  //     socket.disconnect();
-  //   };
-  // }, [handleNewBid, item.id]);
-
-  // useEffect(() => {
-  //   setHighestBid(item.currentBid);
-  //   setBids(allBids);
-  // }, [item.currentBid, allBids]);
-
-  // useEffect(() => {
-  //   if (isBidOver && !hasBids) {
-  //     setShowWinnerModal(true);
-  //   }
-  // }, [isBidOver, hasBids]);
 
   useEffect(() => {
     setHighestBid(item.currentBid);
@@ -400,8 +289,6 @@ export default function AuctionItem({
   }, [isBidOver, hasBids]);
 
   const dateInfo = getDateInfo(item.endDate + "Z");
-  // console.log(`Date: ${dateInfo.formattedDate}`); // Output the formatted date
-  // console.log(`Days remaining: ${dateInfo.formattedTime}`); // Output the number of days remaining
 
   const NoWinnerDialog = () => (
     <>
@@ -422,7 +309,8 @@ export default function AuctionItem({
       </DialogDescription>
     </>
   );
-  const WinnerDialog = () => (
+
+  const BuyItNowWinnerDialog = () => (
     <>
       <DialogTitle className="flex items-center gap-2">
         <Trophy className="w-6 h-6 text-yellow-500" />
@@ -434,8 +322,35 @@ export default function AuctionItem({
             You&apos;ve won this auction!
           </h1>
           <h1 className="text-sm text-green-600 mt-2">
-            You won {item.name} with a final bid of{" "}
-            {formatCurrency(item.currentBid)}
+            You won {item.name} with a BUY IT NOW priceof{" "}
+            {formatCurrency(item.binPrice)}
+          </h1>
+          <h1 className="text-sm text-green-600 mt-2">
+            The seller will contact you soon with payment and delivery details.
+          </h1>
+        </div>
+      </DialogDescription>
+    </>
+  );
+
+  const WinnerDialog = () => (
+    <>
+      <DialogTitle className="flex items-center gap-2">
+        <Trophy className="w-6 h-6 text-yellow-500" />
+        Congratulations!{" "}
+        {purchaseState.type === "buyItNow"
+          ? "Purchase Successful!"
+          : "You Won!"}
+      </DialogTitle>
+      <DialogDescription className="space-y-4">
+        <div className="p-4 bg-green-50 rounded-lg mt-4 text-center">
+          <h1 className="font-medium text-green-700">
+            {purchaseState.type === "buyItNow"
+              ? "You've successfully purchased this item!"
+              : "You've won this auction!"}
+          </h1>
+          <h1 className="text-sm text-green-600 mt-2">
+            {item.name} for {formatCurrency(purchaseState.price)}
           </h1>
           <h1 className="text-sm text-green-600 mt-2">
             The seller will contact you soon with payment and delivery details.
@@ -697,6 +612,7 @@ export default function AuctionItem({
                 endDate={item.endDate}
                 onExpire={handleAuctionEnd}
                 className="text-sm"
+                isOver={isBidOver}
               />
               {/* <CountdownTimer
                 endDate={item.endDate}
@@ -712,40 +628,43 @@ export default function AuctionItem({
                 </form>
               )} */}
               {!isBidOver && !isOwner && (
-                <Button
-                  className="w-full"
-                  disabled={isWinner || isPending}
-                  onClick={handleBidSubmit}
-                >
-                  {isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Processing...
-                    </>
-                  ) : isWinner ? (
-                    "You are currently winning this bid!"
-                  ) : (
-                    "Place Bid"
+                <>
+                  <Button
+                    className="w-full"
+                    disabled={
+                      isPending || isBidOver || item.isBoughtOut || isWinner
+                    }
+                    onClick={handleBidSubmit}
+                  >
+                    {isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Processing...
+                      </>
+                    ) : isWinner ? (
+                      "You are currently winning this bid!"
+                    ) : (
+                      "Place Bid"
+                    )}
+                  </Button>
+                  {!item.isBoughtOut && item.currentBid < item.binPrice && (
+                    <Button
+                      className="w-full"
+                      disabled={isPending}
+                      onClick={handleBuyItNowSubmit}
+                      variant={"destructive"}
+                    >
+                      {isPending ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        `Buy It Now ${formatCurrency(item.binPrice)}`
+                      )}
+                    </Button>
                   )}
-                </Button>
-                // <Button
-                //   className="w-full relative overflow-hidden border-2 border-transparent rounded-md transition-all duration-300 group" // Added Tailwind classes
-                //   disabled={isWinner || isPending}
-                //   onClick={handleBidSubmit}
-                // >
-                //   <span className="absolute inset-0 border-2 border-blue-500 transform scale-0 transition-transform duration-500 group-hover:scale-100" />{" "}
-                //   {/* Moving border */}
-                //   {isPending ? (
-                //     <>
-                //       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                //       Processing...
-                //     </>
-                //   ) : isWinner ? (
-                //     "You are currently winning this bid!"
-                //   ) : (
-                //     "Place Bid"
-                //   )}
-                // </Button>
+                </>
               )}
             </CardContent>
           </Card>

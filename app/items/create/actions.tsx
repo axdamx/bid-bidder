@@ -42,6 +42,7 @@ export async function createItemAction(
       startingPrice: parseFloat(formData.get("startingPrice") as string),
       userId: userId,
       bidInterval: parseFloat(formData.get("bidInterval") as string),
+      binPrice: parseFloat(formData.get("binPrice") as string),
       endDate: new Date(formData.get("endDate") as string).toISOString(),
       description: formData.get("description") as string,
       imageId: imageIds[0],
