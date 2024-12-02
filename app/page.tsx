@@ -104,7 +104,8 @@ export default function Home() {
                   </div>
                   <h3 className="text-xl font-bold">Win & Collect</h3>
                   <p className="text-muted-foreground">
-                    Win auctions and receive your items through secure shipping.
+                    Win auctions and receive your items through secure payment
+                    method and shipping.
                   </p>
                 </div>
               </div>

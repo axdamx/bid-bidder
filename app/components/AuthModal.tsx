@@ -111,6 +111,7 @@ export default function AuthModals({
         // console.log("path", pathname);
         // If OAuth sign-in is successful and returns to the app
         toast.success("Sign in with Google successful");
+        console.log("Sign in with Google successful");
         handleClose();
         // router.replace(pathname); // Redirect and revalidate the original path
         // router.replace(pathname); // Use pathname for redirection
@@ -124,58 +125,65 @@ export default function AuthModals({
   };
 
   async function upsertUser(user: any) {
-    const { data: existingUser, error: selectError } = await supabase
-      .from("users")
-      .select("*")
-      .eq("id", user.id)
-      .single();
-
-    if (selectError && selectError.code !== "PGRST116") {
-      console.error("Error checking user existence:", selectError.message);
-      return;
-    }
-
-    console.log("existingUser", existingUser);
-
-    if (!existingUser) {
-      console.log("New user:", user);
-      const userData = {
-        id: user.id,
-        email: user.email,
-        name: user.user_metadata.full_name || user.email,
-        image: user.user_metadata.avatar_url,
-        createdAt: user.created_at,
-      };
-      // Insert new user
-      const { data: newUser, error: insertError } = await supabase
+    try {
+      // First, check if user exists
+      const { data: existingUser, error: fetchError } = await supabase
         .from("users")
-        .insert([userData])
-        .select()
-        .single();
-
-      if (insertError) {
-        console.error("Error inserting user:", insertError.message);
-      } else {
-        console.log("New user inserted:", newUser);
-        setUser(newUser);
-      }
-    } else {
-      // Update existing user
-      const { data: updatedUser, error: updateError } = await supabase
-        .from("users")
-        .update({
-          email: user.email,
-          image: user.user_metadata.avatar_url,
-        })
+        .select("*")
         .eq("id", user.id)
+        .single();
+
+      if (fetchError && fetchError.code !== "PGRST116") {
+        console.error("Error fetching user:", fetchError.message);
+        throw fetchError;
+      }
+
+      // If user exists, only update email
+      const userData = existingUser
+        ? {
+            ...existingUser,
+            email: user.email,
+          }
+        : {
+            id: user.id,
+            email: user.email,
+            name: user.user_metadata.full_name || user.email,
+            image: user.user_metadata.avatar_url,
+            createdAt: user.created_at,
+          };
+
+      // Upsert user data
+      const { data: upsertedUser, error: upsertError } = await supabase
+        .from("users")
+        .upsert(userData, {
+          onConflict: "id",
+          ignoreDuplicates: false,
+        })
         .select()
         .single();
 
-      if (updateError) {
-        console.error("Error updating user:", updateError.message);
-      } else {
-        setUser(updatedUser);
+      if (upsertError) {
+        console.error("Error upserting user:", upsertError.message);
+        throw upsertError;
       }
+
+      setUser(upsertedUser);
+
+      // If new user, redirect to onboarding
+      if (!existingUser) {
+        router.push("/onboarding");
+        return upsertedUser;
+      }
+
+      // For existing users, check if onboarding is completed
+      if (!existingUser.onboardingCompleted) {
+        router.push("/onboarding");
+      }
+
+      return upsertedUser;
+    } catch (error) {
+      console.error("Error in upsertUser:", error);
+      throw error;
     }
   }
 

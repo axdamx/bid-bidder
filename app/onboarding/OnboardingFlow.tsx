@@ -350,6 +350,12 @@ export default function OnboardingFlow({
 
               {step === 1 && (
                 <div className="space-y-8">
+                  <h3 className="text-lg font-medium">Welcome to Renown!</h3>
+                  <span className="text-sm text-muted-foreground">
+                    We just need some basic info to get your profile setup.
+                    You'll be able to edit this later.
+                  </span>
+
                   <Form {...userDetailsForm}>
                     <form
                       onSubmit={userDetailsForm.handleSubmit(onSubmitDetails)}
@@ -540,6 +546,9 @@ export default function OnboardingFlow({
 
               {step === 2 && (
                 <div className="space-y-8">
+                  <h3 className="text-lg font-medium">
+                    Tell us about your preferable role in Renown
+                  </h3>
                   <Form {...userRoleForm}>
                     <form
                       onSubmit={userRoleForm.handleSubmit(onSubmitRole)}
@@ -595,6 +604,12 @@ export default function OnboardingFlow({
 
               {step === 3 && (
                 <div className="space-y-8">
+                  <h3 className="text-lg font-medium">Nearly there!</h3>
+                  <span className="text-sm text-muted-foreground">
+                    Last thing, a brief description about you and a photo really
+                    helps you get attention and let people know who they're
+                    dealing with.
+                  </span>
                   <Form {...userProfileForm}>
                     <form
                       onSubmit={userProfileForm.handleSubmit(onSubmitProfile)}
@@ -605,7 +620,7 @@ export default function OnboardingFlow({
                         name="image"
                         render={({ field }) => (
                           <FormItem className="flex flex-col items-center">
-                            <FormLabel>Profile Picture</FormLabel>
+                            {/* <FormLabel>Profile Picture</FormLabel> */}
                             <FormControl>
                               <div className="flex flex-col items-center gap-4">
                                 <Avatar className="w-32 h-32">
