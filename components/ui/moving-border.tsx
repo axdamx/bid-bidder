@@ -10,8 +10,17 @@ import {
 import { useRef } from "react";
 import { cn } from "@/lib/utils";
 
+const rainbowColors = [
+  "rgb(255, 0, 0)", // Red
+  "rgb(255, 165, 0)", // Orange
+  "rgb(255, 255, 0)", // Yellow
+  "rgb(0, 255, 0)", // Green
+  "rgb(0, 0, 255)", // Blue
+  "rgb(238, 130, 238)", // Violet
+];
+
 export function Button({
-  borderRadius = "1.75rem",
+  borderRadius = "0.1rem",
   children,
   as: Component = "button",
   containerClassName,
@@ -29,10 +38,20 @@ export function Button({
   className?: string;
   [key: string]: any;
 }) {
+  const [colorIndex, setColorIndex] = React.useState(0);
+
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setColorIndex((prev) => (prev + 1) % rainbowColors.length);
+    }, 2000); // Change color every 2 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <Component
       className={cn(
-        "bg-transparent relative text-xl  h-16 w-40 p-[1px] overflow-hidden ",
+        "bg-transparent relative text-xl h-12 w-40 p-[1px] overflow-hidden",
         containerClassName
       )}
       style={{
@@ -46,10 +65,11 @@ export function Button({
       >
         <MovingBorder duration={duration} rx="30%" ry="30%">
           <div
-            className={cn(
-              "h-20 w-20 opacity-[0.8] bg-[radial-gradient(var(--sky-500)_40%,transparent_60%)]",
-              borderClassName
-            )}
+            className={cn("h-20 w-20 opacity-[0.8]", borderClassName)}
+            style={{
+              background: `radial-gradient(${rainbowColors[colorIndex]} 40%, transparent 60%)`,
+              transition: "background 1s ease-in-out",
+            }}
           />
         </MovingBorder>
       </div>
@@ -121,8 +141,8 @@ export const MovingBorder = ({
           rx={rx}
           ry={ry}
           ref={pathRef}
-          pathLength="1" // Add this line
-          stroke="transparent" // Add this line
+          pathLength="1"
+          stroke="transparent"
         />
       </svg>
       <motion.div

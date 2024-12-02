@@ -41,6 +41,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
+  CrownIcon,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import Link from "next/link";
@@ -55,8 +56,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createClientSupabase } from "@/lib/supabase/client";
 import { userAtom } from "@/app/atom/userAtom";
 import { useAtom } from "jotai";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
+import { Button as MovingBorderButton } from "@/components/ui/moving-border";
 
 type PurchaseType = "auction" | "buyItNow";
 type PurchaseStatus = {
@@ -128,8 +130,10 @@ export default function AuctionItem({
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [isAuthModalsOpen, setIsAuthModalsOpen] = useState(false); // State to control AuthModals
   const [authModalView, setAuthModalView] = useState<ModalView>("log-in");
+  const [isNavigating, setIsNavigating] = useState(false);
   // const [currentUserData, setCurrentUserData] = useState(null);
   const router = useRouter();
+  const pathname = usePathname();
 
   // const { session } = useSupabase();
   // const currentSessionUserId = session?.user?.id;
@@ -150,6 +154,23 @@ export default function AuctionItem({
   const hasBids = bids.length > 0;
   const isBidOver =
     new Date(item.endDate + "Z") < new Date() || item.isBoughtOut;
+
+  // Add this effect to reset navigation state when pathname changes
+  useEffect(() => {
+    setIsNavigating(false);
+    // setIsOpen(false);
+  }, [pathname]);
+
+  const handleLinkClick = async (e: React.MouseEvent, path: string) => {
+    e.preventDefault();
+    // setIsOpen(false);
+    // Don't navigate if we're already on the target path
+    if (path === pathname) {
+      return;
+    }
+    setIsNavigating(true);
+    await router.push(path);
+  };
 
   const handleBidSubmit = async () => {
     // setPurchaseState({
@@ -310,29 +331,6 @@ export default function AuctionItem({
     </>
   );
 
-  const BuyItNowWinnerDialog = () => (
-    <>
-      <DialogTitle className="flex items-center gap-2">
-        <Trophy className="w-6 h-6 text-yellow-500" />
-        Congratulations! You Won!
-      </DialogTitle>
-      <DialogDescription className="space-y-4">
-        <div className="p-4 bg-green-50 rounded-lg mt-4 text-center">
-          <h1 className="font-medium text-green-700">
-            You&apos;ve won this auction!
-          </h1>
-          <h1 className="text-sm text-green-600 mt-2">
-            You won {item.name} with a BUY IT NOW priceof{" "}
-            {formatCurrency(item.binPrice)}
-          </h1>
-          <h1 className="text-sm text-green-600 mt-2">
-            The seller will contact you soon with payment and delivery details.
-          </h1>
-        </div>
-      </DialogDescription>
-    </>
-  );
-
   const WinnerDialog = () => (
     <>
       <DialogTitle className="flex items-center gap-2">
@@ -415,6 +413,16 @@ export default function AuctionItem({
 
   return (
     <div className="container w-full px-4 py-8 md:py-12 overflow-x-hidden">
+      <Dialog open={isNavigating} modal>
+        <DialogTitle className="[&>button]:hidden" />
+        <DialogContent className="[&>button]:hidden">
+          <div className="flex flex-col items-center justify-center space-y-4">
+            <Loader2 className="h-8 w-8 animate-spin" />
+            <p>Loading...</p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Toaster
         toastOptions={{ duration: 3000 }}
         position="bottom-right"
@@ -648,21 +656,31 @@ export default function AuctionItem({
                     )}
                   </Button>
                   {!item.isBoughtOut && item.currentBid < item.binPrice && (
-                    <Button
-                      className="w-full"
-                      disabled={isPending}
-                      onClick={handleBuyItNowSubmit}
-                      variant={"destructive"}
-                    >
-                      {isPending ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Processing...
-                        </>
-                      ) : (
-                        `Buy It Now ${formatCurrency(item.binPrice)}`
-                      )}
-                    </Button>
+                    <>
+                      {/* <div className="text-center">
+                        <span className="text-sm text-muted-foreground">
+                          Or
+                        </span>
+                      </div> */}
+                      <MovingBorderButton
+                        className="bg-white dark:bg-slate-900 text-black dark:text-white border-neutral-200 dark:border-slate-800"
+                        containerClassName="w-full"
+                        disabled={isPending}
+                        onClick={handleBuyItNowSubmit}
+                        variant="destructive"
+                        size="lg"
+                        borderRadius="1.75rem"
+                      >
+                        {isPending ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Processing...
+                          </>
+                        ) : (
+                          `BIN Price ${formatCurrency(item.binPrice)}`
+                        )}
+                      </MovingBorderButton>
+                    </>
                   )}
                 </>
               )}
@@ -729,7 +747,20 @@ export default function AuctionItem({
                       <TableBody>
                         {bids.slice(0, 10).map((bid) => (
                           <TableRow key={bid.id}>
-                            <TableCell>{bid.users.name}</TableCell>
+                            <TableCell>
+                              <Link
+                                href={`/profile/${bid.users.id}`}
+                                className="hover:underline cursor-pointer flex items-center gap-1"
+                                onClick={(e) =>
+                                  handleLinkClick(e, `/profile/${bid.users.id}`)
+                                }
+                              >
+                                {bid.users.name}
+                                {bids.indexOf(bid) === 0 && (
+                                  <CrownIcon className="h-5 w-5 text-yellow-400" />
+                                )}
+                              </Link>
+                            </TableCell>
                             <TableCell>{formatCurrency(bid.amount)}</TableCell>
                             <TableCell>
                               {formatTimestamp(bid.timestamp)}

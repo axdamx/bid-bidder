@@ -64,9 +64,8 @@ const userRoleSchema = z.object({
 
 const userProfileSchema = z.object({
   image: z.string().optional(),
-  about: z
-    .string()
-    .min(10, { message: "About must be at least 10 characters" }),
+  about: z.string(),
+  // .min(10, { message: "About must be at least 10 characters" }),
 });
 
 export default function OnboardingFlow({
@@ -586,9 +585,10 @@ export default function OnboardingFlow({
                           type="submit"
                           disabled={
                             isLoading ||
-                            !userRoleForm.formState.isValid ||
-                            Object.keys(userRoleForm.formState.dirtyFields)
-                              .length === 0
+                            ((!userRoleForm.formState.isValid ||
+                              Object.keys(userRoleForm.formState.dirtyFields)
+                                .length === 0) &&
+                              userRoleForm.getValues("role") !== "none")
                           }
                         >
                           {isLoading ? (
