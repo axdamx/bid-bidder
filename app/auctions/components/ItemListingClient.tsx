@@ -11,9 +11,10 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React from "react";
 import { useState, useRef, useEffect } from "react";
-import { Search, PackageSearch, Loader2 } from "lucide-react";
+import { Search, PackageSearch, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 interface ItemsListingClientProps {
   items: any[];
@@ -36,6 +37,8 @@ export default function ItemsListingClient({
   const [searchTerm, setSearchTerm] = useState("");
   const [isNavigating, setIsNavigating] = useState(false);
   const pathname = usePathname();
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 9;
 
   // Filter items based on search
   const filteredItems = React.useMemo(() => {
@@ -43,6 +46,13 @@ export default function ItemsListingClient({
       item.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [items, searchTerm]);
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+  const paginatedItems = React.useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredItems.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredItems, currentPage]);
 
   useEffect(() => {
     // Scroll selected tab into view
@@ -58,6 +68,16 @@ export default function ItemsListingClient({
     }
   }, [type]); // Run when tab type changes
 
+  useEffect(() => {
+    // Reset to first page when search changes
+    setCurrentPage(1);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    setIsNavigating(false);
+    // setIsOpen(false);
+  }, [pathname]);
+
   const handleTabChange = (value: string) => {
     setIsLoading(true);
     router.push(`/auctions?type=${value}`);
@@ -66,12 +86,6 @@ export default function ItemsListingClient({
       setIsLoading(false);
     }, 500);
   };
-
-  // Add this effect to reset navigation state when pathname changes
-  useEffect(() => {
-    setIsNavigating(false);
-    // setIsOpen(false);
-  }, [pathname]);
 
   const handleLinkClick = async (e: React.MouseEvent, path: string) => {
     e.preventDefault();
@@ -141,7 +155,7 @@ export default function ItemsListingClient({
               <TabsContent value="live">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-3">
                   {type === "live" && filteredItems.length > 0 ? (
-                    filteredItems.map((item, index) => (
+                    paginatedItems.map((item, index) => (
                       <MotionGrid
                         key={item.id}
                         initial={{ opacity: 0 }}
@@ -208,11 +222,36 @@ export default function ItemsListingClient({
                     </div>
                   )}
                 </div>
+                {filteredItems.length > itemsPerPage && (
+                  <div className="flex justify-center items-center mt-6 space-x-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <div className="flex items-center justify-center min-w-[100px]">
+                      <span className="text-sm">
+                        Page {currentPage} of {totalPages}
+                      </span>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                      disabled={currentPage === totalPages}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
               </TabsContent>
               <TabsContent value="upcoming">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-3">
                   {type === "upcoming" && filteredItems.length > 0 ? (
-                    filteredItems.map((item, index) => (
+                    paginatedItems.map((item, index) => (
                       <MotionGrid
                         key={item.id}
                         initial={{ opacity: 0 }}
@@ -279,11 +318,36 @@ export default function ItemsListingClient({
                     </div>
                   )}
                 </div>
+                {filteredItems.length > itemsPerPage && (
+                  <div className="flex justify-center items-center mt-6 space-x-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <div className="flex items-center justify-center min-w-[100px]">
+                      <span className="text-sm">
+                        Page {currentPage} of {totalPages}
+                      </span>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                      disabled={currentPage === totalPages}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
               </TabsContent>
               <TabsContent value="ended">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-3">
                   {type === "ended" && filteredItems.length > 0 ? (
-                    filteredItems.map((item, index) => (
+                    paginatedItems.map((item, index) => (
                       <MotionGrid
                         key={item.id}
                         initial={{ opacity: 0 }}
@@ -350,6 +414,31 @@ export default function ItemsListingClient({
                     </div>
                   )}
                 </div>
+                {filteredItems.length > itemsPerPage && (
+                  <div className="flex justify-center items-center mt-6 space-x-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <div className="flex items-center justify-center min-w-[100px]">
+                      <span className="text-sm">
+                        Page {currentPage} of {totalPages}
+                      </span>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                      disabled={currentPage === totalPages}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
               </TabsContent>
             </>
           )}
