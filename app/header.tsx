@@ -5,10 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import UserAvatar from "./components/userAvatar";
 import SearchCommand from "./components/headerSearch";
-import { Loader2, Menu } from "lucide-react";
+import { Loader2, LogOut, Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { SignOut } from "@/components/ui/sign-out";
-import { useEffect, useState } from "react";
 import { useSupabase } from "./context/SupabaseContext";
 import { fetchUser } from "./profile/[userId]/action";
 import { userAtom } from "./atom/userAtom";
@@ -22,6 +20,9 @@ import { DialogTitle } from "@radix-ui/react-dialog";
 import { Button } from "@/components/ui/button";
 import SignInMobileButton from "@/components/ui/sign-in-mobile";
 import { Button as MovingBorderButton } from "@/components/ui/moving-border";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useEffect, useState } from "react";
+import { createClientSupabase } from "@/lib/supabase/client";
 
 export function Header() {
   const [user, setUser] = useAtom(userAtom);
@@ -29,6 +30,8 @@ export function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
+  // const supabase = useSupabase();
+  const supabase = createClientSupabase();
 
   // Fetch user data from Supabase, when user first login
   // const { data: dbUser } = useQuery({
@@ -152,40 +155,106 @@ export function Header() {
             <SheetTrigger className="md:hidden">
               <Menu className="h-5 w-5" />
             </SheetTrigger>
-            <SheetContent side="right" className="w-[300px]">
-              <div className="flex flex-col gap-4 mt-4">
-                {user ? (
-                  <nav className="flex flex-col space-y-4">
-                    {/* Mobile User Info */}
-                    <div className="flex items-center">
-                      <div className="p-2">
-                        <NotificationDropdown />
-                      </div>
-                      <UserAvatar
-                        name={user.name!}
-                        imageUrl={user.image!}
-                        email={user.email!}
-                        userId={user.id!}
-                      />
-                    </div>
+            <SheetContent side="right" className="w-[300px] p-0">
+              <div className="flex flex-col h-full">
+                {/* Header Section */}
+                <div className="p-4 border-b">
+                  <h2 className="text-lg font-semibold">Menu</h2>
+                </div>
 
-                    {/* Necessary Navigation Items */}
-                    <Link
-                      href="/items/create"
-                      className="px-2 py-1 hover:bg-gray-100 rounded-md text-sm"
-                      onClick={(e) => handleLinkClick(e, "/items/create")}
-                    >
-                      Create Auction
-                    </Link>
-                    {/* <div className="px-2">
-                      <SignOut />
-                    </div> */}
+                {/* Navigation Content */}
+                <div className="flex-1 overflow-auto py-4">
+                  {/* <div className="px-4 mb-4"><SearchCommand /></div> */}
+
+                  <nav className="space-y-2">
+                    {user ? (
+                      <>
+                        {/* User Profile Section */}
+                        <div className="px-4 py-3 mb-2 border-b">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                              <Avatar className="w-12 h-12">
+                                <AvatarImage src={user?.image} />
+                                <AvatarFallback>
+                                  {user?.name?.charAt(0) ||
+                                    user?.email?.charAt(0)}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex flex-col">
+                                <p className="font-medium">{user.name}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  {user.email}
+                                </p>
+                              </div>
+                            </div>
+                            <NotificationDropdown />
+                          </div>
+                        </div>
+
+                        {/* Navigation Links */}
+                        <div className="px-2 py-2">
+                          <Link
+                            href={`/profile/${user.id}`}
+                            className="flex items-center space-x-2 px-2 py-2 rounded-md hover:bg-accent"
+                            onClick={(e) =>
+                              handleLinkClick(e, `/profile/${user.id}`)
+                            }
+                          >
+                            <span>Profile</span>
+                          </Link>
+                          <Link
+                            href="/dashboard"
+                            className="flex items-center space-x-2 px-2 py-2 rounded-md hover:bg-accent"
+                            onClick={(e) => handleLinkClick(e, "/dashboard")}
+                          >
+                            <span>Dashboard</span>
+                          </Link>
+                          <Link
+                            href="/items/create"
+                            className="flex items-center space-x-2 px-2 py-2 rounded-md hover:bg-accent"
+                            onClick={(e) => handleLinkClick(e, "/items/create")}
+                          >
+                            <span>Create Auction</span>
+                          </Link>
+                        </div>
+
+                        {/* Sign Out Section */}
+                        <div className="px-4 py-2 border-t mt-auto">
+                          <form
+                            onSubmit={async (e) => {
+                              e.preventDefault();
+                              try {
+                                const { error } = await supabase.auth.signOut();
+                                if (error) throw error;
+
+                                // Clear any local storage items if needed
+                                // localStorage.removeItem("supabase.auth.token");
+                                setUser(null);
+
+                                // Force reload to clear all state
+                                window.location.href = "/";
+                              } catch (error) {
+                                console.error("Error signing out:", error);
+                              }
+                            }}
+                          >
+                            <button
+                              type="submit"
+                              className="flex items-center space-x-2 w-full px-2 py-2 rounded-md hover:bg-accent"
+                            >
+                              <LogOut className="h-4 w-4" />
+                              <span>Sign Out</span>
+                            </button>
+                          </form>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="px-4">
+                        <SignInMobileButton />
+                      </div>
+                    )}
                   </nav>
-                ) : (
-                  <div className="px-2">
-                    <SignInMobileButton />
-                  </div>
-                )}
+                </div>
               </div>
             </SheetContent>
           </Sheet>
