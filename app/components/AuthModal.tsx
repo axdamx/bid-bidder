@@ -84,6 +84,9 @@ export default function AuthModals({
       (event, session) => {
         if (session?.user) {
           console.log("User signed in:", session.user);
+          // This call is necessary on every session change (including rehydration)
+          // to keep the local state (userAtom) in sync with the session
+          // Without this, your app would lose user state on refresh
           upsertUser(session.user);
         }
       }
@@ -99,6 +102,9 @@ export default function AuthModals({
     try {
       const { error, data } = await supabase.auth.signInWithOAuth({
         provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}`,
+        },
       });
 
       if (error) {
@@ -107,14 +113,6 @@ export default function AuthModals({
       } else if (data?.url) {
         // Redirect the user to the OAuth provider's login page
         window.location.href = data.url;
-      } else {
-        // console.log("path", pathname);
-        // If OAuth sign-in is successful and returns to the app
-        toast.success("Sign in with Google successful");
-        console.log("Sign in with Google successful");
-        handleClose();
-        // router.replace(pathname); // Redirect and revalidate the original path
-        // router.replace(pathname); // Use pathname for redirection
       }
     } catch (error) {
       console.error("Error signing in with Google:", error);
@@ -590,12 +588,26 @@ export default function AuthModals({
                             </FormItem>
                           )}
                         />
-                        <Button
+                        {/* <Button
                           type="submit"
                           className="w-full"
                           disabled={isLoading}
                         >
                           {isLoading ? "Signing up..." : "Sign up"}
+                        </Button> */}
+                        <Button
+                          type="submit"
+                          className="w-full"
+                          disabled={isLoading}
+                        >
+                          {isLoading ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Signing up...
+                            </>
+                          ) : (
+                            "Sign up"
+                          )}
                         </Button>
                       </form>
                     </Form>

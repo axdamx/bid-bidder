@@ -525,6 +525,10 @@ export default function AuctionItem({
                 <Link
                   href={`/profile/${item.users.id}`}
                   className="hover:underline flex items-center gap-1"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleLinkClick(e, `/profile/${item.users.id}`);
+                  }}
                 >
                   <User className="h-4 w-4" />
                   {item.users.name}

@@ -41,6 +41,16 @@ import {
   CloudinaryUploadWidgetInfo,
   CloudinaryUploadWidgetOptions,
 } from "next-cloudinary";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 // Add type for User at the top
 interface User {
@@ -80,8 +90,22 @@ const UserDetailsPage = ({ initialUser }: { initialUser: User }) => {
   // const queryClient = useQueryClient();
   const [user, setUser] = useAtom(userAtom);
   const [profilePicPreview, setProfilePicPreview] = useState(null);
+  const [alertState, setAlertState] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    type: "success" | "error";
+    action?: "complete" | "upload" | undefined;
+  }>({
+    isOpen: false,
+    title: "",
+    description: "",
+    type: "success",
+    action: undefined,
+  });
 
   // console.log("user dalam userDetails", userData);
+  console.log("user dalam userDetails", user);
 
   const handleUpload = async (results: CloudinaryUploadWidgetResults) => {
     // console.log("Upload result:", results);
@@ -122,14 +146,35 @@ const UserDetailsPage = ({ initialUser }: { initialUser: User }) => {
             image: imageUrl,
           };
         });
-        toast.success("Profile picture updated successfully");
+        // toast.success("Profile picture updated successfully");
+        setAlertState({
+          isOpen: true,
+          title: "Success!",
+          description: "Profile picture updated successfully",
+          type: "success",
+          action: "upload",
+        });
         setIsDialogOpen(false);
       } else {
-        toast.error("Failed to update profile picture");
+        // toast.error("Failed to update profile picture");
+        setAlertState({
+          isOpen: true,
+          title: "Error!",
+          description: "Failed to update profile picture",
+          type: "error",
+          action: "upload",
+        });
       }
     } catch (error) {
       console.error("Upload error:", error);
-      toast.error("An error occurred during upload");
+      // toast.error("An error occurred during upload");
+      setAlertState({
+        isOpen: true,
+        title: "Error!",
+        description: "An error occurred during upload",
+        type: "error",
+        action: "upload",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -155,7 +200,14 @@ const UserDetailsPage = ({ initialUser }: { initialUser: User }) => {
           ...prev,
           [editingField]: editValue,
         }));
-        toast.success(`${editingField} updated successfully`);
+        // toast.success(`${editingField} updated successfully`);
+        setAlertState({
+          isOpen: true,
+          title: "Success!",
+          description: `${editingField} updated successfully`,
+          type: "success",
+          action: "complete",
+        });
         setIsDialogOpen(false);
         router.refresh();
         // console.log("result.data", result.data);
@@ -173,10 +225,24 @@ const UserDetailsPage = ({ initialUser }: { initialUser: User }) => {
         // queryClient.invalidateQueries({ queryKey: ["user"] });
         // window.location.reload(); // Replace router.refresh() with this
       } else {
-        toast.error(result.error || "Failed to update");
+        // toast.error(result.error || "Failed to update");
+        setAlertState({
+          isOpen: true,
+          title: "Error!",
+          description: result.error || "Failed to update",
+          type: "error",
+          action: "complete",
+        });
       }
     } catch (error) {
-      toast.error("An unexpected error occurred");
+      // toast.error("An unexpected error occurred");
+      setAlertState({
+        isOpen: true,
+        title: "Error!",
+        description: "An unexpected error occurred",
+        type: "error",
+        action: "complete",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -233,6 +299,31 @@ const UserDetailsPage = ({ initialUser }: { initialUser: User }) => {
 
     return (
       <>
+        <AlertDialog
+          open={alertState.isOpen}
+          onOpenChange={(open) => {
+            setAlertState((prev) => ({ ...prev, isOpen: open }));
+            if (
+              !open &&
+              alertState.type === "success" &&
+              alertState.action === "complete"
+            ) {
+              // onComplete();
+            }
+          }}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{alertState.title}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {alertState.description}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogAction>OK</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
         <Toaster
           toastOptions={{ duration: 3000 }}
           position="bottom-right"
@@ -345,7 +436,7 @@ const UserDetailsPage = ({ initialUser }: { initialUser: User }) => {
         <div className="flex flex-col items-center mb-8">
           <div className="relative mb-4">
             <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-100">
-              {(profilePicPreview || userData.image) && (
+              {/* {(profilePicPreview || userData.image) && (
                 <CldImage
                   src={profilePicPreview || userData.image || ""}
                   alt="Profile"
@@ -357,7 +448,13 @@ const UserDetailsPage = ({ initialUser }: { initialUser: User }) => {
                   quality="auto"
                   preserveTransformations={true}
                 />
-              )}
+              )} */}
+              <Avatar className="w-32 h-32">
+                <AvatarImage src={user?.image} />
+                <AvatarFallback>
+                  {user?.name?.charAt(0) || user?.email?.charAt(0)}
+                </AvatarFallback>
+              </Avatar>
             </div>
           </div>
           <CldUploadWidget

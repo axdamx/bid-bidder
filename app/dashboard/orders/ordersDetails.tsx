@@ -66,7 +66,7 @@ import {
 
 interface Order {
   id: number;
-  orderStatus: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  orderStatus: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
   item: {
     name: string;
   };
@@ -75,7 +75,11 @@ interface Order {
   itemId: number;
 }
 
-const StatusBadge = ({ status }: { status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' }) => {
+const StatusBadge = ({
+  status,
+}: {
+  status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
+}) => {
   const statusConfig = {
     pending: {
       label: "Pending",
@@ -167,12 +171,12 @@ export default function OrderDetails() {
     updateStatus({ orderId, status: newStatus });
   };
 
-  const OrdersTable = ({ 
-    orders, 
-    showStatusUpdate = false 
-  }: { 
-    orders?: Order[]; 
-    showStatusUpdate?: boolean 
+  const OrdersTable = ({
+    orders,
+    showStatusUpdate = false,
+  }: {
+    orders?: Order[];
+    showStatusUpdate?: boolean;
   }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 5;
@@ -304,14 +308,16 @@ export default function OrderDetails() {
         </div>
 
         {/* Mobile view */}
-        <div className="md:hidden overflow-y-auto max-h-[400px]">
-          <div className="min-w-[320px] overflow-x-auto">
+        <div className="md:hidden overflow-y-auto max-h-[400px] max-w-[75vw] space-y-4 px-2 sm:px-4">
+          {/* <div className="space-y-4 px-2 sm:px-4 max-w-[85vw] overflow-hidden mb-6"> */}
+
+          <div className="min-w-[320px] overflow-x-auto w-full">
             {" "}
             {/* Added wrapper with min-width */}
             {/* Set max height and enable vertical scrolling */}
             {currentOrders?.map((order: Order) => (
               <div key={order.id} className="border-b p-2 space-y-3">
-                <div className="flex justify-between items-start px-9">
+                <div className="flex justify-between items-start">
                   <div>
                     <p className="text-sm">{order.item.name}</p>
                     <p className="text-sm text-muted-foreground">
@@ -321,7 +327,7 @@ export default function OrderDetails() {
                   <StatusBadge status={order.orderStatus} />
                 </div>
 
-                <div className="flex justify-between items-center text-sm px-9">
+                <div className="flex justify-between items-center text-sm">
                   <span className="text-muted-foreground">
                     {new Date(order.orderDate).toLocaleDateString()}
                   </span>

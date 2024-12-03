@@ -86,8 +86,8 @@ export function ItemCarousel({
         </DialogContent>
       </Dialog>
 
-      <div className="w-full py-12">
-        <div className="container">
+      <div className="w-full">
+        <div className="">
           <Carousel
             opts={{
               loop: false,

@@ -138,30 +138,30 @@ export default function ProfilePage({
       </div>
 
       {/* Stats and Follow Button */}
-      <div className="mt-20 border-b">
-        <div className="container flex flex-col sm:flex-row items-center justify-between py-4">
-          <div className="flex gap-8">
-            <div className="flex items-center gap-2">
+      <div className="mt-20">
+        <div className="container flex flex-col sm:flex-row items-center sm:items-start justify-between py-4">
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-8">
+            <div className="flex items-center justify-center sm:justify-start gap-2">
               <Package className="h-4 w-4" />
-              <span className="text-lg">
+              <span className="text-base sm:text-lg">
                 {ownedItemsQuery.data?.length || 0} Listings
               </span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center justify-center sm:justify-start gap-2">
               <Users className="h-4 w-4" />
-              <span className="text-lg">
+              <span className="text-base sm:text-lg">
                 {followDataQuery.data?.followersCount || 0} Followers
               </span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center justify-center sm:justify-start gap-2">
               <Star className="h-4 w-4" />
-              <span className="text-lg">
+              <span className="text-base sm:text-lg">
                 {userQuery.data.rating || 0} Rating
               </span>
             </div>
           </div>
           {user?.id !== ownerId && (
-            <div className="w-full sm:w-auto">
+            <div className="w-full sm:w-auto mt-4 sm:mt-0">
               <FollowButton
                 targetUserId={ownerId}
                 currentUserId={user?.id || ""}
@@ -173,214 +173,220 @@ export default function ProfilePage({
         </div>
       </div>
 
+      <Separator color="red" />
+
       {/* Main Content */}
-      <div className="container py-6">
-        <Tabs defaultValue="listings" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="listings">Listings</TabsTrigger>
-            <TabsTrigger value="about">About</TabsTrigger>
-            <TabsTrigger value="reviews">Reviews</TabsTrigger>
-          </TabsList>
+      <div className="w-full">
+        <div className="px-0 sm:container">
+          <Tabs defaultValue="listings" className="w-full">
+            <TabsList className="w-full sm:w-auto flex justify-between sm:justify-start sm:inline-flex mt-6">
+              <TabsTrigger value="listings">Listings</TabsTrigger>
+              <TabsTrigger value="about">About</TabsTrigger>
+              <TabsTrigger value="reviews">Reviews</TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="listings" className="space-y-6">
-            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-              {paginatedItems.length > 0 ? (
-                paginatedItems?.map((item, index) => (
-                  <Card key={item.id} className="overflow-hidden h-fit">
-                    <CardContent className="p-0">
-                      <MotionGrid
-                        key={item.id}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: index * 0.125 }}
-                      >
-                        <ItemCard key={item.id} item={item} />
-                      </MotionGrid>
-                    </CardContent>
-                  </Card>
-                ))
-              ) : (
-                <MotionGrid
-                  // key={item.id}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.125 }}
-                >
-                  <Card className="col-span-full p-6">
-                    <CardContent className="flex flex-col items-center justify-center space-y-4 text-center">
-                      <Package className="h-12 w-12 text-muted-foreground" />
-                      <h3 className="font-semibold text-lg">No Listings Yet</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Get started by creating your first auction listing
-                      </p>
-                      <Link
-                        href="/items/create"
-                        className="hover:underline whitespace-nowrap"
-                        onClick={(e) => handleLinkClick(e, "/items/create")}
-                      >
-                        <Button>Create Auction</Button>
-                      </Link>
-                    </CardContent>
-                  </Card>
-                </MotionGrid>
-              )}
-            </div>
-            {/* {paginatedItems?.length > 0 && (
-              <div className="flex justify-center gap-2 mt-8">
-                <Button
-                  variant="outline"
-                  onClick={() => setPage(page - 1)}
-                  disabled={page === 1}
-                >
-                  <ChevronLeft className="mr-2 h-4 w-4" /> Previous
-                </Button>
-                <span className="flex items-center">
-                  Page {page} of {totalPages}
-                </span>
-                <Button
-                  variant="outline"
-                  onClick={() => setPage(page + 1)}
-                  disabled={page === totalPages}
-                >
-                  Next <ChevronRight className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
-            )} */}
-            {paginatedItems.length > 0 && (
-              <Pagination className="justify-center p-4">
-                {/* Added padding to the pagination */}
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious
-                      onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-                      className={
-                        page === 1
-                          ? "pointer-events-none opacity-50"
-                          : "cursor-pointer"
-                      }
-                    />
-                  </PaginationItem>
-
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                    (pageNumber) => (
-                      <PaginationItem key={pageNumber}>
-                        <PaginationLink
-                          onClick={() => setPage(pageNumber)}
-                          isActive={pageNumber === page}
-                          className="cursor-pointer opacity-100"
+            <TabsContent value="listings" className="space-y-6 mb-6">
+              <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 w-full">
+                {paginatedItems.length > 0 ? (
+                  paginatedItems?.map((item, index) => (
+                    <Card key={item.id} className="overflow-hidden h-fit">
+                      <CardContent className="p-0">
+                        <MotionGrid
+                          key={item.id}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: index * 0.125 }}
                         >
-                          {pageNumber}
-                        </PaginationLink>
-                      </PaginationItem>
-                    )
-                  )}
+                          <ItemCard key={item.id} item={item} />
+                        </MotionGrid>
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : (
+                  <MotionGrid
+                    // key={item.id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.125 }}
+                  >
+                    <Card className="col-span-full p-6">
+                      <CardContent className="flex flex-col items-center justify-center space-y-4 text-center">
+                        <Package className="h-12 w-12 text-muted-foreground" />
+                        <h3 className="font-semibold text-lg">
+                          No Listings Yet
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          Get started by creating your first auction listing
+                        </p>
+                        <Link
+                          href="/items/create"
+                          className="hover:underline whitespace-nowrap"
+                          onClick={(e) => handleLinkClick(e, "/items/create")}
+                        >
+                          <Button>Create Auction</Button>
+                        </Link>
+                      </CardContent>
+                    </Card>
+                  </MotionGrid>
+                )}
+              </div>
+              {/* {paginatedItems?.length > 0 && (
+                <div className="flex justify-center gap-2 mt-8">
+                  <Button
+                    variant="outline"
+                    onClick={() => setPage(page - 1)}
+                    disabled={page === 1}
+                  >
+                    <ChevronLeft className="mr-2 h-4 w-4" /> Previous
+                  </Button>
+                  <span className="flex items-center">
+                    Page {page} of {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    onClick={() => setPage(page + 1)}
+                    disabled={page === totalPages}
+                  >
+                    Next <ChevronRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </div>
+              )} */}
+              {paginatedItems.length > 0 && (
+                <Pagination className="justify-center p-4">
+                  {/* Added padding to the pagination */}
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+                        className={
+                          page === 1
+                            ? "pointer-events-none opacity-50"
+                            : "cursor-pointer"
+                        }
+                      />
+                    </PaginationItem>
 
-                  <PaginationItem>
-                    <PaginationNext
-                      onClick={() =>
-                        setPage((prev) => Math.min(prev + 1, totalPages))
-                      }
-                      className={
-                        page === totalPages
-                          ? "pointer-events-none opacity-50"
-                          : "cursor-pointer"
-                      }
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            )}
-          </TabsContent>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                      (pageNumber) => (
+                        <PaginationItem key={pageNumber}>
+                          <PaginationLink
+                            onClick={() => setPage(pageNumber)}
+                            isActive={pageNumber === page}
+                            className="cursor-pointer opacity-100"
+                          >
+                            {pageNumber}
+                          </PaginationLink>
+                        </PaginationItem>
+                      )
+                    )}
 
-          <TabsContent value="about" className="space-y-6">
-            <MotionGrid
-              // key={item.id}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.125 }}
-            >
-              <Card>
-                <CardContent className="grid gap-4 p-6">
-                  <div>
-                    <h3 className="font-semibold">About Me</h3>
-                    {userQuery.data.about && (
-                      <p className="text-sm text-muted-foreground mt-3">
-                        {userQuery.data.about}
-                      </p>
-                    )}
-                  </div>
-                  <Separator />
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-muted-foreground" />
-                    {userQuery.data.city && (
-                      <p className="text-sm text-muted-foreground">
-                        {userQuery.data.city}, {userQuery.data.country}
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CalendarDays className="h-4 w-4 text-muted-foreground" />
-                    {userQuery.data.createdAt && (
-                      <p className="text-sm text-muted-foreground">
-                        Member since{" "}
-                        {new Date(userQuery.data.createdAt).toLocaleDateString(
-                          "en-US",
-                          {
-                            month: "long",
-                            year: "numeric",
-                          }
-                        )}
-                      </p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </MotionGrid>
-          </TabsContent>
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() =>
+                          setPage((prev) => Math.min(prev + 1, totalPages))
+                        }
+                        className={
+                          page === totalPages
+                            ? "pointer-events-none opacity-50"
+                            : "cursor-pointer"
+                        }
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              )}
+            </TabsContent>
 
-          <TabsContent value="reviews" className="space-y-6">
-            {Array.from({ length: 3 }).map((_, i) => (
+            <TabsContent value="about" className="space-y-6 mb-6">
               <MotionGrid
-                key={i}
+                // key={item.id}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.125 }}
               >
-                <Card key={i}>
+                <Card>
                   <CardContent className="grid gap-4 p-6">
-                    <div className="flex items-start gap-4">
-                      <Avatar>
-                        <AvatarImage src="/placeholder.svg" alt="Reviewer" />
-                        <AvatarFallback>RV</AvatarFallback>
-                      </Avatar>
-                      <div className="grid gap-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold">John Doe</span>
-                          <span className="text-sm text-muted-foreground">
-                            • 2 weeks ago
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          {Array.from({ length: 5 }).map((_, i) => (
-                            <Star
-                              key={i}
-                              className="h-4 w-4 fill-primary text-primary"
-                            />
-                          ))}
-                        </div>
-                      </div>
+                    <div>
+                      <h3 className="font-semibold">About Me</h3>
+                      {userQuery.data.about && (
+                        <p className="text-sm text-muted-foreground mt-3">
+                          {userQuery.data.about}
+                        </p>
+                      )}
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      Amazing seller! The vintage watch I purchased was exactly
-                      as described and arrived quickly. Sarah was very
-                      communicative throughout the process. Highly recommended!
-                    </p>
+                    <Separator />
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-muted-foreground" />
+                      {userQuery.data.city && (
+                        <p className="text-sm text-muted-foreground">
+                          {userQuery.data.city}, {userQuery.data.country}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                      {userQuery.data.createdAt && (
+                        <p className="text-sm text-muted-foreground">
+                          Member since{" "}
+                          {new Date(
+                            userQuery.data.createdAt
+                          ).toLocaleDateString("en-US", {
+                            month: "long",
+                            year: "numeric",
+                          })}
+                        </p>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               </MotionGrid>
-            ))}
-          </TabsContent>
-        </Tabs>
+            </TabsContent>
+
+            <TabsContent value="reviews" className="space-y-6 mb-6">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <MotionGrid
+                  key={i}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.125 }}
+                >
+                  <Card key={i}>
+                    <CardContent className="grid gap-4 p-6">
+                      <div className="flex items-start gap-4">
+                        <Avatar>
+                          <AvatarImage src="/placeholder.svg" alt="Reviewer" />
+                          <AvatarFallback>RV</AvatarFallback>
+                        </Avatar>
+                        <div className="grid gap-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold">John Doe</span>
+                            <span className="text-sm text-muted-foreground">
+                              • 2 weeks ago
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            {Array.from({ length: 5 }).map((_, i) => (
+                              <Star
+                                key={i}
+                                className="h-4 w-4 fill-primary text-primary"
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Amazing seller! The vintage watch I purchased was
+                        exactly as described and arrived quickly. Sarah was very
+                        communicative throughout the process. Highly
+                        recommended!
+                      </p>
+                    </CardContent>
+                  </Card>
+                </MotionGrid>
+              ))}
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
     </div>
   );

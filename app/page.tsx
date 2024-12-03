@@ -40,7 +40,7 @@ function LoadingSection({ message }: { message: string }) {
 export default function Home() {
   return (
     <>
-      <main className="flex flex-col gap-8 pb-20">
+      <main className="flex flex-col">
         {/* Hero Section */}
         <HeroSection />
         {/* Top Bids Section */}
@@ -51,21 +51,17 @@ export default function Home() {
         {/* <CategoryCarousell /> */}
 
         {/* Live Auctions - Featured Section */}
-        <section className="container px-4 md:px-6">
-          {/* <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold md:text-3xl">Live Auctions</h2>
-          <a href="/auctions" className="text-primary hover:text-primary/80">
-            View all →
-          </a>
-        </div> */}
-          <Suspense
-            fallback={<LoadingSection message="Loading live auctions..." />}
-          >
-            <LiveAuctions />
-          </Suspense>
+        <section className="w-full px-0 sm:container">
+          <div className="w-full">
+            <Suspense
+              fallback={<LoadingSection message="Loading live auctions..." />}
+            >
+              <LiveAuctions />
+            </Suspense>
+          </div>
         </section>
 
-        <section className="border-t bg-muted/50">
+        <section className="border-t bg-muted/50 my-6">
           <div className="container py-12 md:py-24">
             <div className="grid gap-8 md:gap-12">
               <div className="flex flex-col items-center justify-center space-y-4 text-center">
@@ -123,7 +119,7 @@ export default function Home() {
         </section> */}
 
         {/* Ended Auctions - Trending */}
-        <section className="container px-4 md:px-6">
+        <section className="w-full px-0 sm:container mb-6">
           {/* <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-2xl font-bold md:text-3xl">Past Auctions</h2>

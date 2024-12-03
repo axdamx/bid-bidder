@@ -157,7 +157,7 @@ export function Header() {
                 {user ? (
                   <nav className="flex flex-col space-y-4">
                     {/* Mobile User Info */}
-                    <div className="flex items-center gap-2 px-2 py-2">
+                    <div className="flex items-center">
                       <div className="p-2">
                         <NotificationDropdown />
                       </div>

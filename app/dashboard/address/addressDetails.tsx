@@ -1,371 +1,305 @@
-import { useState, useEffect } from "react";
+"use client";
+
+import { useEffect, useState } from "react";
+import { useAtom } from "jotai";
+import { userAtom } from "@/app/atom/userAtom";
+import {
+  getUserAddresses,
+  setDefaultAddress,
+  addAddress,
+  updateAddress,
+  AddressFormData,
+} from "./actions";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Card } from "@/components/ui/card";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
-  DialogFooter,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Home,
-  CreditCard,
-  MapPin,
-  Phone,
-  User,
-  Building,
-  Mail,
-  Globe,
-} from "lucide-react";
-import { createClientSupabase } from "@/lib/supabase/client";
+import { Badge } from "@/components/ui/badge";
+import { CreditCard, Home } from "lucide-react";
+import toast from "react-hot-toast";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 interface Address {
-  [key: string]: string | null;
-  addressLine1: string | null;
-  addressLine2: string | null;
-  city: string | null;
-  state: string | null;
-  postcode: string | null;
-  country: string | null;
+  id: string;
+  userId: string;
+  addressLine1: string;
+  addressLine2?: string;
+  city: string;
+  state: string;
+  postcode: string;
+  country: string;
+  isDefault: boolean;
 }
 
-interface AddressSectionProps {
-  title: string;
-  name: string;
-  address: Address | null;
-  icon: React.ElementType;
-  onEdit?: () => void;
-  addressType: "primary" | "billing" | "shipping";
-}
+const addressSchema = z.object({
+  addressLine1: z.string().min(5, "Address must be at least 5 characters"),
+  addressLine2: z.string().optional(),
+  city: z.string().min(2, "City must be at least 2 characters"),
+  state: z.string().min(2, "State must be at least 2 characters"),
+  postcode: z.string().min(2, "Postcode must be at least 2 characters"),
+  country: z.string().min(2, "Country must be at least 2 characters"),
+});
 
-const AddressSection: React.FC<AddressSectionProps> = ({
-  title,
-  name,
-  address,
-  icon: Icon,
-  onEdit,
-  addressType,
-}) => {
+export default function AddressDetails() {
+  const [user] = useAtom(userAtom);
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const prefix = addressType === "primary" ? "" : `${addressType}_`;
+  const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
+  const [defaultAddressId, setDefaultAddressId] = useState<string>("");
 
-  const hasAddress =
-    address &&
-    Object.entries(address)
-      .filter(([key]) => key.startsWith(prefix))
-      .some(([_, value]) => value !== null);
+  const MAX_ADDRESSES = 3;
+  const canAddAddress = addresses.length < MAX_ADDRESSES;
 
-  const getAddressValue = (field: string) => address?.[`${prefix}${field}`];
-
-  return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-primary/10 rounded-full">
-              <Icon className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <CardTitle className="text-lg">{title}</CardTitle>
-              {hasAddress ? (
-                <CardDescription>
-                  {getAddressValue("addressLine1")}
-                  {getAddressValue("addressLine2") && <br />}
-                  {getAddressValue("addressLine2")}
-                  <br />
-                  {getAddressValue("city")}, {getAddressValue("state")}{" "}
-                  {getAddressValue("postcode")}
-                  <br />
-                  {getAddressValue("country")}
-                </CardDescription>
-              ) : (
-                <CardDescription className="text-muted-foreground">
-                  No address added yet
-                </CardDescription>
-              )}
-            </div>
-          </div>
-          <Button variant="outline" onClick={() => setIsDialogOpen(true)}>
-            {hasAddress ? "Edit" : "Add"}
-          </Button>
-        </div>
-      </CardHeader>
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>
-              {hasAddress ? "Edit" : "Add"} {title}
-            </DialogTitle>
-            <DialogDescription>
-              {hasAddress
-                ? "Update your address details below"
-                : "Enter your address details below"}
-            </DialogDescription>
-          </DialogHeader>
-          <AddressForm
-            initialData={address}
-            addressType={addressType}
-            onSuccess={() => {
-              setIsDialogOpen(false);
-              if (onEdit) onEdit();
-            }}
-          />
-        </DialogContent>
-      </Dialog>
-    </Card>
-  );
-};
-
-interface FormFieldProps {
-  label: string;
-  icon: React.ElementType;
-  children: React.ReactNode;
-  required?: boolean;
-}
-
-const FormField: React.FC<FormFieldProps> = ({
-  label,
-  icon: Icon,
-  children,
-  required,
-}) => (
-  <div className="space-y-1.5">
-    <Label className="flex items-center space-x-2">
-      <Icon className="h-4 w-4" />
-      <span>
-        {label}
-        {required && <span className="text-destructive">*</span>}
-      </span>
-    </Label>
-    {children}
-  </div>
-);
-
-interface AddressFormData {
-  [key: string]: string;
-}
-
-interface AddressFormProps {
-  onSuccess?: () => void;
-  initialData: Address | null;
-  addressType: "primary" | "billing" | "shipping";
-}
-
-const AddressForm: React.FC<AddressFormProps> = ({
-  onSuccess,
-  initialData,
-  addressType,
-}) => {
-  const [formData, setFormData] = useState<AddressFormData>({
-    [`${addressType}AddressLine1`]:
-      initialData?.[`${addressType}AddressLine1`] || "",
-    [`${addressType}AddressLine2`]:
-      initialData?.[`${addressType}AddressLine2`] || "",
-    [`${addressType}City`]: initialData?.[`${addressType}City`] || "",
-    [`${addressType}State`]: initialData?.[`${addressType}State`] || "",
-    [`${addressType}Postcode`]: initialData?.[`${addressType}Postcode`] || "",
-    [`${addressType}Country`]: initialData?.[`${addressType}Country`] || "",
+  const form = useForm<AddressFormData>({
+    resolver: zodResolver(addressSchema),
+    defaultValues: {
+      addressLine1: "",
+      addressLine2: "",
+      city: "",
+      state: "",
+      postcode: "",
+      country: "",
+    },
   });
-  const [loading, setLoading] = useState(false);
-  const supabase = createClientSupabase();
 
-  const handleSubmit = async (e: any) => {
-    e.preventDefault();
-    setLoading(true);
+  useEffect(() => {
+    if (selectedAddress) {
+      form.reset({
+        addressLine1: selectedAddress.addressLine1,
+        addressLine2: selectedAddress.addressLine2 || "",
+        city: selectedAddress.city,
+        state: selectedAddress.state,
+        postcode: selectedAddress.postcode,
+        country: selectedAddress.country,
+      });
+    } else {
+      form.reset({
+        addressLine1: "",
+        addressLine2: "",
+        city: "",
+        state: "",
+        postcode: "",
+        country: "",
+      });
+    }
+  }, [selectedAddress, form]);
 
+  useEffect(() => {
+    if (user?.id) {
+      loadAddresses();
+    }
+  }, [user?.id]);
+
+  const loadAddresses = async () => {
+    if (!user?.id) return;
+
+    setIsLoading(true);
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) throw new Error("No user found");
-
-      const { error } = await supabase
-        .from("users")
-        .update({
-          ...formData,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", user.id);
-
-      if (error) throw error;
-
-      if (onSuccess) onSuccess();
+      const result = await getUserAddresses(user.id);
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+      if (result.success && result.data) {
+        setAddresses(result.data);
+        const defaultAddress = result.data.find((addr) => addr.isDefault);
+        if (defaultAddress) {
+          setDefaultAddressId(defaultAddress.id);
+        }
+      }
     } catch (error) {
-      console.error("Error saving address:", error);
+      console.error("Error loading addresses:", error);
+      toast.error("Failed to load addresses");
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const prefix = addressType === "primary" ? "Primary" : "Billing";
+  const handleDefaultChange = async (addressId: string) => {
+    if (!user?.id || addressId === defaultAddressId) return;
 
-  return (
-    <form onSubmit={handleSubmit}>
-      <div className="grid gap-4 py-4">
-        <FormField label={`${prefix} Address Line 1`} icon={Home} required>
-          <Input
-            required
-            value={formData[`${addressType}AddressLine1`]}
-            onChange={(e) =>
-              setFormData((prev) => ({
-                ...prev,
-                [`${addressType}AddressLine1`]: e.target.value,
-              }))
-            }
-          />
-        </FormField>
-        <FormField label={`${prefix} Address Line 2`} icon={Building}>
-          <Input
-            value={formData[`${addressType}AddressLine2`]}
-            onChange={(e) =>
-              setFormData((prev) => ({
-                ...prev,
-                [`${addressType}AddressLine2`]: e.target.value,
-              }))
-            }
-          />
-        </FormField>
-        <FormField label={`${prefix} City`} icon={MapPin} required>
-          <Input
-            required
-            value={formData[`${addressType}City`]}
-            onChange={(e) =>
-              setFormData((prev) => ({
-                ...prev,
-                [`${addressType}City`]: e.target.value,
-              }))
-            }
-          />
-        </FormField>
-        <FormField label={`${prefix} State/Province`} icon={MapPin} required>
-          <Input
-            required
-            value={formData[`${addressType}State`]}
-            onChange={(e) =>
-              setFormData((prev) => ({
-                ...prev,
-                [`${addressType}State`]: e.target.value,
-              }))
-            }
-          />
-        </FormField>
-        <FormField label={`${prefix} Postcode`} icon={MapPin} required>
-          <Input
-            required
-            value={formData[`${addressType}Postcode`]}
-            onChange={(e) =>
-              setFormData((prev) => ({
-                ...prev,
-                [`${addressType}Postcode`]: e.target.value,
-              }))
-            }
-          />
-        </FormField>
-        <FormField label={`${prefix} Country`} icon={Globe} required>
-          <Input
-            required
-            value={formData[`${addressType}Country`]}
-            onChange={(e) =>
-              setFormData((prev) => ({
-                ...prev,
-                [`${addressType}Country`]: e.target.value,
-              }))
-            }
-          />
-        </FormField>
-      </div>
-      <DialogFooter>
-        <Button type="submit" disabled={loading}>
-          {loading ? "Saving..." : "Save Address"}
-        </Button>
-      </DialogFooter>
-    </form>
-  );
-};
-
-const Addresses = () => {
-  const [address, setAddress] = useState<Address | null>(null);
-  const supabase = createClientSupabase();
-
-  const fetchAddress = async () => {
+    setIsLoading(true);
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
+      const result = await setDefaultAddress(addressId, user.id);
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+      if (result.success) {
+        setDefaultAddressId(addressId);
+        toast.success("Default address updated");
+        loadAddresses();
+      }
+    } catch (error) {
+      console.error("Error setting default address:", error);
+      toast.error("Failed to update default address");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-      const { data, error } = await supabase
-        .from("users")
-        .select(
-          `
-          addressLine1, addressLine2, city, state, postcode, country
-          `
-        )
-        .eq("id", user.id)
-        .single();
+  const handleAddressSubmit = async (data: AddressFormData) => {
+    if (!user?.id) return;
 
-      if (error) {
-        console.error("Error fetching address:", error);
+    // Check if we're at the limit when adding a new address
+    if (!selectedAddress && addresses.length >= MAX_ADDRESSES) {
+      toast.error("Maximum number of addresses reached");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const result = selectedAddress
+        ? await updateAddress(selectedAddress.id, data)
+        : await addAddress(user.id, data);
+
+      if (result.error) {
+        toast.error(result.error);
         return;
       }
 
-      setAddress(data);
+      toast.success(selectedAddress ? "Address updated" : "Address added");
+      loadAddresses();
+      setIsDialogOpen(false);
+      setSelectedAddress(null);
     } catch (error) {
-      console.error("Error fetching address:", error);
+      console.error("Error saving address:", error);
+      toast.error("Failed to save address");
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchAddress();
-  }, []);
+  const openAddressDialog = (address?: Address) => {
+    setSelectedAddress(address || null);
+    setIsDialogOpen(true);
+  };
 
   return (
-    <div className="space-y-6">
-      {/* <div>
-        <h3 className="text-lg font-medium">Addresses</h3>
-        <p className="text-sm text-muted-foreground">
-          Manage your shipping and billing addresses
-        </p>
-      </div> */}
-      <Separator />
-      <Tabs defaultValue="primary" className="w-full p-4">
+    <div className="space-y-6 max-w-4xl mx-auto p-4">
+      <Tabs defaultValue="primary" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="primary">Primary Address</TabsTrigger>
           <TabsTrigger value="billing" disabled>
             Billing Address (Coming Soon)
           </TabsTrigger>
         </TabsList>
-        <TabsContent value="primary" className="mt-4">
-          <AddressSection
-            title="Primary Address"
-            name="primary"
-            address={address}
-            icon={Home}
-            onEdit={fetchAddress}
-            addressType="primary"
-          />
+
+        <TabsContent value="primary" className="mt-6 space-y-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="space-y-1">
+              <h4 className="text-sm font-medium">
+                Your addresses is listed here
+              </h4>
+              <p className="text-xs text-muted-foreground">
+                {`${addresses.length}/${MAX_ADDRESSES} addresses added`}
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => openAddressDialog()}
+              disabled={!canAddAddress}
+            >
+              {canAddAddress ? "Add New Address" : "Maximum addresses reached"}
+            </Button>
+          </div>
+
+          {isLoading ? (
+            <div className="space-y-4">
+              {[1, 2].map((n) => (
+                <Card key={n} className="p-4">
+                  <div className="flex items-start gap-4">
+                    <div className="h-4 w-4 mt-1 rounded-full bg-muted animate-enhanced-pulse" />
+                    <div className="flex-1 min-w-0 space-y-3">
+                      <div className="h-4 w-3/4 bg-muted rounded animate-enhanced-pulse" />
+                      <div className="h-4 w-1/2 bg-muted rounded animate-enhanced-pulse" />
+                      <div className="h-4 w-2/3 bg-muted rounded animate-enhanced-pulse" />
+                      <div className="h-4 w-1/4 bg-muted rounded animate-enhanced-pulse" />
+                    </div>
+                    <div className="h-8 w-16 bg-muted rounded animate-enhanced-pulse" />
+                  </div>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <RadioGroup
+              value={defaultAddressId}
+              onValueChange={handleDefaultChange}
+              className="space-y-4"
+            >
+              {addresses.map((address) => (
+                <Card key={address.id} className="p-4">
+                  <div className="flex items-start gap-4">
+                    <RadioGroupItem
+                      value={address.id}
+                      id={`address-${address.id}`}
+                      className="mt-1"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <Label
+                        htmlFor={`address-${address.id}`}
+                        className="flex flex-col gap-1"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium truncate">
+                            {address.addressLine1}
+                          </span>
+                          {address.isDefault && (
+                            <Badge
+                              variant="secondary"
+                              className="text-xs font-normal"
+                            >
+                              Default
+                            </Badge>
+                          )}
+                        </div>
+                        {address.addressLine2 && (
+                          <span className="text-sm text-muted-foreground truncate">
+                            {address.addressLine2}
+                          </span>
+                        )}
+                        <span className="text-sm truncate">
+                          {`${address.city}, ${address.state} ${address.postcode}`}
+                        </span>
+                        <span className="text-sm">{address.country}</span>
+                      </Label>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => openAddressDialog(address)}
+                      className="shrink-0"
+                    >
+                      Edit
+                    </Button>
+                  </div>
+                </Card>
+              ))}
+
+              {addresses.length === 0 && (
+                <div className="text-center py-8 px-4">
+                  <p className="text-muted-foreground">
+                    No addresses found. Add a new address to get started.
+                  </p>
+                </div>
+              )}
+            </RadioGroup>
+          )}
         </TabsContent>
-        <TabsContent value="billing" className="mt-4">
+
+        <TabsContent value="billing" className="mt-6">
           <div className="flex flex-col items-center justify-center p-8 text-center">
             <CreditCard className="h-10 w-10 text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium mb-2">
@@ -378,8 +312,125 @@ const Addresses = () => {
           </div>
         </TabsContent>
       </Tabs>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedAddress ? "Edit Address" : "Add New Address"}
+            </DialogTitle>
+          </DialogHeader>
+          <form
+            onSubmit={form.handleSubmit(handleAddressSubmit)}
+            className="space-y-4"
+          >
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="addressLine1">Address Line 1</Label>
+                <Input
+                  id="addressLine1"
+                  placeholder="Street address"
+                  {...form.register("addressLine1")}
+                />
+                {form.formState.errors.addressLine1 && (
+                  <p className="text-sm text-destructive mt-1">
+                    {form.formState.errors.addressLine1.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="addressLine2">Address Line 2 (Optional)</Label>
+                <Input
+                  id="addressLine2"
+                  placeholder="Apartment, suite, etc."
+                  {...form.register("addressLine2")}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="city">City</Label>
+                  <Input
+                    id="city"
+                    placeholder="City"
+                    {...form.register("city")}
+                  />
+                  {form.formState.errors.city && (
+                    <p className="text-sm text-destructive mt-1">
+                      {form.formState.errors.city.message}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="state">State</Label>
+                  <Input
+                    id="state"
+                    placeholder="State"
+                    {...form.register("state")}
+                  />
+                  {form.formState.errors.state && (
+                    <p className="text-sm text-destructive mt-1">
+                      {form.formState.errors.state.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="postcode">Postcode</Label>
+                  <Input
+                    id="postcode"
+                    placeholder="Postcode"
+                    {...form.register("postcode")}
+                  />
+                  {form.formState.errors.postcode && (
+                    <p className="text-sm text-destructive mt-1">
+                      {form.formState.errors.postcode.message}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="country">Country</Label>
+                  <Input
+                    id="country"
+                    placeholder="Country"
+                    {...form.register("country")}
+                  />
+                  {form.formState.errors.country && (
+                    <p className="text-sm text-destructive mt-1">
+                      {form.formState.errors.country.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col-reverse sm:flex-row justify-end gap-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setIsDialogOpen(false);
+                  setSelectedAddress(null);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="sm:w-auto w-full"
+              >
+                {isLoading ? "Saving..." : selectedAddress ? "Update" : "Add"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
-};
-
-export default Addresses;
+}

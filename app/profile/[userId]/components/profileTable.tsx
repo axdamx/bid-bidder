@@ -70,6 +70,7 @@ export default function ProfileTable({ items }: OwnedItemsProps) {
   const [sortOrder, setSortOrder] = React.useState("low");
   const [currentPage, setCurrentPage] = React.useState(1);
   const itemsPerPage = 9;
+  const maxVisiblePages = 4;
 
   const [isNavigating, setIsNavigating] = useState(false);
   const pathname = usePathname();
@@ -120,6 +121,23 @@ export default function ProfileTable({ items }: OwnedItemsProps) {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
+
+  const getVisiblePages = () => {
+    const pages = [];
+    const halfVisible = Math.floor(maxVisiblePages / 2);
+    let start = Math.max(currentPage - halfVisible, 1);
+    let end = Math.min(start + maxVisiblePages - 1, totalPages);
+
+    // Adjust start if we're near the end
+    if (end - start + 1 < maxVisiblePages) {
+      start = Math.max(end - maxVisiblePages + 1, 1);
+    }
+
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    return pages;
+  };
 
   const renderContent = () => {
     switch (view) {
@@ -245,129 +263,81 @@ export default function ProfileTable({ items }: OwnedItemsProps) {
   }
 
   return (
-    <>
-      <Dialog open={isNavigating} modal>
-        <DialogTitle className="[&>button]:hidden" />
-        <DialogContent className="[&>button]:hidden">
-          <div className="flex flex-col items-center justify-center space-y-4">
-            <Loader2 className="h-8 w-8 animate-spin" />
-            <p>Loading...</p>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <div className="container mx-auto px-4">
-        <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div className="relative w-full md:w-[400px]">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
-            <Input
-              className="pl-9"
-              placeholder="Search by name"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:mt-6 md:mt-0">
-            <Select value={sortOrder} onValueChange={setSortOrder}>
-              <SelectTrigger className="w-full sm:w-[180px]">
-                <SelectValue placeholder="Sort by price" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="low">Price low to high</SelectItem>
-                <SelectItem value="high">Price high to low</SelectItem>
-                <SelectItem value="createdAt">Newest First</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <ToggleGroup
-              type="single"
-              value={view}
-              onValueChange={(value) => value && setView(value)}
-              className="justify-start sm:justify-center"
-            >
-              <ToggleGroupItem value="list" aria-label="List view">
-                <LayoutList className="h-4 w-4" />
-              </ToggleGroupItem>
-              <ToggleGroupItem value="grid" aria-label="Grid view">
-                <LayoutGrid className="h-4 w-4" />
-              </ToggleGroupItem>
-            </ToggleGroup>
-          </div>
+    <div className="w-full max-w-full overflow-hidden">
+      <div className="mb-6 flex flex-col sm:flex-row gap-4 items-center justify-between">
+        <div className="relative w-full md:w-[400px]">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
+          <Input
+            className="pl-9"
+            placeholder="Search by name"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
 
-        {renderContent()}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:mt-6 md:mt-0">
+          <Select value={sortOrder} onValueChange={setSortOrder}>
+            <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectValue placeholder="Sort by price" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="low">Price low to high</SelectItem>
+              <SelectItem value="high">Price high to low</SelectItem>
+              <SelectItem value="createdAt">Newest First</SelectItem>
+            </SelectContent>
+          </Select>
 
-        {/* {totalPages > 1 && (
-          <div className="mt-6 flex items-center justify-between mb-6">
-            <Button
-              variant="outline"
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-            >
-              <ChevronLeft className="mr-2 h-4 w-4" /> Previous
-            </Button>
-            <span>
-              Page {currentPage} of {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              onClick={() =>
-                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-              }
-              disabled={currentPage === totalPages}
-            >
-              Next <ChevronRight className="ml-2 h-4 w-4" />
-            </Button>
-          </div>  
-        )} */}
-        {totalPages > 1 && (
-          <Pagination className="justify-center p-4">
-            {/* Added padding to the pagination */}
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.max(prev - 1, 1))
-                  }
-                  className={
-                    currentPage === 1
-                      ? "pointer-events-none opacity-50"
-                      : "cursor-pointer"
-                  }
-                />
-              </PaginationItem>
-
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                (pageNumber) => (
-                  <PaginationItem key={pageNumber}>
-                    <PaginationLink
-                      onClick={() => setCurrentPage(pageNumber)}
-                      isActive={pageNumber === currentPage}
-                      className="cursor-pointer opacity-100"
-                    >
-                      {pageNumber}
-                    </PaginationLink>
-                  </PaginationItem>
-                )
-              )}
-
-              <PaginationItem>
-                <PaginationNext
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                  }
-                  className={
-                    currentPage === totalPages
-                      ? "pointer-events-none opacity-50"
-                      : "cursor-pointer"
-                  }
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        )}
+          <ToggleGroup
+            type="single"
+            value={view}
+            onValueChange={(value) => value && setView(value)}
+            className="justify-start sm:justify-center"
+          >
+            <ToggleGroupItem value="list" aria-label="List view">
+              <LayoutList className="h-4 w-4" />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="grid" aria-label="Grid view">
+              <LayoutGrid className="h-4 w-4" />
+            </ToggleGroupItem>
+          </ToggleGroup>
+        </div>
       </div>
-    </>
+
+      {renderContent()}
+
+      <div className="mt-6 flex justify-center">
+        <Pagination>
+          <PaginationContent className="flex-wrap justify-center gap-2">
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                className={currentPage === 1 ? "opacity-50 cursor-not-allowed" : ""}
+                aria-disabled={currentPage === 1}
+              />
+            </PaginationItem>
+
+            {getVisiblePages().map((pageNum) => (
+              <PaginationItem key={pageNum}>
+                <PaginationLink
+                  onClick={() => setCurrentPage(pageNum)}
+                  isActive={currentPage === pageNum}
+                  className="min-w-[40px] h-[40px] flex items-center justify-center"
+                >
+                  {pageNum}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+
+            <PaginationItem>
+              <PaginationNext
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                className={currentPage === totalPages ? "opacity-50 cursor-not-allowed" : ""}
+                aria-disabled={currentPage === totalPages}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      </div>
+    </div>
   );
 }

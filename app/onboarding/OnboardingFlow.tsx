@@ -40,6 +40,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { LoadingModal } from "../components/LoadingModal";
+import { updateUserAndAddress } from "./actions";
 
 const userDetailsSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters" }),
@@ -172,20 +173,21 @@ export default function OnboardingFlow({
   const onSubmitDetails = async (data: any) => {
     setIsLoading(true);
     try {
-      const { error } = await supabase
-        .from("users")
-        .update({
-          name: data.name,
-          addressLine1: data.addressLine1,
-          addressLine2: data.addressLine2,
-          city: data.city,
-          state: data.state,
-          postcode: data.postcode,
-          country: data.country,
-        })
-        .eq("id", user.id);
+      const result = await updateUserAndAddress(user.id, {
+        name: data.name,
+        addressLine1: data.addressLine1,
+        addressLine2: data.addressLine2 || "",
+        city: data.city,
+        state: data.state,
+        postcode: data.postcode,
+        country: data.country,
+      });
 
-      if (error) throw error;
+      if (result.error) {
+        console.error("Error updating user details:", result.error);
+        return;
+      }
+
       setStep(2);
     } catch (error) {
       console.error("Error updating user details:", error);

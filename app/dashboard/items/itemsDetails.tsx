@@ -73,7 +73,7 @@ export default function ItemsDetails() {
       name: string;
     };
     currentBid: number;
-  };
+  }
 
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const itemsPerPage = 9;
@@ -155,8 +155,46 @@ export default function ItemsDetails() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <p>Loading...</p>
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between p-4">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <div className="w-full sm:w-[300px] h-10 bg-gray-200 animate-pulse rounded-md" />
+            <div className="w-10 h-10 bg-gray-200 animate-pulse rounded-md" />
+          </div>
+          <div className="flex items-center gap-4 w-full sm:w-auto justify-end">
+            <div className="w-full sm:w-[180px] h-10 bg-gray-200 animate-pulse rounded-md" />
+            <div className="w-20 h-10 bg-gray-200 animate-pulse rounded-md" />
+          </div>
+        </div>
+
+        {view === "list" ? (
+          <div className="rounded-md border overflow-x-auto">
+            <div className="min-w-[800px]">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="flex items-center p-4 border-b">
+                  <div className="w-16 h-16 bg-gray-200 animate-pulse rounded-md" />
+                  <div className="flex-1 ml-4 space-y-2">
+                    <div className="h-4 bg-gray-200 animate-pulse rounded w-1/4" />
+                    <div className="h-4 bg-gray-200 animate-pulse rounded w-1/3" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="rounded-lg overflow-hidden border">
+                <div className="aspect-square bg-gray-200 animate-pulse" />
+                <div className="p-4 space-y-2">
+                  <div className="h-4 bg-gray-200 animate-pulse rounded w-3/4" />
+                  <div className="h-4 bg-gray-200 animate-pulse rounded w-1/2" />
+                  <div className="h-4 bg-gray-200 animate-pulse rounded w-1/3" />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
@@ -191,7 +229,10 @@ export default function ItemsDetails() {
       return <Badge variant="destructive">Cancelled</Badge>;
     }
 
-    const variants: Record<ItemStatus, "default" | "destructive" | "outline" | "secondary"> = {
+    const variants: Record<
+      ItemStatus,
+      "default" | "destructive" | "outline" | "secondary"
+    > = {
       LIVE: "default",
       PENDING: "secondary",
       ACTIVE: "default",
@@ -244,22 +285,24 @@ export default function ItemsDetails() {
         </DialogContent>
       </Dialog>
 
-      <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between p-4">
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <Input
-              placeholder="Search items..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full sm:w-[300px]"
-            />
-            <Button size="icon" variant="ghost">
+      <div className="space-y-4 px-2 sm:px-4 max-w-[85vw] overflow-hidden mb-6">
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="flex-1">
+              <Input
+                placeholder="Search items..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full"
+              />
+            </div>
+            <Button size="icon" variant="ghost" className="shrink-0">
               <Search className="h-4 w-4" />
             </Button>
           </div>
-          <div className="flex items-center gap-4 w-full sm:w-auto justify-end">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
             <Select value={sortOrder} onValueChange={setSortOrder}>
-              <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectTrigger className="w-[130px] sm:w-[180px]">
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
               <SelectContent>
@@ -268,7 +311,12 @@ export default function ItemsDetails() {
                 <SelectItem value="createdAt">Most Recent</SelectItem>
               </SelectContent>
             </Select>
-            <ToggleGroup type="single" value={view} onValueChange={setView}>
+            <ToggleGroup
+              type="single"
+              value={view}
+              onValueChange={setView}
+              className="shrink-0"
+            >
               <ToggleGroupItem value="grid" aria-label="Grid view">
                 <LayoutGrid className="h-4 w-4" />
               </ToggleGroupItem>
@@ -280,144 +328,157 @@ export default function ItemsDetails() {
         </div>
 
         {view === "list" ? (
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[100px]">Image</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Starting Price</TableHead>
-                  <TableHead>Created At</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Winner</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedItems.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell>
-                      <div className="relative h-16 w-16 rounded-md overflow-hidden">
-                        <CldImage
-                          src={item.imageId}
-                          alt={item.name}
-                          className="object-cover"
-                          width={64}
-                          height={64}
-                        />
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Link
-                        href={`/items/${item.id}`}
-                        onClick={(e) => handleLinkClick(e, `/items/${item.id}`)}
-                        className="hover:underline text-primary"
-                      >
-                        {item.name}
-                      </Link>
-                    </TableCell>
-                    <TableCell>RM {item.startingPrice.toFixed(2)}</TableCell>
-                    <TableCell>{formatTimestamp(item.createdAt)}</TableCell>
-                    <TableCell>{getStatusBadge(item)}</TableCell>
-                    <TableCell>
-                      {item.winner ? (
-                        <Link
-                          href={`/profile/${item.winner.id}`}
-                          onClick={(e) => handleLinkClick(e, `/profile/${item.winner.id}`)}
-                          className="hover:underline text-primary"
-                        >
-                          {item.winner.name}
-                        </Link>
-                      ) : (
-                        "-"
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        {/* <Button variant="link" asChild className="p-0">
+          <div className="w-full overflow-hidden border rounded-md">
+            <div
+              className="overflow-x-auto"
+              style={{ WebkitOverflowScrolling: "touch" }}
+            >
+              <div style={{ minWidth: "800px", paddingBottom: "1px" }}>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[100px]">Image</TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Starting Price</TableHead>
+                      <TableHead>Created At</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Winner</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedItems.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell>
+                          <div className="relative h-16 w-16 rounded-md overflow-hidden">
+                            <CldImage
+                              src={item.imageId}
+                              alt={item.name}
+                              className="object-cover"
+                              width={64}
+                              height={64}
+                            />
+                          </div>
+                        </TableCell>
+                        <TableCell>
                           <Link
                             href={`/items/${item.id}`}
                             onClick={(e) =>
                               handleLinkClick(e, `/items/${item.id}`)
                             }
+                            className="hover:underline text-primary"
                           >
-                            View
+                            {item.name}
                           </Link>
-                        </Button> */}
-                        {canReopen(item) && (
-                          <Button
-                            onClick={() => {
-                              setSelectedItem(item);
-                              setIsUpdateDialogOpen(true);
-                            }}
-                            size="sm"
-                            variant="outline"
-                          >
-                            Reopen
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            {totalPages > 1 && (
-              <div className="flex justify-center py-4">
-                <Pagination>
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious
-                        onClick={() =>
-                          setCurrentPage((prev) => Math.max(prev - 1, 1))
-                        }
-                        className={
-                          currentPage === 1
-                            ? "pointer-events-none opacity-50"
-                            : "cursor-pointer"
-                        }
-                      />
-                    </PaginationItem>
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                      (page) => (
-                        <PaginationItem key={page}>
-                          <PaginationLink
-                            onClick={() => setCurrentPage(page)}
-                            isActive={currentPage === page}
-                            className="cursor-pointer"
-                          >
-                            {page}
-                          </PaginationLink>
-                        </PaginationItem>
-                      )
-                    )}
-                    <PaginationItem>
-                      <PaginationNext
-                        onClick={() =>
-                          setCurrentPage((prev) =>
-                            Math.min(prev + 1, totalPages)
-                          )
-                        }
-                        className={
-                          currentPage === totalPages
-                            ? "pointer-events-none opacity-50"
-                            : "cursor-pointer"
-                        }
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
+                        </TableCell>
+                        <TableCell>
+                          RM {item.startingPrice.toFixed(2)}
+                        </TableCell>
+                        <TableCell>{formatTimestamp(item.createdAt)}</TableCell>
+                        <TableCell>{getStatusBadge(item)}</TableCell>
+                        <TableCell>
+                          {item.winner ? (
+                            <Link
+                              href={`/profile/${item.winner.id}`}
+                              onClick={(e) =>
+                                handleLinkClick(e, `/profile/${item.winner.id}`)
+                              }
+                              className="hover:underline text-primary"
+                            >
+                              {item.winner.name}
+                            </Link>
+                          ) : (
+                            "-"
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {/* <Button variant="link" asChild className="p-0">
+                              <Link
+                                href={`/items/${item.id}`}
+                                onClick={(e) =>
+                                  handleLinkClick(e, `/items/${item.id}`)
+                                }
+                              >
+                                View
+                              </Link>
+                            </Button> */}
+                            {canReopen(item) && (
+                              <Button
+                                onClick={() => {
+                                  setSelectedItem(item);
+                                  setIsUpdateDialogOpen(true);
+                                }}
+                                size="sm"
+                                variant="outline"
+                              >
+                                Reopen
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
-            )}
+              {totalPages > 1 && (
+                <div className="flex justify-center py-4">
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious
+                          onClick={() =>
+                            setCurrentPage((prev) => Math.max(prev - 1, 1))
+                          }
+                          className={
+                            currentPage === 1
+                              ? "pointer-events-none opacity-50"
+                              : "cursor-pointer"
+                          }
+                        />
+                      </PaginationItem>
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                        (page) => (
+                          <PaginationItem key={page}>
+                            <PaginationLink
+                              onClick={() => setCurrentPage(page)}
+                              isActive={currentPage === page}
+                              className="cursor-pointer"
+                            >
+                              {page}
+                            </PaginationLink>
+                          </PaginationItem>
+                        )
+                      )}
+                      <PaginationItem>
+                        <PaginationNext
+                          onClick={() =>
+                            setCurrentPage((prev) =>
+                              Math.min(prev + 1, totalPages)
+                            )
+                          }
+                          className={
+                            currentPage === totalPages
+                              ? "pointer-events-none opacity-50"
+                              : "cursor-pointer"
+                          }
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
+              )}
+            </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
             {paginatedItems.map((item) => (
-              <Card key={item.id} className="overflow-hidden">
+              <Card key={item.id} className="overflow-hidden flex flex-col">
                 <Link
                   href={`/items/${item.id}`}
                   onClick={(e) => handleLinkClick(e, `/items/${item.id}`)}
-                  className="block"
+                  className="block flex-1"
                 >
                   <div className="relative aspect-square">
                     <CldImage
@@ -425,12 +486,13 @@ export default function ItemsDetails() {
                       alt={item.name}
                       className="object-cover"
                       fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     />
                     <div className="absolute top-2 right-2">
                       {getStatusBadge(item)}
                     </div>
                   </div>
-                  <div className="p-4">
+                  <div className="p-4 flex-1">
                     <h3 className="font-semibold truncate">{item.name}</h3>
                     <div className="mt-2 space-y-1">
                       <p className="text-sm text-gray-500">
@@ -442,24 +504,26 @@ export default function ItemsDetails() {
                       <p className="text-xs text-gray-400">
                         Created: {formatTimestamp(item.createdAt)}
                       </p>
-                      {canReopen(item) && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="mt-2"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setSelectedItem(item);
-                            setIsUpdateDialogOpen(true);
-                          }}
-                        >
-                          <Calendar className="h-4 w-4 mr-2" />
-                          Reopen
-                        </Button>
-                      )}
                     </div>
                   </div>
                 </Link>
+                {canReopen(item) && (
+                  <div className="p-4 pt-0">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setSelectedItem(item);
+                        setIsUpdateDialogOpen(true);
+                      }}
+                    >
+                      <Calendar className="h-4 w-4 mr-2" />
+                      Reopen
+                    </Button>
+                  </div>
+                )}
               </Card>
             ))}
           </div>
