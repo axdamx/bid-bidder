@@ -46,7 +46,7 @@ import {
 import toast, { Toaster } from "react-hot-toast";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { CldImage } from "next-cloudinary";
+import { OptimizedImage } from "@/app/components/OptimizedImage";
 import Lightbox from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
 import AuthModals from "@/app/components/AuthModal";
@@ -237,6 +237,19 @@ export default function AuctionItem({
     },
   });
 
+  const { mutate: submitBuyItNow, isPending: isBuyItNowPending } = useMutation({
+    mutationFn: async () => {
+      await createOrderAction(item.id, userId, item.binPrice, item.users.id);
+    },
+    onError: (error) => {
+      console.error("Error processing Buy It Now:", error);
+      toast.error("Failed to process Buy It Now. Please try again.");
+    },
+    onSuccess: () => {
+      setShowWinnerModal(true);
+    },
+  });
+
   const nextImage = () => {
     setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
   };
@@ -248,21 +261,18 @@ export default function AuctionItem({
   };
 
   const handleBuyItNowSubmit = async () => {
+    if (!userId) {
+      setIsAuthModalsOpen(true);
+      return;
+    }
+
     setPurchaseState({
       type: "buyItNow",
       price: item.binPrice,
       isWinner: true,
     });
-    if (!userId) {
-      setIsAuthModalsOpen(true); // Open the AuthModals
-      return;
-    }
 
-    if (!hasAcknowledgedBid) {
-      setShowDisclaimerModal(true);
-      return;
-    }
-    setShowWinnerModal(true);
+    submitBuyItNow();
   };
 
   const handleAuctionEnd = useCallback(() => {
@@ -283,6 +293,8 @@ export default function AuctionItem({
     queryFn: () => checkExistingOrder(item.id, userId),
     enabled: !!userId && isBidOver && isWinner, // Only run query if user is winner and auction is over
   });
+
+  console.log("orderExists", orderExists);
 
   const { mutate: updateItemStatusMutate, isPending: isUpdating } = useMutation(
     {
@@ -430,6 +442,7 @@ export default function AuctionItem({
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+        <p>{orderExists?.toString()}</p>
         {/* Image Gallery Section */}
         <div className="space-y-4">
           <div className="relative aspect-square">
@@ -437,13 +450,13 @@ export default function AuctionItem({
               onClick={() => setIsLightboxOpen(true)}
               className="cursor-pointer h-full" // Added h-full
             >
-              <CldImage
-                width="460"
-                height="460"
+              <OptimizedImage
+                width={800}
+                height={600}
                 src={images[currentImageIndex]}
                 alt="Description of my image"
-                // className="rounded-xl gap-8" // Ensure the image covers the content area
                 className="w-full h-full object-cover rounded-lg"
+                quality="eco"
               />
             </div>
             <Lightbox
@@ -481,19 +494,18 @@ export default function AuctionItem({
                   currentImageIndex === index && "ring-2 ring-primary"
                 )}
               >
-                {/* <img
+                <OptimizedImage
+                  width={150}
+                  height={150}
                   src={image}
-                  alt={`${item.name} thumbnail ${index + 1}`}
-                  className="w-full h-full object-cover"
-                /> */}
-                <CldImage
-                  width="460"
-                  height="400"
-                  src={image}
-                  alt="Description of my image"
-                  // className="rounded-xl gap-8" // Ensure the image covers the content area
-                  // className="w-full h-full object-cover rounded-lg"
-                  className="w-full h-full object-cover"
+                  alt={`Product thumbnail ${index + 1}`}
+                  className={cn(
+                    "rounded-lg object-cover cursor-pointer transition-all duration-200",
+                    currentImageIndex === index
+                      ? "border-2 border-primary"
+                      : "hover:opacity-75"
+                  )}
+                  quality="eco"
                 />
               </button>
             ))}
@@ -669,13 +681,13 @@ export default function AuctionItem({
                       <MovingBorderButton
                         className="bg-white dark:bg-slate-900 text-black dark:text-white border-neutral-200 dark:border-slate-800"
                         containerClassName="w-full"
-                        disabled={isPending}
+                        disabled={isBuyItNowPending}
                         onClick={handleBuyItNowSubmit}
                         variant="destructive"
                         size="lg"
                         borderRadius="1.75rem"
                       >
-                        {isPending ? (
+                        {isBuyItNowPending ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                             Processing...

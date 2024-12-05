@@ -23,15 +23,16 @@ export function DateTimePicker({ onChange }: DateTimePickerProps) {
   const [isOpen, setIsOpen] = React.useState(false);
 
   const hours = Array.from({ length: 12 }, (_, i) => i + 1);
-  // Update handleDateSelect to include onChange
   const handleDateSelect = (selectedDate: Date | undefined) => {
     if (selectedDate) {
       setDate(selectedDate);
-      onChange?.(selectedDate);
+      // Only trigger onChange when the popover is closed
+      if (!isOpen) {
+        onChange?.(selectedDate);
+      }
     }
   };
 
-  // Update handleTimeChange to include onChange
   const handleTimeChange = (
     type: "hour" | "minute" | "ampm",
     value: string
@@ -59,6 +60,7 @@ export function DateTimePicker({ onChange }: DateTimePickerProps) {
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
         <Button
+          type="button"
           variant="outline"
           className={cn(
             "w-full justify-start text-left font-normal",
@@ -89,6 +91,7 @@ export function DateTimePicker({ onChange }: DateTimePickerProps) {
               <div className="flex sm:flex-col p-2">
                 {hours.reverse().map((hour) => (
                   <Button
+                    type="button"
                     key={hour}
                     size="icon"
                     variant={
@@ -109,6 +112,7 @@ export function DateTimePicker({ onChange }: DateTimePickerProps) {
               <div className="flex sm:flex-col p-2">
                 {Array.from({ length: 12 }, (_, i) => i * 5).map((minute) => (
                   <Button
+                    type="button"
                     key={minute}
                     size="icon"
                     variant={
@@ -129,6 +133,7 @@ export function DateTimePicker({ onChange }: DateTimePickerProps) {
               <div className="flex sm:flex-col p-2">
                 {["AM", "PM"].map((ampm) => (
                   <Button
+                    type="button"
                     key={ampm}
                     size="icon"
                     variant={

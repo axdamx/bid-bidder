@@ -30,7 +30,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { CldImage } from "next-cloudinary";
+import { OptimizedImage } from "@/app/components/OptimizedImage";
 import { formatTimestamp } from "@/app/items/[itemId]/item-page-client";
 import Link from "next/link";
 import CountdownTimer from "@/app/countdown-timer";
@@ -56,7 +56,7 @@ interface Item {
   createdAt: string;
   endDate: string;
   isBoughtOut: boolean;
-  imageId: string;
+  images: string[];
   backgroundColor: string;
 }
 
@@ -165,12 +165,13 @@ export default function ProfileTable({ items }: OwnedItemsProps) {
                       <div
                         className={`relative h-24 w-24 ${item.backgroundColor} rounded-xl overflow-hidden`}
                       >
-                        <CldImage
-                          src={item.imageId}
+                        <OptimizedImage
+                          width={100}
+                          height={100}
+                          src={item.images[0]}
                           alt={item.name}
-                          className="w-full h-full object-cover transition-transform hover:scale-105"
-                          width={400}
-                          height={400}
+                          className="w-full h-full object-cover rounded-lg"
+                          quality="eco"
                         />
                       </div>
                     </TableCell>
@@ -220,12 +221,13 @@ export default function ProfileTable({ items }: OwnedItemsProps) {
                       <div
                         className={`relative aspect-square ${item.backgroundColor}`}
                       >
-                        <CldImage
-                          src={item.imageId}
+                        <OptimizedImage
+                          width={100}
+                          height={100}
+                          src={item.images[0]}
                           alt={item.name}
-                          className="w-full h-full object-cover transition-transform hover:scale-105"
-                          width={400}
-                          height={400}
+                          className="w-full h-full object-cover rounded-lg"
+                          quality="eco"
                         />
                       </div>
                       <div className="p-4">

@@ -12,7 +12,7 @@ import { Loader2, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { searchItems } from "../action";
-import { CldImage } from "next-cloudinary";
+import { OptimizedImage } from "./OptimizedImage";
 import {
   Dialog,
   DialogContent,
@@ -175,12 +175,13 @@ export default function SearchCommand() {
                     <div className="flex items-center gap-3">
                       <div className="flex-shrink-0">
                         {item.imageUrl ? (
-                          <CldImage
-                            width="64"
-                            height="64"
+                          <OptimizedImage
+                            width={50}
+                            height={50}
                             src={item.imageUrl}
                             alt={item.name}
-                            className="rounded-md object-cover"
+                            className="w-12 h-12 object-cover rounded-md"
+                            quality="eco"
                           />
                         ) : (
                           // Fallback for when there's no image

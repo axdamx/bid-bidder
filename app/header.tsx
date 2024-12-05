@@ -159,7 +159,7 @@ export function Header() {
               <div className="flex flex-col h-full">
                 {/* Header Section */}
                 <div className="p-4 border-b">
-                  <h2 className="text-lg font-semibold">Menu</h2>
+                  <h2 className="text-lg font-semibold">Renown</h2>
                 </div>
 
                 {/* Navigation Content */}

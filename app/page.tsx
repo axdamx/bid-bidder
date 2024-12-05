@@ -61,7 +61,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="border-t bg-muted/50 my-6">
+        <section className="border bg-muted/50 my-6 rounded-xl">
           <div className="container py-12 md:py-24">
             <div className="grid gap-8 md:gap-12">
               <div className="flex flex-col items-center justify-center space-y-4 text-center">

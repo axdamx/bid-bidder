@@ -10,7 +10,7 @@ import {
   CardHeader,
 } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { CldImage } from "next-cloudinary";
+import { OptimizedImage } from "./OptimizedImage";
 
 interface CountdownProps {
   targetDate: Date;
@@ -76,12 +76,13 @@ export default function MainItemCard({
   return (
     <Card className="w-full max-w-md mx-auto overflow-hidden">
       <div className="relative aspect-[16/9]">
-        <CldImage
+        <OptimizedImage
+          width={400}
+          height={300}
+          src={image}
           alt={title}
           className="object-cover w-full h-full"
-          src={image}
-          width={600}
-          height={400}
+          quality="eco"
         />
         {isActive && (
           <Badge className="absolute top-4 right-4" variant="secondary">

@@ -272,9 +272,15 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
     <div className="flex flex-col h-full rounded-xl">
       <div className="p-4 border-b">
         <div className="flex items-center gap-4 mb-2">
-          <Avatar className="h-10 w-10">
+          {/* <Avatar className="h-10 w-10">
             <AvatarImage src={initialUser?.image} alt="User" />
             <AvatarFallback>{initials}</AvatarFallback>
+          </Avatar> */}
+          <Avatar className="w-10 h-10">
+            <AvatarImage src={initialUser?.image} />
+            <AvatarFallback>
+              {initialUser?.name?.charAt(0) || initialUser?.email?.charAt(0)}
+            </AvatarFallback>
           </Avatar>
           {isSidebarOpen && (
             <motion.div

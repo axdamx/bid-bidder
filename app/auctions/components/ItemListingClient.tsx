@@ -6,12 +6,18 @@ import { Card, CardContent } from "@/components/ui/card";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatCurrency } from "@/lib/utils";
-import { CldImage } from "next-cloudinary";
+import { OptimizedImage } from "@/app/components/OptimizedImage";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React from "react";
 import { useState, useRef, useEffect } from "react";
-import { Search, PackageSearch, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Search,
+  PackageSearch,
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -98,6 +104,8 @@ export default function ItemsListingClient({
     await router.push(path);
   };
 
+  console.log("paginatedItems", paginatedItems);
+
   return (
     <MotionGrid
       initial={{ opacity: 0 }}
@@ -173,12 +181,13 @@ export default function ItemsListingClient({
                               <div
                                 className={`relative aspect-square ${item.backgroundColor}`}
                               >
-                                <CldImage
+                                <OptimizedImage
+                                  width={400}
+                                  height={300}
                                   src={item.imageId}
                                   alt={item.name}
-                                  className="w-full h-full object-cover transition-transform hover:scale-105"
-                                  width={400}
-                                  height={400}
+                                  className="object-cover w-full h-full rounded-t-lg"
+                                  quality="eco"
                                 />
                               </div>
                               <div className="p-4">
@@ -227,7 +236,9 @@ export default function ItemsListingClient({
                     <Button
                       variant="outline"
                       size="icon"
-                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.max(1, prev - 1))
+                      }
                       disabled={currentPage === 1}
                     >
                       <ChevronLeft className="h-4 w-4" />
@@ -240,7 +251,9 @@ export default function ItemsListingClient({
                     <Button
                       variant="outline"
                       size="icon"
-                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                      }
                       disabled={currentPage === totalPages}
                     >
                       <ChevronRight className="h-4 w-4" />
@@ -269,12 +282,13 @@ export default function ItemsListingClient({
                               <div
                                 className={`relative aspect-square ${item.backgroundColor}`}
                               >
-                                <CldImage
+                                <OptimizedImage
+                                  width={400}
+                                  height={300}
                                   src={item.imageId}
                                   alt={item.name}
-                                  className="w-full h-full object-cover transition-transform hover:scale-105"
-                                  width={400}
-                                  height={400}
+                                  className="object-cover w-full h-full rounded-t-lg"
+                                  quality="eco"
                                 />
                               </div>
                               <div className="p-4">
@@ -323,7 +337,9 @@ export default function ItemsListingClient({
                     <Button
                       variant="outline"
                       size="icon"
-                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.max(1, prev - 1))
+                      }
                       disabled={currentPage === 1}
                     >
                       <ChevronLeft className="h-4 w-4" />
@@ -336,7 +352,9 @@ export default function ItemsListingClient({
                     <Button
                       variant="outline"
                       size="icon"
-                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                      }
                       disabled={currentPage === totalPages}
                     >
                       <ChevronRight className="h-4 w-4" />
@@ -365,12 +383,13 @@ export default function ItemsListingClient({
                               <div
                                 className={`relative aspect-square ${item.backgroundColor}`}
                               >
-                                <CldImage
+                                <OptimizedImage
+                                  width={400}
+                                  height={300}
                                   src={item.imageId}
                                   alt={item.name}
-                                  className="w-full h-full object-cover transition-transform hover:scale-105"
-                                  width={400}
-                                  height={400}
+                                  className="object-cover w-full h-full rounded-t-lg"
+                                  quality="eco"
                                 />
                               </div>
                               <div className="p-4">
@@ -419,7 +438,9 @@ export default function ItemsListingClient({
                     <Button
                       variant="outline"
                       size="icon"
-                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.max(1, prev - 1))
+                      }
                       disabled={currentPage === 1}
                     >
                       <ChevronLeft className="h-4 w-4" />
@@ -432,7 +453,9 @@ export default function ItemsListingClient({
                     <Button
                       variant="outline"
                       size="icon"
-                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                      }
                       disabled={currentPage === totalPages}
                     >
                       <ChevronRight className="h-4 w-4" />

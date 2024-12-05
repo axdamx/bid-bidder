@@ -7,7 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { CldUploadWidget, CldImage } from "next-cloudinary";
+import {
+  CldUploadWidget,
+  CloudinaryUploadWidgetOptions,
+} from "next-cloudinary";
 import { createItemAction } from "./actions";
 import {
   Camera,
@@ -30,14 +33,42 @@ import { useAtom } from "jotai";
 import { userAtom } from "@/app/atom/userAtom";
 import { CreateItemFormData, createItemSchema } from "@/src/db/schema";
 import { DateTimePicker } from "./components/DateTimePicker";
+import { LoadingModal } from "@/app/components/LoadingModal";
+import { OptimizedImage } from "@/app/components/OptimizedImage";
 
 type UploadResult = {
   info: { public_id: string };
   event: "success";
 };
 
+interface ExtendedCloudinaryUploadWidgetOptions
+  extends CloudinaryUploadWidgetOptions {
+  transformation?: {
+    quality?: string;
+    fetch_format?: string;
+    width?: number;
+    height?: number;
+    crop?: string;
+    format?: string;
+    flags?: string;
+    dpr?: string;
+  };
+  eager?: Array<{
+    quality?: string;
+    fetch_format?: string;
+    width?: number;
+    height?: number;
+    crop?: string;
+    format?: string;
+    flags?: string;
+  }>;
+  eager_async?: boolean;
+  eager_notification_url?: boolean;
+}
+
 export default function CreatePage() {
   const [imageIds, setImageIds] = useState<string[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
   const router = useRouter();
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [newItemId, setNewItemId] = useState<string | null>(null);
@@ -156,12 +187,45 @@ export default function CreatePage() {
           Create New Listing
         </h1>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+          <LoadingModal isOpen={isUploading} message="Uploading image..." />
           <div className="mb-8">
             <Label className="text-lg font-medium">Photos (Max 5)</Label>
             <div className="mt-2 space-y-2">
               <CldUploadWidget
                 uploadPreset="jzhhmoah"
+                options={
+                  {
+                    maxFiles: 5,
+                    clientAllowedFormats: ["jpg", "jpeg", "png", "webp"],
+                    maxFileSize: 5000000,
+                    eager: [
+                      {
+                        quality: "auto:eco",
+                        fetch_format: "auto",
+                        width: 800,
+                        height: 800,
+                        crop: "limit",
+                        format: "webp",
+                        flags: "preserve_transparency",
+                      },
+                    ],
+                    eager_async: true,
+                    eager_notification_url: true,
+                    transformation: {
+                      quality: "auto:eco",
+                      fetch_format: "auto",
+                      width: 800,
+                      height: 800,
+                      crop: "limit",
+                      format: "webp",
+                      flags: "preserve_transparency",
+                      dpr: "auto",
+                    },
+                  } as ExtendedCloudinaryUploadWidgetOptions
+                }
+                onUpload={() => setIsUploading(true)}
                 onSuccess={(result) => {
+                  setIsUploading(false);
                   const uploadResult = result as UploadResult;
                   setImageIds((prev) => {
                     if (prev.length >= 5) return prev;
@@ -169,6 +233,10 @@ export default function CreatePage() {
                     setValue("images", newImageIds);
                     return newImageIds;
                   });
+                }}
+                onError={(error) => {
+                  console.error("Upload error:", error);
+                  setIsUploading(false);
                 }}
               >
                 {({ open }) => (
@@ -199,14 +267,14 @@ export default function CreatePage() {
               >
                 {imageIds.map((id) => (
                   <div key={id} className="relative">
-                    <CldImage
+                    <OptimizedImage
                       width="400"
                       height="200"
                       src={id}
                       alt="Uploaded image"
                       className={`rounded-lg object-cover w-full ${
                         imageIds.length === 1
-                          ? "max-h-[400px] object-contain" // Changed to object-contain and max-height
+                          ? "max-h-[400px] object-contain"
                           : imageIds.length === 2
                           ? "min-h-[300px]"
                           : "min-h-[200px]"
