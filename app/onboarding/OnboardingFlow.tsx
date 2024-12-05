@@ -40,7 +40,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { LoadingModal } from "../components/LoadingModal";
-import { updateUserAndAddress } from "./actions";
+import { updateUserAndAddress, updateHasSeenOnboarding } from "./actions";
 
 const userDetailsSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters" }),
@@ -78,6 +78,17 @@ export default function OnboardingFlow({
   onComplete: () => void;
   setUser: (user: any) => void;
 }) {
+  useEffect(() => {
+    if (user && !user.hasSeenOnboarding) {
+      updateHasSeenOnboarding(user.id);
+    }
+  }, [user]);
+
+  // // If user has already seen onboarding or completed it, don't show the flow
+  // if (!user || user.hasSeenOnboarding || user.onboardingCompleted) {
+  //   return null;
+  // }
+
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(true);
@@ -296,25 +307,6 @@ export default function OnboardingFlow({
     }
   };
 
-  if (user.onboardingCompleted) {
-    return (
-      <AlertDialog open={true}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Onboarding Completed</AlertDialogTitle>
-            <AlertDialogDescription>
-              You have completed the onboarding process.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <Link href="/">
-              <AlertDialogAction>Go to Home</AlertDialogAction>
-            </Link>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    );
-  }
   return (
     <>
       <LoadingModal isOpen={isPageLoading} message="Loading onboarding..." />

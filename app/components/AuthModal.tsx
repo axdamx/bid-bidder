@@ -135,17 +135,21 @@ export default function AuthModals({
         console.error("Error fetching user:", fetchError.message);
         throw fetchError;
       }
+      console.log("existingUser", existingUser);
+
+      console.log("user dalam upsert", user);
 
       // If user exists, only update email
       const userData = existingUser
         ? {
             ...existingUser,
             email: user.email,
+            // name: user.email,
           }
         : {
             id: user.id,
             email: user.email,
-            name: user.user_metadata.full_name || user.email,
+            name: user.email,
             image: user.user_metadata.avatar_url,
             createdAt: user.created_at,
           };
@@ -165,6 +169,8 @@ export default function AuthModals({
         throw upsertError;
       }
 
+      console.log("upsertedUser", upsertedUser);
+
       setUser(upsertedUser);
 
       // If new user, redirect to onboarding
@@ -174,7 +180,10 @@ export default function AuthModals({
       }
 
       // For existing users, check if onboarding is completed
-      if (!existingUser.onboardingCompleted) {
+      if (
+        !existingUser.onboardingCompleted &&
+        !existingUser.hasSeenOnboarding
+      ) {
         router.push("/onboarding");
       }
 
@@ -281,6 +290,7 @@ export default function AuthModals({
             id: session.user.id,
             email: data.email,
             createdAt: new Date().toISOString(),
+            name: data.email,
           },
           {
             onConflict: "id",

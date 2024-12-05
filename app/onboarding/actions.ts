@@ -1,4 +1,4 @@
-'use server'
+"use server";
 
 import { createServerSupabase } from "@/lib/supabase/server";
 import { z } from "zod";
@@ -39,44 +39,65 @@ export async function updateUserAndAddress(
       .eq("id", userId);
 
     if (userError) {
-      console.error('Error updating user:', userError);
-      return { error: 'Failed to update user name' };
+      console.error("Error updating user:", userError);
+      return { error: "Failed to update user name" };
     }
 
     // Create address
     const { data: address, error: addressError } = await supabase
       .from("addresses")
-      .insert([{
-        userId,
-        addressLine1: validatedData.addressLine1,
-        addressLine2: validatedData.addressLine2 || null,
-        city: validatedData.city,
-        state: validatedData.state,
-        postcode: validatedData.postcode,
-        country: validatedData.country,
-        isDefault: true
-      }])
+      .insert([
+        {
+          userId,
+          addressLine1: validatedData.addressLine1,
+          addressLine2: validatedData.addressLine2 || null,
+          city: validatedData.city,
+          state: validatedData.state,
+          postcode: validatedData.postcode,
+          country: validatedData.country,
+          isDefault: true,
+        },
+      ])
       .select()
       .single();
 
     if (addressError) {
-      console.error('Error creating address:', addressError);
-      return { error: 'Failed to create address' };
+      console.error("Error creating address:", addressError);
+      return { error: "Failed to create address" };
     }
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       data: {
         user: { id: userId, name: validatedData.name },
-        address
-      }
+        address,
+      },
     };
-
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return { error: 'Invalid form data', details: error.errors };
+      return { error: "Invalid form data", details: error.errors };
     }
-    console.error('Error in updateUserAndAddress:', error);
-    return { error: 'An unexpected error occurred' };
+    console.error("Error in updateUserAndAddress:", error);
+    return { error: "An unexpected error occurred" };
+  }
+}
+
+export async function updateHasSeenOnboarding(userId: string) {
+  const supabase = createServerSupabase();
+
+  try {
+    const { error } = await supabase
+      .from("users")
+      .update({ hasSeenOnboarding: true })
+      .eq("id", userId);
+
+    if (error) {
+      throw error;
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating hasSeenOnboarding:", error);
+    return { success: false, error };
   }
 }
