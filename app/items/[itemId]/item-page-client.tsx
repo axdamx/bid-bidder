@@ -294,8 +294,6 @@ export default function AuctionItem({
     enabled: !!userId && isBidOver && isWinner, // Only run query if user is winner and auction is over
   });
 
-  console.log("orderExists", orderExists);
-
   const { mutate: updateItemStatusMutate, isPending: isUpdating } = useMutation(
     {
       mutationFn: () => updateItemStatus(item.id, userId),
@@ -442,7 +440,6 @@ export default function AuctionItem({
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
-        <p>{orderExists?.toString()}</p>
         {/* Image Gallery Section */}
         <div className="space-y-4">
           <div className="relative aspect-square">
@@ -491,7 +488,7 @@ export default function AuctionItem({
                 onClick={() => setCurrentImageIndex(index)}
                 className={cn(
                   "relative aspect-square overflow-hidden rounded-md",
-                  currentImageIndex === index && "ring-2 ring-primary"
+                  currentImageIndex === index && "ring-primary"
                 )}
               >
                 <OptimizedImage
