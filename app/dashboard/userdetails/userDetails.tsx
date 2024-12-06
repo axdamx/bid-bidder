@@ -1,7 +1,8 @@
 // disabled typescript for this file
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
+import debounce from "lodash/debounce";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -80,9 +81,28 @@ interface ExtendedCloudinaryUploadWidgetOptions
   transformation: any;
 }
 
+// Custom debounce hook
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
 const UserDetailsPage = ({ initialUser }: { initialUser: User }) => {
   const [userData, setUserData] = useState(initialUser);
   const [editingField, setEditingField] = useState("");
+  const [inputValue, setInputValue] = useState("");
+  const debouncedValue = useDebounce(inputValue, 300); // 300ms delay
   const [editValue, setEditValue] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -104,8 +124,131 @@ const UserDetailsPage = ({ initialUser }: { initialUser: User }) => {
     action: undefined,
   });
 
-  // console.log("user dalam userDetails", userData);
-  console.log("user dalam userDetails", user);
+  // Update editValue when debounced value changes
+  useEffect(() => {
+    if (debouncedValue !== userData[editingField as keyof User]) {
+      setEditValue(debouncedValue);
+    }
+  }, [debouncedValue, editingField, userData]);
+
+  // Memoize field configurations
+  const fieldConfig = useMemo(
+    () => ({
+      personal: {
+        title: "Personal Information",
+        description: "Manage your personal details",
+        fields: {
+          name: {
+            label: "Name",
+            type: "text",
+            icon: <User className="h-4 w-4" />,
+          },
+          gender: {
+            label: "Gender",
+            type: "select",
+            icon: <Users className="h-4 w-4" />,
+          },
+          birthday: {
+            label: "Birthday",
+            type: "date",
+            icon: <Calendar className="h-4 w-4" />,
+          },
+        },
+      },
+      contact: {
+        title: "Contact Information",
+        description: "Manage your contact details",
+        fields: {
+          email: {
+            label: "Email",
+            type: "email",
+            icon: <Mail className="h-4 w-4" />,
+          },
+          phone: {
+            label: "Phone",
+            type: "tel",
+            icon: <Phone className="h-4 w-4" />,
+          },
+        },
+      },
+    }),
+    []
+  );
+
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setInputValue(e.target.value);
+    },
+    []
+  );
+
+  const handleEdit = useCallback(
+    (field: keyof User) => {
+      setEditingField(field);
+      setInputValue(userData[field] || "");
+      setEditValue(userData[field] || "");
+      setIsDialogOpen(true);
+    },
+    [userData]
+  );
+
+  const handleSave = useCallback(async () => {
+    if (!editValue.trim() || isLoading) return;
+
+    setIsLoading(true);
+    try {
+      const result = await updateUserField(
+        userData.id,
+        editingField,
+        editValue
+      );
+
+      if (result.success) {
+        setUserData((prev) => ({
+          ...prev,
+          [editingField]: editValue,
+        }));
+
+        setUser((prev) =>
+          prev
+            ? {
+                ...prev,
+                [editingField]: editValue,
+              }
+            : null
+        );
+
+        setAlertState({
+          isOpen: true,
+          title: "Success!",
+          description: `${editingField.toUpperCase()} updated successfully`,
+          type: "success",
+          action: "complete",
+        });
+
+        setIsDialogOpen(false);
+        router.refresh();
+      } else {
+        setAlertState({
+          isOpen: true,
+          title: "Error!",
+          description: result.error || "Failed to update",
+          type: "error",
+          action: "complete",
+        });
+      }
+    } catch (error) {
+      setAlertState({
+        isOpen: true,
+        title: "Error!",
+        description: "An unexpected error occurred",
+        type: "error",
+        action: "complete",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [editValue, editingField, isLoading, userData.id, router, setUser]);
 
   const handleUpload = async (results: CloudinaryUploadWidgetResults) => {
     // console.log("Upload result:", results);
@@ -178,114 +321,6 @@ const UserDetailsPage = ({ initialUser }: { initialUser: User }) => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleEdit = (field: keyof User) => {
-    setEditingField(field);
-    setEditValue(userData[field] || "");
-    setIsDialogOpen(true);
-  };
-
-  const handleSave = async () => {
-    setIsLoading(true);
-    try {
-      const result = await updateUserField(
-        userData.id,
-        editingField,
-        editValue
-      );
-
-      if (result.success) {
-        setUserData((prev) => ({
-          ...prev,
-          [editingField]: editValue,
-        }));
-        // toast.success(`${editingField} updated successfully`);
-        setAlertState({
-          isOpen: true,
-          title: "Success!",
-          description: `${editingField} updated successfully`,
-          type: "success",
-          action: "complete",
-        });
-        setIsDialogOpen(false);
-        router.refresh();
-        // console.log("result.data", result.data);
-        // this is for atom
-        setUser((prev) =>
-          prev
-            ? { ...prev, [editingField]: editValue }
-            : ({
-                id: "",
-                email: "",
-                name: "",
-                [editingField]: editValue,
-              } as User)
-        );
-        // queryClient.invalidateQueries({ queryKey: ["user"] });
-        // window.location.reload(); // Replace router.refresh() with this
-      } else {
-        // toast.error(result.error || "Failed to update");
-        setAlertState({
-          isOpen: true,
-          title: "Error!",
-          description: result.error || "Failed to update",
-          type: "error",
-          action: "complete",
-        });
-      }
-    } catch (error) {
-      // toast.error("An unexpected error occurred");
-      setAlertState({
-        isOpen: true,
-        title: "Error!",
-        description: "An unexpected error occurred",
-        type: "error",
-        action: "complete",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const fieldConfig = {
-    personal: {
-      title: "Personal Information",
-      description: "Manage your personal details",
-      fields: {
-        name: {
-          label: "Name",
-          type: "text",
-          icon: <User className="h-4 w-4" />,
-        },
-        gender: {
-          label: "Gender",
-          type: "select",
-          icon: <Users className="h-4 w-4" />,
-        },
-        birthday: {
-          label: "Birthday",
-          type: "date",
-          icon: <Calendar className="h-4 w-4" />,
-        },
-      },
-    },
-    contact: {
-      title: "Contact Information",
-      description: "Manage your contact details",
-      fields: {
-        email: {
-          label: "Email",
-          type: "email",
-          icon: <Mail className="h-4 w-4" />,
-        },
-        phone: {
-          label: "Phone",
-          type: "tel",
-          icon: <Phone className="h-4 w-4" />,
-        },
-      },
-    },
   };
 
   const renderEditDialog = () => {
@@ -364,8 +399,8 @@ const UserDetailsPage = ({ initialUser }: { initialUser: User }) => {
                   <Input
                     id="edit-field"
                     type={config.type}
-                    value={editValue}
-                    onChange={(e) => setEditValue(e.target.value)}
+                    value={inputValue}
+                    onChange={handleInputChange}
                     className="col-span-3"
                     disabled={isLoading}
                   />

@@ -74,7 +74,7 @@ export default function AuthModals({
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter(); // Add this line to use the router
   const supabase = createClientSupabase();
-  const [, setUser] = useAtom(userAtom);
+  const [user, setUser] = useAtom(userAtom);
   // const [showOnboarding, setShowOnboarding] = useState(false);
 
   // console.log("userAtom", userAtom);
@@ -87,7 +87,9 @@ export default function AuthModals({
           // This call is necessary on every session change (including rehydration)
           // to keep the local state (userAtom) in sync with the session
           // Without this, your app would lose user state on refresh
-          upsertUser(session.user);
+          if (!user) {
+            upsertUser(session.user);
+          }
         }
       }
     );
@@ -149,7 +151,7 @@ export default function AuthModals({
         : {
             id: user.id,
             email: user.email,
-            name: user.email,
+            name: user.user_metadata.name || user.email,
             image: user.user_metadata.avatar_url,
             createdAt: user.created_at,
           };

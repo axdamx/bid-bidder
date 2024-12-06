@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -31,18 +31,55 @@ import {
   NavigationMenuList,
   NavigationMenuItem,
 } from "@/components/ui/navigation-menu";
-import UserDetailsPage from "./userdetails/userDetails";
-import Addresses from "./address/addressDetails";
-import PaymentsAndPayouts from "./payment/paymentDetails";
-import OrderDetails from "./orders/ordersDetails";
-import HelpDetails from "./help/helpDetails";
-// import ItemsDetails from "./items/itemsDetails";
-import { MotionGrid } from "../components/motionGrid";
+import dynamic from "next/dynamic";
+
+import { 
+  DashboardSkeleton, 
+  UserDetailsSkeleton, 
+  AddressSkeleton, 
+  PaymentSkeleton, 
+  OrdersSkeleton 
+} from './loading';
+
+const UserDetailsPage = dynamic(() => import("./userdetails/userDetails"), {
+  loading: () => <UserDetailsSkeleton />,
+});
+
+const Addresses = dynamic(() => import("./address/addressDetails"), {
+  loading: () => <AddressSkeleton />,
+});
+
+const PaymentsAndPayouts = dynamic(() => import("./payment/paymentDetails"), {
+  loading: () => <PaymentSkeleton />,
+});
+
+const OrderDetails = dynamic(() => import("./orders/ordersDetails"), {
+  loading: () => <OrdersSkeleton />,
+});
+
+const HelpDetails = dynamic(() => import("./help/helpDetails"), {
+  loading: () => <DashboardSkeleton />,
+});
+
+const ItemsDetails = dynamic(() => import("./items/itemsDetails"), {
+  loading: () => <DashboardSkeleton />,
+});
+
 import { userAtom } from "../atom/userAtom";
 import { useAtom } from "jotai";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import ItemsDetails from "./items/itemsDetails";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { MotionGrid } from "../components/motionGrid";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // Data stays fresh for 5 minutes
+      // cacheTime: 1000 * 60 * 30, // Cache persists for 30 minutes
+    },
+  },
+});
 
 type User = {
   id: string;
@@ -62,18 +99,18 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [activeContent, setActiveContent] = useState(
-    searchParams.get("tab") || "userDetails"
+    searchParams.get("tab") || (initialUser ? "userDetails" : "")
   );
+
+  const handleTabChange = useCallback((tabId: string) => {
+    setActiveContent(tabId);
+    // Use shallow routing to prevent full page refresh
+    window.history.replaceState({}, "", `/dashboard?tab=${tabId}`);
+  }, []);
 
   if (!initialUser) {
     return null;
   }
-
-  // Update URL when tab changes
-  const handleTabChange = (tabId: string) => {
-    setActiveContent(tabId);
-    router.push(`/dashboard?tab=${tabId}`);
-  };
 
   const initials =
     initialUser?.name ||
@@ -358,72 +395,74 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
   );
 
   return (
-    <div
-      className={cn(
-        "grid min-h-screen w-full overflow-hidden lg:grid-cols-[280px_1fr] p-2 sm:p-8",
-        !isSidebarOpen && "lg:grid-cols-[64px_1fr]"
-      )}
-    >
-      {/* Desktop Sidebar */}
-      <motion.aside
+    <QueryClientProvider client={queryClient}>
+      <div
         className={cn(
-          "hidden md:flex flex-col bg-white overflow-hidden rounded-xl",
-          isSidebarOpen ? "w-64" : "w-16"
+          "grid min-h-screen w-full overflow-hidden lg:grid-cols-[280px_1fr] p-2 sm:p-8",
+          !isSidebarOpen && "lg:grid-cols-[64px_1fr]"
         )}
-        initial="open"
-        animate={isSidebarOpen ? "open" : "closed"}
-        variants={sidebarVariants}
       >
-        <div className="flex justify-end p-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6"
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          >
-            <motion.div
-              animate={{ rotate: isSidebarOpen ? 0 : 180 }}
-              transition={{ duration: 0.3 }}
+        {/* Desktop Sidebar */}
+        <motion.aside
+          className={cn(
+            "hidden md:flex flex-col bg-white overflow-hidden rounded-xl",
+            isSidebarOpen ? "w-64" : "w-16"
+          )}
+          initial="open"
+          animate={isSidebarOpen ? "open" : "closed"}
+          variants={sidebarVariants}
+        >
+          <div className="flex justify-end p-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
             >
-              {isSidebarOpen ? (
-                <ChevronLeft className="h-4 w-4" />
-              ) : (
-                <ChevronRight className="h-4 w-4" />
-              )}
-            </motion.div>
-          </Button>
-        </div>
-        <SidebarContent />
-      </motion.aside>
-
-      {/* Mobile Sidebar */}
-      <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
-        <SheetContent side="left" className="p-0 w-64">
+              <motion.div
+                animate={{ rotate: isSidebarOpen ? 0 : 180 }}
+                transition={{ duration: 0.3 }}
+              >
+                {isSidebarOpen ? (
+                  <ChevronLeft className="h-4 w-4" />
+                ) : (
+                  <ChevronRight className="h-4 w-4" />
+                )}
+              </motion.div>
+            </Button>
+          </div>
           <SidebarContent />
-        </SheetContent>
-      </Sheet>
+        </motion.aside>
 
-      {/* Main Content */}
-      <motion.main
-        className="flex-1"
-        layout // This will animate the layout changes
-        transition={{ duration: 0.3, ease: "easeInOut" }}
-      >
-        <div className="md:hidden flex items-center p-2 border-b bg-background rounded-xl w-full">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="mr-2"
-            onClick={() => setIsMobileOpen(true)}
-          >
-            <List className="h-5 w-5" />
-          </Button>
-          <h1 className="font-semibold">Dashboard</h1>
-        </div>
-        <div className="w-full">{renderContent()}</div>
-        {/* {renderContent()} */}
-      </motion.main>
-    </div>
+        {/* Mobile Sidebar */}
+        <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
+          <SheetContent side="left" className="p-0 w-64">
+            <SidebarContent />
+          </SheetContent>
+        </Sheet>
+
+        {/* Main Content */}
+        <motion.main
+          className="flex-1"
+          layout // This will animate the layout changes
+          transition={{ duration: 0.3, ease: "easeInOut" }}
+        >
+          <div className="md:hidden flex items-center p-2 border-b bg-background rounded-xl w-full">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="mr-2"
+              onClick={() => setIsMobileOpen(true)}
+            >
+              <List className="h-5 w-5" />
+            </Button>
+            <h1 className="font-semibold">Dashboard</h1>
+          </div>
+          <div className="w-full">{renderContent()}</div>
+          {/* {renderContent()} */}
+        </motion.main>
+      </div>
+    </QueryClientProvider>
   );
 };
 
