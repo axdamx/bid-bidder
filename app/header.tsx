@@ -102,22 +102,22 @@ export function Header() {
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-8">
               {user && (
-                <Link
-                  href="/items/create"
-                  className="hover:underline whitespace-nowrap"
-                  onClick={(e) => handleLinkClick(e, "/items/create")}
-                >
-                  <Button>Create Auction</Button>
-                  {/* <div>
-                    <MovingBorderButton
-                      borderRadius="1.75rem"
-                      className="bg-white dark:bg-slate-900 text-black dark:text-white border-neutral-200 dark:border-slate-800"
-                    >
-                      Create Auction
-                    </MovingBorderButton>
-                  </div> */}
-                  {/* Create Auction */}
-                </Link>
+                <>
+                  <Link
+                    href="/items/create"
+                    className="hover:underline whitespace-nowrap"
+                    onClick={(e) => handleLinkClick(e, "/items/create")}
+                  >
+                    <Button>Create Auction</Button>
+                  </Link>
+                  <Link
+                    href="/active"
+                    className="hover:underline whitespace-nowrap"
+                    onClick={(e) => handleLinkClick(e, "/active")}
+                  >
+                    <Button variant="outline">Active Bids</Button>
+                  </Link>
+                </>
               )}
             </div>
           </div>
@@ -215,6 +215,13 @@ export function Header() {
                             onClick={(e) => handleLinkClick(e, "/items/create")}
                           >
                             <span>Create Auction</span>
+                          </Link>
+                          <Link
+                            href="/active"
+                            className="flex items-center space-x-2 px-2 py-2 rounded-md hover:bg-accent"
+                            onClick={(e) => handleLinkClick(e, "/active")}
+                          >
+                            <span>Active Bids</span>
                           </Link>
                         </div>
 

@@ -133,12 +133,15 @@ export default function OrderDetails() {
     error,
     isError,
     refetch,
+    isLoading,
   } = useQuery({
     queryKey: ["orders", user?.id],
     queryFn: () => getOrders(user?.id!),
     enabled: !!user?.id,
-    // refetchOnWindowFocus: false, // Prevent refetch on window focus
-    refetchOnMount: true, // Prevent refetch on component mount
+    refetchOnWindowFocus: true, // Enable refetch on window focus
+    refetchOnMount: true, // Enable refetch on component mount
+    refetchInterval: 30000, // Refresh every 30 seconds
+    staleTime: 10000, // Consider data stale after 10 seconds
   });
 
   // Mutation for updating order status
@@ -174,12 +177,18 @@ export default function OrderDetails() {
   const OrdersTable = ({
     orders,
     showStatusUpdate = false,
+    type,
   }: {
     orders?: Order[];
     showStatusUpdate?: boolean;
+    type?: string;
   }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 5;
+
+    console.log("orders", orders);
+    console.log("showStatusUpdate", showStatusUpdate);
+    // if (isError) {
 
     // Calculate pagination
     const totalPages = Math.ceil((orders?.length || 0) / itemsPerPage);
@@ -190,6 +199,20 @@ export default function OrderDetails() {
       <div className="overflow-x-auto rounded-md border">
         {/* Desktop view */}
         <div className="hidden md:block">
+          <div className="flex justify-end p-2">
+            <Button
+              onClick={() => refetch()}
+              variant="outline"
+              size="sm"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <span>Refreshing...</span>
+              ) : (
+                <span>Refresh Orders</span>
+              )}
+            </Button>
+          </div>
           <Table>
             <TableHeader>
               <TableRow>
@@ -198,58 +221,61 @@ export default function OrderDetails() {
                 <TableHead>Date</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Amount</TableHead>
-                {showStatusUpdate && <TableHead>Update Status</TableHead>}
-                <TableHead>Action</TableHead>
+                {showStatusUpdate && <TableHead>Action</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
               {currentOrders?.map((order: Order) => (
                 <TableRow key={order.id}>
                   <TableCell className="font-medium">{order.id}</TableCell>
-                  <TableCell>{order.item.name}</TableCell>
+                  <TableCell>
+                    {" "}
+                    <Link
+                      href={`/items/${order.itemId}`}
+                      className="hover:underline text-primary"
+                    >
+                      {order.item.name}
+                    </Link>
+                  </TableCell>
                   <TableCell>
                     {new Date(order.orderDate).toLocaleDateString()}
                   </TableCell>
                   <TableCell>
-                    {showStatusUpdate ? (
-                      <Select
-                        defaultValue={order.orderStatus}
-                        onValueChange={(value) =>
-                          handleStatusUpdate(order.id, value)
-                        }
-                      >
-                        <SelectTrigger className="w-[180px]">
-                          <SelectValue placeholder="Update status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="pending">Pending</SelectItem>
-                          <SelectItem value="processing">Processing</SelectItem>
-                          <SelectItem value="shipped">Shipped</SelectItem>
-                          <SelectItem value="delivered">Delivered</SelectItem>
-                          <SelectItem value="cancelled">Cancelled</SelectItem>
-                        </SelectContent>
-                      </Select>
+                    {false ? (
+                      <div className="space-y-2">
+                        <Select
+                          defaultValue={order.orderStatus}
+                          onValueChange={(value) =>
+                            handleStatusUpdate(order.id, value)
+                          }
+                        >
+                          <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Update status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pending">Pending</SelectItem>
+                            <SelectItem value="processing">
+                              Processing
+                            </SelectItem>
+                            <SelectItem value="shipped">Shipped</SelectItem>
+                            <SelectItem value="delivered">Delivered</SelectItem>
+                            <SelectItem value="cancelled">Cancelled</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     ) : (
                       <StatusBadge status={order.orderStatus} />
                     )}
                   </TableCell>
                   <TableCell>{formatCurrency(order.amount)}</TableCell>
                   <TableCell>
-                    <Sheet>
-                      <SheetTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => console.log(order.itemId)}
-                        >
-                          {/* <Link href={`/items/${order.itemId}`}>View Item</Link> */}
-                          <Link href={`/checkout/${order.itemId}`}>
-                            View Item
-                          </Link>
-                        </Button>
-                      </SheetTrigger>
-                      {/* Update your SheetContent to use the new Order type */}
-                    </Sheet>
+                    {type !== "selling" && (
+                      <Button variant="outline" size="sm" className="w-[180px]">
+                        <Link href={`/checkout/${order.itemId}`}>
+                          Proceed to checkout
+                        </Link>
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
@@ -338,38 +364,31 @@ export default function OrderDetails() {
 
                 <div className="flex flex-col gap-2">
                   {showStatusUpdate && (
-                    <Select
-                      defaultValue={order.orderStatus}
-                      onValueChange={(value) =>
-                        handleStatusUpdate(order.id, value)
-                      }
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Update status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="processing">Processing</SelectItem>
-                        <SelectItem value="shipped">Shipped</SelectItem>
-                        <SelectItem value="delivered">Delivered</SelectItem>
-                        <SelectItem value="cancelled">Cancelled</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )}
-
-                  <Sheet>
-                    <SheetTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="w-full"
-                        onClick={() => setSelectedOrder(order)}
+                    <div className="space-y-2">
+                      <Select
+                        defaultValue={order.orderStatus}
+                        onValueChange={(value) =>
+                          handleStatusUpdate(order.id, value)
+                        }
                       >
-                        View Details
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Update status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="processing">Processing</SelectItem>
+                          <SelectItem value="shipped">Shipped</SelectItem>
+                          <SelectItem value="delivered">Delivered</SelectItem>
+                          <SelectItem value="cancelled">Cancelled</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button variant="outline" size="sm" className="w-full">
+                        <Link href={`/checkout/${order.itemId}`}>
+                          Proceed to checkout
+                        </Link>
                       </Button>
-                    </SheetTrigger>
-                    {/* Sheet content remains the same */}
-                  </Sheet>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -476,13 +495,14 @@ export default function OrderDetails() {
           <TabsContent value="winning">
             <OrdersTable
               orders={orders?.winningOrders}
-              showStatusUpdate={false}
+              showStatusUpdate={true}
             />
           </TabsContent>
           <TabsContent value="selling">
             <OrdersTable
               orders={orders?.sellingOrders}
-              showStatusUpdate={true}
+              showStatusUpdate={false}
+              type={"selling"}
             />
           </TabsContent>
         </Tabs>

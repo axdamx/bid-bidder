@@ -160,7 +160,6 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
   ];
 
   const renderContent = () => {
-    // TODO: fix or enhance this button on all the content
     switch (activeContent) {
       case "userDetails":
         return (
@@ -283,7 +282,6 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
             </div>
           </MotionGrid>
         );
-      // Similar content sections for other navigation items
       default:
         return (
           <div className="p-6">

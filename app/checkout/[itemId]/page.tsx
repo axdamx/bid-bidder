@@ -90,6 +90,7 @@ export default function CheckoutPage({
   );
   const [formData, setFormData] = useState<Partial<FormData>>({});
   const [user] = useAtom(userAtom);
+  const [isTimerExpired, setIsTimerExpired] = useState(false);
 
   const { data: checkoutItems, isLoading } = useQuery({
     queryKey: ["checkoutItems", user?.id],
@@ -124,17 +125,17 @@ export default function CheckoutPage({
   const { order, item } = checkoutItems || {};
 
   // console.log("checkoutItems", checkoutItems); // Add check for buyer ID
-  if (!order) {
+  if (!order && isTimerExpired) {
     return (
       <div className="container mx-auto py-12 text-center">
-        <h2 className="text-xl font-semibold">NO item found</h2>
+        <h2 className="text-xl font-semibold">NO orders found</h2>
         <p className="mt-2 text-muted-foreground">You cannot view this page.</p>
       </div>
     );
   }
 
   const shippingCost = 20;
-  const buyersPremium = item?.currentBid! * 0.07;
+  const buyersPremium = item?.currentBid! * 0.06;
   const totalPrice = item?.currentBid! + shippingCost + buyersPremium;
 
   const onSubmit = async (data: Partial<FormData>) => {
@@ -171,6 +172,17 @@ export default function CheckoutPage({
     }
   };
 
+  if (isTimerExpired) {
+    return (
+      <div className="container mx-auto py-12 text-center">
+        <h2 className="text-xl font-semibold">Order Expired</h2>
+        <p className="mt-2 text-muted-foreground">
+          Your order has expired. Please place a new order.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto py-12 rounded-xl">
       <main className="mx-auto max-w-6xl px-4 py-8">
@@ -197,11 +209,12 @@ export default function CheckoutPage({
               </div>
             ))}
           </div>
-          {order?.createdAt && (
+          {checkoutItems?.order && (
             <CountdownTimer
-              createdAt={order.createdAt}
-              orderId={order.id}
+              createdAt={checkoutItems.order.createdAt}
+              orderId={checkoutItems.order.id}
               userId={user?.id!}
+              onTimerExpired={() => setIsTimerExpired(true)}
             />
           )}
         </div>
@@ -659,7 +672,7 @@ export default function CheckoutPage({
                     <span>{formatCurrency(item?.currentBid)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Service fee (7%)</span>
+                    <span>Service fee (6%)</span>
                     <span>{formatCurrency(buyersPremium)}</span>
                   </div>
                   <div className="flex justify-between">

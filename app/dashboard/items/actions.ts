@@ -47,10 +47,13 @@ export async function fetchUserItems(userId: string) {
     if (ordersError) throw ordersError;
 
     // Create a map of itemId to orderStatus
-    const orderStatusMap: { [key: number]: string | null } = orders.reduce((acc, order) => {
-      acc[order.itemId] = order.orderStatus;
-      return acc;
-    }, {} as { [key: number]: string | null });
+    const orderStatusMap: { [key: number]: string | null } = orders.reduce(
+      (acc, order) => {
+        acc[order.itemId] = order.orderStatus;
+        return acc;
+      },
+      {} as { [key: number]: string | null }
+    );
 
     // Combine the data
     const processedData = itemsWithWinners.map((item) => ({
@@ -68,13 +71,33 @@ export async function fetchUserItems(userId: string) {
 export async function updateItemEndDate(itemId: number, endDate: string) {
   try {
     const supabase = createServerSupabase();
+
+    // First get the item to get its starting price
+    const { data: item, error: fetchError } = await supabase
+      .from("items")
+      .select("startingPrice")
+      .eq("id", itemId)
+      .single();
+
+    if (fetchError) throw fetchError;
+
+    // Delete all existing bids for this item
+    const { error: deleteBidsError } = await supabase
+      .from("bids")
+      .delete()
+      .eq("itemId", itemId);
+
+    if (deleteBidsError) throw deleteBidsError;
+
+    // Then update the item with all reset values
     const { error } = await supabase
       .from("items")
       .update({
         endDate,
-        status: "ACTIVE",
+        status: "LIVE",
         winnerId: null,
         isBoughtOut: false,
+        currentBid: item.startingPrice, // Reset current bid to starting price
       })
       .eq("id", itemId);
 

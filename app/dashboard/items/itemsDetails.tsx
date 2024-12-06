@@ -49,6 +49,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { DateTimePicker } from "@/app/items/create/components/DateTimePicker";
 
 export default function ItemsDetails() {
   const [user] = useAtom(userAtom);
@@ -104,7 +105,10 @@ export default function ItemsDetails() {
     queryKey: ["userItems", user?.id],
     queryFn: () => fetchUserItems(user?.id || ""),
     enabled: !!user?.id,
-    retry: 1,
+    refetchOnWindowFocus: true, // Enable refetch on window focus
+    refetchOnMount: true, // Enable refetch on component mount
+    refetchInterval: 30000, // Refresh every 30 seconds
+    staleTime: 10000, // Consider data stale after 10 seconds
   });
 
   console.log("itemsData", itemsData);
@@ -246,7 +250,7 @@ export default function ItemsDetails() {
   };
 
   const canReopen = (item: Item) => {
-    return item.status === "CANCELLED" || item.status === "ENDED";
+    return item.status === "CANCELLED";
   };
 
   return (
@@ -260,13 +264,14 @@ export default function ItemsDetails() {
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <CalendarComponent
+            {/* <CalendarComponent
               mode="single"
               selected={selectedDate}
               onSelect={setSelectedDate}
               disabled={(date) => date < new Date()}
               initialFocus
-            />
+            /> */}
+            <DateTimePicker onChange={setSelectedDate} />
           </div>
           <div className="flex justify-end space-x-2">
             <Button

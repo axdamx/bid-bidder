@@ -142,11 +142,11 @@ export async function updateOrderStatusToCancelled(
 
       if (orderError) throw orderError;
 
-      // Update item status to available
+      // Update item status to cancelled
       // Remove winnerId from the item
       const { error: itemError } = await supabase
         .from("items")
-        .update({ winnerId: null, status: "AVAILABLE" })
+        .update({ winnerId: null, status: "CANCELLED" })
         .eq("id", order.itemId);
 
       if (itemError) throw itemError;
