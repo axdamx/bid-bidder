@@ -58,7 +58,6 @@ export default function AuctionItem({
   const [messages, setMessages] = useState<any[]>([]);
   const [isLoadingMessages, setIsLoadingMessages] = useState(true);
 
-  console.log("hasNewMessage", hasNewMessage);
   const [user] = useAtom(userAtom);
   const router = useRouter();
   const pathname = usePathname();

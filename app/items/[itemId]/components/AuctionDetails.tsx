@@ -117,6 +117,12 @@ export function AuctionDetails({
               {getDateInfo(item.endDate + "Z").formattedTime}
             </p>
           </div>
+          {item.binPrice && (
+            <div className="break-words">
+              <p className="text-sm text-muted-foreground">BIN Price</p>
+              <p className="text-lg">{formatCurrency(item.binPrice)}</p>
+            </div>
+          )}
         </div>
         <div>
           <h3 className="text-lg font-semibold mb-2">Description</h3>
