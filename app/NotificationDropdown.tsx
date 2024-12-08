@@ -47,13 +47,12 @@ export function NotificationDropdown() {
       // Handle different notification types
       switch (notification.type) {
         case "bid":
+        case "outbid":
+        case "new_item":
           router.push(`/items/${notification.itemId}`);
           break;
         case "follow":
           router.push(`/profile/${notification.followerId}`);
-          break;
-        case "new_item":
-          router.push(`/items/${notification.itemId}`);
           break;
         case "order_created":
           router.push(`/dashboard?tab=orders`);

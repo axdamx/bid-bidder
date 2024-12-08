@@ -123,10 +123,13 @@ export async function createBidAction(itemId: number, userId: string) {
     amount: latestBidValue,
     itemId: itemId,
     userId: userId,
-    timestamp: new Date(),
+    timestamp: new Date(), // Use plain Date object for timestamp without timezone
   });
 
-  if (bidError) throw new Error("Failed to create bid");
+  if (bidError) {
+    console.error("Bid Error Details:", bidError);
+    throw new Error(`Failed to create bid: ${bidError.message}`);
+  }
 
   // Update item's current bid
   const { error: updateError } = await supabase
