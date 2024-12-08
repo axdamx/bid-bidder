@@ -69,14 +69,14 @@ const HeroSection = () => {
             </p>
           </div>
 
-          <div className="flex gap-4 items-center">
+          {/* <div className="flex gap-4 items-center">
             <Button size="lg" className="bg-red-500 hover:bg-red-600">
               Explore
             </Button>
             <Button variant="ghost" className="gap-2">
               Learn more <ArrowRight className="w-4 h-4" />
             </Button>
-          </div>
+          </div> */}
 
           <div className="flex gap-8 text-sm">
             <div>

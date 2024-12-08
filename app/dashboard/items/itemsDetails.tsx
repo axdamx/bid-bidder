@@ -5,7 +5,6 @@ import { useAtom } from "jotai";
 import { userAtom } from "@/app/atom/userAtom";
 import { CldImage } from "next-cloudinary";
 import Link from "next/link";
-import { formatTimestamp } from "@/app/items/[itemId]/item-page-client";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -50,6 +49,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { DateTimePicker } from "@/app/items/create/components/DateTimePicker";
+import { formatTimestamp } from "@/app/items/[itemId]/utils/formatters";
 
 export default function ItemsDetails() {
   const [user] = useAtom(userAtom);

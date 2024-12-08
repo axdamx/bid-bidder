@@ -125,7 +125,7 @@ export default function CheckoutPage({
   const { order, item } = checkoutItems || {};
 
   // console.log("checkoutItems", checkoutItems); // Add check for buyer ID
-  if (!order && isTimerExpired) {
+  if (!order || isTimerExpired) {
     return (
       <div className="container mx-auto py-12 text-center">
         <h2 className="text-xl font-semibold">NO orders found</h2>

@@ -32,3 +32,11 @@ export type Item = {
   winnerId: string | null;
   user: User;
 };
+
+export type PurchaseType = "auction" | "buyItNow";
+export type PurchaseStatus = {
+  type: PurchaseType;
+  price: number;
+  isWinner: boolean;
+};
+export type ModalView = "log-in" | "sign-up" | "forgot-password";

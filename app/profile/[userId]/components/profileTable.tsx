@@ -31,7 +31,6 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { OptimizedImage } from "@/app/components/OptimizedImage";
-import { formatTimestamp } from "@/app/items/[itemId]/item-page-client";
 import Link from "next/link";
 import CountdownTimer from "@/app/countdown-timer";
 import { formatCurrency } from "@/lib/utils";
@@ -47,6 +46,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { formatTimestamp } from "@/app/items/[itemId]/utils/formatters";
 
 interface Item {
   id: string;
@@ -313,7 +313,9 @@ export default function ProfileTable({ items }: OwnedItemsProps) {
             <PaginationItem>
               <PaginationPrevious
                 onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                className={currentPage === 1 ? "opacity-50 cursor-not-allowed" : ""}
+                className={
+                  currentPage === 1 ? "opacity-50 cursor-not-allowed" : ""
+                }
                 aria-disabled={currentPage === 1}
               />
             </PaginationItem>
@@ -332,8 +334,14 @@ export default function ProfileTable({ items }: OwnedItemsProps) {
 
             <PaginationItem>
               <PaginationNext
-                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                className={currentPage === totalPages ? "opacity-50 cursor-not-allowed" : ""}
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
+                className={
+                  currentPage === totalPages
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
+                }
                 aria-disabled={currentPage === totalPages}
               />
             </PaginationItem>
