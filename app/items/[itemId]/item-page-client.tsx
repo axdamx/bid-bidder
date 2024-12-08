@@ -16,7 +16,6 @@ import {
   updateBidAcknowledgmentAction,
   updateItemStatus,
 } from "./actions";
-import { format, formatDistance } from "date-fns";
 import {
   Table,
   TableBody,
@@ -45,7 +44,7 @@ import {
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 import { OptimizedImage } from "@/app/components/OptimizedImage";
 import Lightbox from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
@@ -59,54 +58,9 @@ import { useAtom } from "jotai";
 import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button as MovingBorderButton } from "@/components/ui/moving-border";
+import { ModalView, PurchaseStatus } from "./items-types";
+import { formatTimestamp, getDateInfo } from "./utils/formatters";
 
-type PurchaseType = "auction" | "buyItNow";
-type PurchaseStatus = {
-  type: PurchaseType;
-  price: number;
-  isWinner: boolean;
-};
-// export function formatTimestamp(timestamp: string) {
-//   return formatDistance(new Date(), timestamp, { addSuffix: true });
-// }
-export function formatTimestamp(timestamp: string) {
-  const now = new Date();
-  // Convert timestamp to local timezone by explicitly creating a UTC date
-  const date = new Date(timestamp + "Z"); // Adding 'Z' to indicate UTC
-  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-  if (diffInSeconds < 60) {
-    return `${diffInSeconds} seconds ago`;
-  }
-
-  return formatDistance(date, now, {
-    addSuffix: true,
-    includeSeconds: true,
-  });
-}
-
-function formatCurrency(value: number) {
-  const formattedValue = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "MYR",
-    minimumFractionDigits: value % 1 === 0 ? 0 : 2,
-    maximumFractionDigits: 2,
-  }).format(value);
-
-  return formattedValue;
-}
-
-function getDateInfo(dateString: string) {
-  const targetDate = new Date(dateString);
-  const formattedDate = format(targetDate, "MMMM d, yyyy"); // Format the date
-  const formattedTime = format(targetDate, "hh:mm a"); // Format the time (12-hour format)
-
-  return {
-    formattedDate,
-    formattedTime,
-  };
-}
-type ModalView = "log-in" | "sign-up" | "forgot-password";
 export default function AuctionItem({
   item,
   allBids,
@@ -668,13 +622,8 @@ export default function AuctionItem({
                       "Place Bid"
                     )}
                   </Button>
-                  {!item.isBoughtOut && item.currentBid < item.binPrice && (
+                  {/* {!item.isBoughtOut && item.currentBid < item.binPrice && (
                     <>
-                      {/* <div className="text-center">
-                        <span className="text-sm text-muted-foreground">
-                          Or
-                        </span>
-                      </div> */}
                       <MovingBorderButton
                         className="bg-white dark:bg-slate-900 text-black dark:text-white border-neutral-200 dark:border-slate-800"
                         containerClassName="w-full"
@@ -694,7 +643,7 @@ export default function AuctionItem({
                         )}
                       </MovingBorderButton>
                     </>
-                  )}
+                  )} */}
                 </>
               )}
             </CardContent>
