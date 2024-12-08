@@ -199,7 +199,7 @@ export async function updateItemStatus(itemId: number, userId: string) {
 }
 
 export async function updateBidAcknowledgmentAction(
-  itemId: string,
+  itemId: number,
   userId: string
 ) {
   const { error: insertError } = await supabase
@@ -274,7 +274,7 @@ export async function fetchBids(itemId: string) {
 }
 
 // Add this check function
-export async function checkExistingOrder(itemId: string, buyerId: string) {
+export async function checkExistingOrder(itemId: number, buyerId: string) {
   // const supabase = createServerSupabaseClient();
 
   const { data, error } = await supabase
@@ -293,7 +293,7 @@ export async function checkExistingOrder(itemId: string, buyerId: string) {
 }
 
 export async function createOrderAction(
-  itemId: string,
+  itemId: number,
   userId: string,
   finalBidAmount: number,
   sellerId: string

@@ -31,6 +31,9 @@ interface ChatComponentProps {
   userName: string;
   isActive?: boolean;
   itemOwnerId: string;
+  onNewMessage?: (hasNewMessage: boolean) => void;
+  existingMessages: Message[];
+  isLoadingMessages: boolean;
 }
 
 export default function ChatComponent({
@@ -39,6 +42,9 @@ export default function ChatComponent({
   userName,
   isActive = true,
   itemOwnerId,
+  onNewMessage,
+  existingMessages,
+  isLoadingMessages,
 }: ChatComponentProps) {
   const [messages, setMessages] = React.useState<Message[]>([]);
   const [newMessage, setNewMessage] = React.useState("");
@@ -47,107 +53,21 @@ export default function ChatComponent({
   const [imagePreviewUrl, setImagePreviewUrl] = React.useState<string | null>(
     null
   );
+  const [isLoading, setIsLoading] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
   const [error, setError] = React.useState<string | null>(null);
-  const [isLoading, setIsLoading] = React.useState(true);
-  const [isConnected, setIsConnected] = React.useState(false);
-  const channelRef = React.useRef<RealtimeChannel | null>(null);
-  //   const { sessionState, refreshSession } = useSession();
   const supabase = createClientSupabase();
+
+  console.log("existingMessages", existingMessages);
 
   // console.log("userId", userId);
   // console.log("itemOwnerId", itemOwnerId);
   const isOwner = userId === itemOwnerId; // Add this check
 
-  //   const verifySession = async () => {
-  //     if (sessionState === "expired") {
-  //       const success = await refreshSession();
-  //       if (!success) {
-  //         setError("Session expired. Please refresh the page or login again.");
-  //         return false;
-  //       }
-  //     }
-  //     return true;
-  //   };
   React.useEffect(() => {
-    let mounted = true;
-
-    const fetchMessages = async () => {
-      try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        if (!session) {
-          setError("Session expired. Please refresh the page.");
-          return;
-        }
-        setIsLoading(true);
-        const { data, error } = await supabase
-          .from("chatMessages")
-          .select("*")
-          .eq("itemId", itemId)
-          .order("createdAt", { ascending: true });
-
-        if (error) throw error;
-        if (mounted) {
-          setIsLoading(false);
-          setMessages(data || []);
-          setError(null);
-        }
-      } catch (error) {
-        console.error("Error fetching messages:", error);
-        if (mounted) {
-          setError("Failed to load messages");
-        }
-      } finally {
-        if (mounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    const setupSubscription = () => {
-      if (!channelRef.current) {
-        channelRef.current = supabase
-          .channel(`item-${itemId}`)
-          .on(
-            "postgres_changes",
-            {
-              event: "INSERT",
-              schema: "public",
-              table: "chatMessages",
-              filter: `itemId=eq.${itemId}`,
-            },
-            (payload) => {
-              if (mounted) {
-                setMessages((current) => {
-                  const newMessage = payload.new as Message;
-                  const isDuplicate = current.some(
-                    (msg) => msg.id === newMessage.id
-                  );
-                  if (isDuplicate) {
-                    return current;
-                  }
-                  return [...current, newMessage];
-                });
-              }
-            }
-          )
-          .subscribe((status) => {
-            if (!mounted) return;
-            setIsConnected(status === "SUBSCRIBED");
-          });
-      }
-    };
-
-    fetchMessages();
-    setupSubscription();
-
-    return () => {
-      mounted = false;
-    };
-  }, [itemId]);
+    setMessages(existingMessages);
+  }, [existingMessages]);
 
   React.useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -188,10 +108,6 @@ export default function ChatComponent({
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if ((!newMessage.trim() && !selectedImage) || !isActive) return;
-    // e.preventDefault();
-    // if (!(await verifySession())) {
-    //   return;
-    // }
 
     const {
       data: { session },
@@ -211,6 +127,7 @@ export default function ChatComponent({
       }
 
       const messageData = {
+        id: uuidv4(),
         content: newMessage.trim(),
         userId: session.user.id,
         userName,
@@ -219,10 +136,7 @@ export default function ChatComponent({
         imageUrl,
       };
 
-      const { data, error } = await supabase
-        .from("chatMessages")
-        .insert(messageData)
-        .select();
+      const { error } = await supabase.from("chatMessages").insert(messageData);
 
       if (error) throw error;
 
@@ -270,78 +184,81 @@ export default function ChatComponent({
 
   return (
     <Card className="w-full mx-auto h-[600px] md:h-[700px] flex flex-col">
-      {!isConnected && error && (
+      {error && (
         <div className="flex items-center justify-center gap-2 p-2 bg-yellow-100 rounded-md">
-          <span className="text-sm text-yellow-800">Connection lost</span>
+          <span className="text-sm text-yellow-800">{error}</span>
           <Button
             size="sm"
             variant="outline"
             onClick={() => setError(null)}
             className="h-7 px-2"
           >
-            Reconnect
+            Dismiss
           </Button>
         </div>
       )}
-      <ScrollArea className="flex-1 p-4">
-        {isLoading ? (
+      <ScrollArea className="flex-grow p-4">
+        {isLoadingMessages ? (
           <div className="flex items-center justify-center h-full">
             <Loader2 className="h-6 w-6 animate-spin" />
           </div>
+        ) : messages.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+            <p>No messages yet</p>
+            <p className="text-sm">Be the first to send a message!</p>
+          </div>
         ) : (
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {messages.map((message) => (
+          messages.map((message, index) => (
+            <div
+              key={message.id}
+              className={`flex items-start gap-2.5 ${
+                message.userId === userId ? "flex-row-reverse" : ""
+              }`}
+            >
+              <Avatar className="w-12 h-12">
+                {/* <AvatarImage src={message.imageUrl} alt="Avatar" /> */}
+                <AvatarFallback>
+                  {message.userName.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
               <div
-                key={message.id}
-                className={`flex items-start gap-2.5 ${
-                  message.userId === userId ? "flex-row-reverse" : ""
+                className={`flex flex-col gap-1 max-w-[80%] ${
+                  message.userId === userId ? "items-end" : "items-start"
                 }`}
               >
-                <Avatar className="w-12 h-12">
-                  {/* <AvatarImage src={message.imageUrl} alt="Avatar" /> */}
-                  <AvatarFallback>
-                    {message.userName.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
                 <div
-                  className={`flex flex-col gap-1 max-w-[80%] ${
-                    message.userId === userId ? "items-end" : "items-start"
+                  className={`rounded-lg p-3 ${
+                    message.userId === userId
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted"
                   }`}
                 >
-                  <div
-                    className={`rounded-lg p-3 ${
-                      message.userId === userId
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 text-sm font-semibold mb-1">
-                      {message.userId === itemOwnerId ? (
-                        <Crown className="h-4 w-4" />
-                      ) : null}
-                      {message.userName}
-                    </div>
-                    {message.imageUrl && (
-                      <Image
-                        src={message.imageUrl}
-                        alt="Shared image"
-                        className="max-w-full rounded-lg mb-2 cursor-pointer"
-                        onClick={() => window.open(message.imageUrl, "_blank")}
-                        width={300}
-                        height={300}
-                      />
-                    )}
-                    {message.content && (
-                      <p className="text-sm break-words">{message.content}</p>
-                    )}
+                  <div className="flex items-center gap-2 text-sm font-semibold mb-1 mt-1">
+                    {message.userId === itemOwnerId ? (
+                      <Crown className="h-4 w-4" />
+                    ) : null}
+                    {message.userName}
                   </div>
-                  <span className="text-xs text-muted-foreground">
-                    {formatTimestamp(message.createdAt)}
-                  </span>
+                  {message.imageUrl && (
+                    <Image
+                      src={message.imageUrl}
+                      alt="Shared image"
+                      className="max-w-full rounded-lg mb-2 cursor-pointer"
+                      onClick={() => window.open(message.imageUrl, "_blank")}
+                      width={300}
+                      height={300}
+                    />
+                  )}
+                  {message.content && (
+                    <p className="text-sm break-words">{message.content}</p>
+                  )}
                 </div>
+                <span className="text-xs text-muted-foreground mb-5">
+                  {formatTimestamp(message.createdAt)}
+                </span>
               </div>
-            ))}
-          </div>
+            </div>
+          ))
         )}
         <div ref={messagesEndRef} />
       </ScrollArea>

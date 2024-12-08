@@ -36,7 +36,8 @@ export async function getOrders(userId: string) {
         item:items(*)
       `
       )
-      .or(`buyerId.eq.${userId},sellerId.eq.${userId}`);
+      .or(`buyerId.eq.${userId},sellerId.eq.${userId}`)
+      .order("createdAt", { ascending: false });
 
     if (error) throw error;
 
