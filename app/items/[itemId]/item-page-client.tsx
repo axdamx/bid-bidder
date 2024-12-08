@@ -54,6 +54,7 @@ export default function AuctionItem({
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false); // Added state
   const [hasNewMessage, setHasNewMessage] = useState(false);
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
+  const [currentTab, setCurrentTab] = useState("history");
   const [messages, setMessages] = useState<any[]>([]);
   const [isLoadingMessages, setIsLoadingMessages] = useState(true);
 
@@ -103,7 +104,7 @@ export default function AuctionItem({
     if (!userId) return;
 
     const supabase = createClientSupabase();
-    
+
     // Fetch initial messages
     const fetchMessages = async () => {
       setIsLoadingMessages(true);
@@ -143,7 +144,7 @@ export default function AuctionItem({
             if (isDuplicate) return current;
             return [...current, newMessage];
           });
-          if (newMessage.userId !== userId) {
+          if (newMessage.userId !== userId && currentTab !== "chat") {
             setHasNewMessage(true);
             setUnreadMessageCount((prev) => Math.min(prev + 1, 99));
           }
@@ -154,7 +155,7 @@ export default function AuctionItem({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [item.id, userId]);
+  }, [item.id, userId, currentTab]);
 
   const handleLinkClick = async (e: React.MouseEvent, path: string) => {
     e.preventDefault();
@@ -232,20 +233,26 @@ export default function AuctionItem({
 
       <Card className="mt-8">
         <CardHeader>
-          <Tabs defaultValue="history" className="w-full">
+          <Tabs
+            defaultValue="history"
+            className="w-full"
+            onValueChange={(value) => {
+              setCurrentTab(value);
+              if (value === "chat") {
+                setHasNewMessage(false);
+                setUnreadMessageCount(0);
+              }
+            }}
+          >
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="history">Bid History</TabsTrigger>
               <TabsTrigger
                 value="chat"
                 disabled={isBidOver}
                 className="relative"
-                onClick={() => {
-                  setHasNewMessage(false);
-                  setUnreadMessageCount(0);
-                }}
               >
                 Live Chat
-                {hasNewMessage && (
+                {hasNewMessage && currentTab !== "chat" && (
                   <Badge
                     className="absolute -top-2 -right-2 h-7 w-7 flex items-center justify-center p-0"
                     variant="destructive"
