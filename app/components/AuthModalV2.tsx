@@ -45,6 +45,7 @@ export default function AuthModalV2({
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClientSupabase();
@@ -115,6 +116,7 @@ export default function AuthModalV2({
   const handleClose = () => {
     setIsOpen(false);
     setMagicLinkSent(false);
+    setErrorMessage("");
     form.reset();
   };
 
@@ -146,7 +148,7 @@ export default function AuthModalV2({
       } else {
         // Handle case where user is not present
         console.log("No user data returned from OAuth sign-in");
-        toast.error("Sign in did not return user information.");
+        // toast.error("Sign in did not return user information.");
       }
     } catch (error) {
       console.error("Error signing in with Google:", error);
@@ -175,11 +177,12 @@ export default function AuthModalV2({
 
       if (error) {
         console.log("Error message:", error.message);
-        handleError(error.message);
+        setErrorMessage(error.message);
         throw error;
       }
 
       setMagicLinkSent(true);
+      setErrorMessage(""); // Clear error message on success
       toast.success("Magic link sent to your email!");
     } catch (error) {
       console.error("Error sending magic link:", error);
@@ -297,6 +300,14 @@ export default function AuthModalV2({
                           />
                         </FormControl>
                         <FormMessage />
+                        {errorMessage && (
+                          <div
+                            className="error-message"
+                            style={{ color: "red", marginTop: "8px" }}
+                          >
+                            <span>{errorMessage}</span>
+                          </div>
+                        )}
                       </FormItem>
                     )}
                   />
@@ -386,27 +397,6 @@ export default function AuthModalV2({
           )}
         </DialogContent>
       </Dialog>
-      {showErrorDialog && (
-        <Dialog open={showErrorDialog} onOpenChange={setShowErrorDialog}>
-          <DialogTitle>Error</DialogTitle>
-          <DialogContent>
-            <p>
-              Email link is invalid or has expired. Please try logging in again.
-            </p>
-          </DialogContent>
-          <div className="flex justify-end space-x-2">
-            <Button onClick={handleRetry} variant="default">
-              Retry
-            </Button>
-            <Button
-              onClick={() => setShowErrorDialog(false)}
-              variant="secondary"
-            >
-              Cancel
-            </Button>
-          </div>
-        </Dialog>
-      )}
     </>
   );
 }

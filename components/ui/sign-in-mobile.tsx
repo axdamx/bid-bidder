@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { Button } from "@/components/ui/button";
 import AuthModals from "@/app/components/AuthModal";
 import AuthModalV2 from "@/app/components/AuthModalV2";
+import Loading from "@/app/loading";
 // import { Button } from "../ui/moving-border";
 
 type ModalView = "log-in" | "sign-up" | "forgot-password";
@@ -21,7 +22,9 @@ export default function SignInMobileButton() {
         view={view}
         setView={setView}
       /> */}
-      <AuthModalV2 isOpen={isOpen} setIsOpen={setIsOpen} />
+      <Suspense fallback={<Loading />}>
+        <AuthModalV2 isOpen={isOpen} setIsOpen={setIsOpen} />
+      </Suspense>
     </>
   );
 }

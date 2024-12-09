@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { Button } from "@/components/ui/button";
 import AuthModalV2 from "@/app/components/AuthModalV2";
+import Loading from "@/app/loading";
 
 export default function SignInButton() {
   const [isOpen, setIsOpen] = useState(false);
@@ -12,7 +13,9 @@ export default function SignInButton() {
       <Button variant="outline" onClick={() => setIsOpen(true)}>
         Login / Sign Up
       </Button>
-      <AuthModalV2 isOpen={isOpen} setIsOpen={setIsOpen} />
+      <Suspense fallback={<Loading />}>
+        <AuthModalV2 isOpen={isOpen} setIsOpen={setIsOpen} />
+      </Suspense>
     </>
   );
 }
