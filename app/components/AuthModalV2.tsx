@@ -50,19 +50,30 @@ export default function AuthModalV2({
   const searchParams = useSearchParams();
   const supabase = createClientSupabase();
   const [user, setUser] = useAtom(userAtom);
+  const [isNavigating, setIsNavigating] = useState(false);
 
   useEffect(() => {
     const handleAuthStateChange = async (event: string, session: any) => {
       if (session?.user) {
         console.log("Auth state changed:", event, session.user);
         try {
+          setIsNavigating(true);
           const upsertedUser = await upsertUser(session.user);
           setUser(upsertedUser);
           handleClose();
-          router.refresh();
+          // Force a client-side navigation to refresh the page state
+          if (window.location.href.includes("code=")) {
+            // If we're on the callback URL, navigate to home
+            await router.push("/");
+          } else {
+            // Otherwise, refresh the current route
+            router.refresh();
+          }
         } catch (error) {
           console.error("Error handling auth state change:", error);
           toast.error("Failed to update user data");
+        } finally {
+          setIsNavigating(false);
         }
       }
     };
@@ -141,15 +152,7 @@ export default function AuthModalV2({
         return;
       }
 
-      // Check if data has a user property
-      if (data && "user" in data) {
-        // Handle successful sign-in
-        console.log("Signed in user:", data.user);
-      } else {
-        // Handle case where user is not present
-        console.log("No user data returned from OAuth sign-in");
-        // toast.error("Sign in did not return user information.");
-      }
+      // No need to check for user data here as we'll handle it in the callback
     } catch (error) {
       console.error("Error signing in with Google:", error);
       toast.error("Sign in with Google failed. Please try again.");
