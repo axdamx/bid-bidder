@@ -59,9 +59,21 @@ export default function AuthModalV2({
           const upsertedUser = await upsertUser(session.user);
           setUser(upsertedUser);
           handleClose();
-          router.refresh();
+          // Add a small delay before refreshing
+          setTimeout(() => {
+            console.log("Refreshing router...");
+            router.refresh();
+            // If refresh doesn't work, force a hard refresh after a delay
+            setTimeout(() => {
+              if (window.location.href.includes("code=")) {
+                console.log("Forcing page reload...");
+                window.location.href = "/";
+              }
+            }, 1000);
+          }, 500);
         } catch (error) {
           console.error("Error handling auth state change:", error);
+          console.error("Error details:", error);
           toast.error("Failed to update user data");
         }
       }
@@ -139,16 +151,6 @@ export default function AuthModalV2({
         toast.error("Sign in with Google failed. Please try again.");
         setIsGoogleLoading(false);
         return;
-      }
-
-      // Check if data has a user property
-      if (data && "user" in data) {
-        // Handle successful sign-in
-        console.log("Signed in user:", data.user);
-      } else {
-        // Handle case where user is not present
-        console.log("No user data returned from OAuth sign-in");
-        // toast.error("Sign in did not return user information.");
       }
     } catch (error) {
       console.error("Error signing in with Google:", error);
