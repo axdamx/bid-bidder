@@ -51,70 +51,89 @@ export default function AuthModalV2({
   const supabase = createClientSupabase();
   const [user, setUser] = useAtom(userAtom);
 
+  // useEffect(() => {
+  //   const handleAuthStateChange = async (event: string, session: any) => {
+  //     if (session?.user) {
+  //       console.log("Auth state changed:", event, session.user);
+  //       try {
+  //         if (!user) {
+  //           upsertUser(session.user);
+  //         }
+  //         // const upsertedUser = await upsertUser(session.user);
+  //         // setUser(upsertedUser);
+  //         handleClose();
+  //         router.refresh();
+  //       } catch (error) {
+  //         console.error("Error handling auth state change:", error);
+  //         toast.error("Failed to update user data");
+  //       }
+  //     }
+  //   };
+
+  //   const { data: authListener } = supabase.auth.onAuthStateChange(
+  //     handleAuthStateChange
+  //   );
+
+  //   // Check for auth success/error parameters
+  //   const authSuccess = searchParams.get("auth-success");
+  //   const authError = searchParams.get("auth-error");
+  //   const accountExists = searchParams.get("account-exists");
+
+  //   if (authSuccess === "true") {
+  //     if (accountExists === "true") {
+  //       toast.success(
+  //         "Signed in! Note: An account with this email already exists."
+  //       );
+  //     } else {
+  //       toast.success("Successfully signed in!");
+  //     }
+  //     // Remove the parameters from the URL without triggering a refresh
+  //     const newUrl = new URL(window.location.href);
+  //     newUrl.searchParams.delete("auth-success");
+  //     newUrl.searchParams.delete("account-exists");
+  //     window.history.replaceState({}, "", newUrl.toString());
+  //   } else if (authError === "true") {
+  //     toast.error("Authentication failed. Please try again.");
+  //     const newUrl = new URL(window.location.href);
+  //     newUrl.searchParams.delete("auth-error");
+  //     window.history.replaceState({}, "", newUrl.toString());
+  //   }
+
+  //   // Check current session on mount
+  //   const checkSession = async () => {
+  //     const {
+  //       data: { session },
+  //     } = await supabase.auth.getSession();
+  //     if (session?.user) {
+  //       await handleAuthStateChange("INITIAL_SESSION", session);
+  //     }
+  //   };
+
+  //   checkSession();
+
+  //   return () => {
+  //     authListener?.subscription.unsubscribe();
+  //   };
+  // }, [searchParams]);
   useEffect(() => {
-    const handleAuthStateChange = async (event: string, session: any) => {
-      if (session?.user) {
-        console.log("Auth state changed:", event, session.user);
-        try {
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (session?.user) {
+          console.log("User signed in:", session.user);
+          // This call is necessary on every session change (including rehydration)
+          // to keep the local state (userAtom) in sync with the session
+          // Without this, your app would lose user state on refresh
           if (!user) {
             upsertUser(session.user);
           }
-          // const upsertedUser = await upsertUser(session.user);
-          // setUser(upsertedUser);
-          handleClose();
-          router.refresh();
-        } catch (error) {
-          console.error("Error handling auth state change:", error);
-          toast.error("Failed to update user data");
         }
       }
-    };
-
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      handleAuthStateChange
     );
-
-    // Check for auth success/error parameters
-    const authSuccess = searchParams.get("auth-success");
-    const authError = searchParams.get("auth-error");
-    const accountExists = searchParams.get("account-exists");
-
-    if (authSuccess === "true") {
-      if (accountExists === "true") {
-        toast.success(
-          "Signed in! Note: An account with this email already exists."
-        );
-      } else {
-        toast.success("Successfully signed in!");
-      }
-      // Remove the parameters from the URL without triggering a refresh
-      const newUrl = new URL(window.location.href);
-      newUrl.searchParams.delete("auth-success");
-      newUrl.searchParams.delete("account-exists");
-      window.history.replaceState({}, "", newUrl.toString());
-    } else if (authError === "true") {
-      toast.error("Authentication failed. Please try again.");
-      const newUrl = new URL(window.location.href);
-      newUrl.searchParams.delete("auth-error");
-      window.history.replaceState({}, "", newUrl.toString());
-    }
-
-    // Check current session on mount
-    const checkSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (session?.user) {
-        await handleAuthStateChange("INITIAL_SESSION", session);
-      }
-    };
-
-    checkSession();
 
     return () => {
       authListener?.subscription.unsubscribe();
     };
-  }, [searchParams]);
+  }, []);
 
   const handleClose = () => {
     setIsOpen(false);
