@@ -133,16 +133,20 @@ export default function AuthModalV2({
 
   useEffect(() => {
     const handleAuthStateChange = async (event: string, session: any) => {
+      console.log("Auth state change detected", event);
       if (session?.user) {
-        console.log("Auth state changed:", event, session.user);
+        console.log("User session available", session.user.id);
         try {
-          console.log("Starting user upsert process");
+          console.log("Setting isNavigating to true");
           setIsNavigating(true);
-          const upsertedUser = await upsertUser(session.user);
-          setUser(upsertedUser);
-          console.log("User upsert completed");
 
-          // Close any open modals or dialogs
+          console.log("Starting user upsert process");
+          const upsertedUser = await upsertUser(session.user);
+
+          console.log("User upsert completed", upsertedUser);
+          setUser(upsertedUser);
+
+          console.log("Closing any open modals");
           handleClose();
 
           console.log("Current URL:", window.location.href);
@@ -154,21 +158,24 @@ export default function AuthModalV2({
             router.refresh();
           }
         } catch (error) {
-          console.error("Error handling auth state change:", error);
+          console.error("Error in handleAuthStateChange:", error);
           toast.error("Failed to update user data. Please try again.");
         } finally {
+          console.log("Setting isNavigating to false");
           setIsNavigating(false);
         }
+      } else {
+        console.log("No user session");
       }
     };
 
-    // Set up the listener for auth state changes
+    console.log("Setting up auth state change listener");
     const { data: authListener } = supabase.auth.onAuthStateChange(
       handleAuthStateChange
     );
 
-    // Cleanup function
     return () => {
+      console.log("Cleaning up auth state change listener");
       authListener.subscription.unsubscribe();
     };
   }, [router]);
@@ -258,16 +265,26 @@ export default function AuthModalV2({
   };
 
   async function upsertUser(user: any) {
+    console.log("Starting upsertUser function", user.id);
     try {
+      console.log("Fetching existing user");
       const { data: existingUser, error: fetchError } = await supabase
         .from("users")
         .select("*")
         .eq("id", user.id)
         .single();
 
-      if (fetchError && fetchError.code !== "PGRST116") {
-        console.error("Error fetching user:", fetchError.message);
-        throw fetchError;
+      console.log("Fetch operation completed");
+
+      if (fetchError) {
+        if (fetchError.code === "PGRST116") {
+          console.log("User not found, will create new user");
+        } else {
+          console.error("Error fetching user:", fetchError.message);
+          throw fetchError;
+        }
+      } else {
+        console.log("Existing user found", existingUser?.id);
       }
 
       const userData = existingUser
@@ -278,11 +295,14 @@ export default function AuthModalV2({
         : {
             id: user.id,
             email: user.email,
-            name: user.user_metadata.name || user.email,
-            image: user.user_metadata.avatar_url,
+            name: user.user_metadata?.name || user.email,
+            image: user.user_metadata?.avatar_url,
             createdAt: user.created_at,
           };
 
+      console.log("Prepared user data for upsert", userData);
+
+      console.log("Upserting user data");
       const { data: upsertedUser, error: upsertError } = await supabase
         .from("users")
         .upsert(userData, {
@@ -292,12 +312,17 @@ export default function AuthModalV2({
         .select()
         .single();
 
+      console.log("Upsert operation completed");
+
       if (upsertError) {
         console.error("Error upserting user:", upsertError.message);
         throw upsertError;
       }
 
+      console.log("User upserted successfully", upsertedUser?.id);
+
       if (!existingUser) {
+        console.log("New user, redirecting to onboarding");
         router.push("/onboarding");
         return upsertedUser;
       }
@@ -306,6 +331,7 @@ export default function AuthModalV2({
         !existingUser.onboardingCompleted &&
         !existingUser.hasSeenOnboarding
       ) {
+        console.log("Existing user hasn't completed onboarding, redirecting");
         router.push("/onboarding");
       }
 
