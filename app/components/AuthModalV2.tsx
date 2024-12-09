@@ -50,144 +50,75 @@ export default function AuthModalV2({
   const searchParams = useSearchParams();
   const supabase = createClientSupabase();
   const [user, setUser] = useAtom(userAtom);
-  const [isNavigating, setIsNavigating] = useState(false);
-
-  // useEffect(() => {
-  //   const handleAuthStateChange = async (event: string, session: any) => {
-  //     if (session?.user) {
-  //       console.log("Auth state changed:", event, session.user);
-  //       console.log("luar try catch");
-  //       try {
-  //         console.log("dalam try catch");
-  //         console.log("before upsert");
-  //         setIsNavigating(true);
-  //         const upsertedUser = await upsertUser(session.user);
-  //         setUser(upsertedUser);
-  //         console.log("after upsert");
-  //         handleClose();
-  //         console.log("after close");
-  //         console.log("window.location.href.includes", window.location.href);
-  //         // Force a client-side navigation to refresh the page state
-  //         if (window.location.href.includes("?code=")) {
-  //           console.log("dalam auth modal v2");
-  //           // If we're on the callback URL, navigate to home
-  //           router.push("/");
-  //         } else {
-  //           // Otherwise, refresh the current route
-  //           router.refresh();
-  //         }
-  //       } catch (error) {
-  //         console.error("Error handling auth state change:", error);
-  //         toast.error("Failed to update user data");
-  //       } finally {
-  //         setIsNavigating(false);
-  //       }
-  //     }
-  //   };
-
-  //   const { data: authListener } = supabase.auth.onAuthStateChange(
-  //     handleAuthStateChange
-  //   );
-
-  //   // Check for auth success/error parameters
-  //   const authSuccess = searchParams.get("auth-success");
-  //   const authError = searchParams.get("auth-error");
-  //   const accountExists = searchParams.get("account-exists");
-
-  //   if (authSuccess === "true") {
-  //     if (accountExists === "true") {
-  //       toast.success(
-  //         "Signed in! Note: An account with this email already exists."
-  //       );
-  //     } else {
-  //       toast.success("Successfully signed in!");
-  //     }
-  //     // Remove the parameters from the URL without triggering a refresh
-  //     const newUrl = new URL(window.location.href);
-  //     newUrl.searchParams.delete("auth-success");
-  //     newUrl.searchParams.delete("account-exists");
-  //     window.history.replaceState({}, "", newUrl.toString());
-  //   } else if (authError === "true") {
-  //     toast.error("Authentication failed. Please try again.");
-  //     const newUrl = new URL(window.location.href);
-  //     newUrl.searchParams.delete("auth-error");
-  //     window.history.replaceState({}, "", newUrl.toString());
-  //   }
-
-  //   // Check current session on mount
-  //   const checkSession = async () => {
-  //     const {
-  //       data: { session },
-  //     } = await supabase.auth.getSession();
-  //     if (session?.user) {
-  //       await handleAuthStateChange("INITIAL_SESSION", session);
-  //     }
-  //   };
-
-  //   checkSession();
-
-  //   return () => {
-  //     authListener?.subscription.unsubscribe();
-  //   };
-  // }, [searchParams]);
 
   useEffect(() => {
     const handleAuthStateChange = async (event: string, session: any) => {
-      console.log("Auth state change detected", event);
       if (session?.user) {
-        console.log("User session available", session.user.id);
-
+        console.log("Auth state changed:", event, session.user);
         try {
-          console.log("Starting user upsert process");
-          setIsNavigating(true);
-
           if (!user) {
             upsertUser(session.user);
           }
           // const upsertedUser = await upsertUser(session.user);
-
-          // console.log("User upsert completed", upsertedUser);
           // setUser(upsertedUser);
-
-          const shouldRedirect = searchParams.get("upsert-user") === "true";
-          if (shouldRedirect) {
-            // Remove the upsert-user flag from the URL
-            const newUrl = new URL(window.location.href);
-            newUrl.searchParams.delete("upsert-user");
-            router.replace(newUrl.toString());
-          }
+          handleClose();
+          router.refresh();
         } catch (error) {
-          console.error("Error in user upsert:", error);
-          toast.error("Failed to update user data. Please try again.");
-        } finally {
-          setIsNavigating(false);
+          console.error("Error handling auth state change:", error);
+          toast.error("Failed to update user data");
         }
-      } else {
-        console.log("No user session");
-        setUser(null);
       }
     };
 
-    console.log("Setting up auth state change listener");
     const { data: authListener } = supabase.auth.onAuthStateChange(
       handleAuthStateChange
     );
 
-    // Trigger the auth state change handler immediately
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      handleAuthStateChange("INITIAL", session);
-    });
+    // Check for auth success/error parameters
+    const authSuccess = searchParams.get("auth-success");
+    const authError = searchParams.get("auth-error");
+    const accountExists = searchParams.get("account-exists");
+
+    if (authSuccess === "true") {
+      if (accountExists === "true") {
+        toast.success(
+          "Signed in! Note: An account with this email already exists."
+        );
+      } else {
+        toast.success("Successfully signed in!");
+      }
+      // Remove the parameters from the URL without triggering a refresh
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete("auth-success");
+      newUrl.searchParams.delete("account-exists");
+      window.history.replaceState({}, "", newUrl.toString());
+    } else if (authError === "true") {
+      toast.error("Authentication failed. Please try again.");
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete("auth-error");
+      window.history.replaceState({}, "", newUrl.toString());
+    }
+
+    // Check current session on mount
+    const checkSession = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session?.user) {
+        await handleAuthStateChange("INITIAL_SESSION", session);
+      }
+    };
+
+    checkSession();
 
     return () => {
-      console.log("Cleaning up auth state change listener");
-      authListener.subscription.unsubscribe();
+      authListener?.subscription.unsubscribe();
     };
-  }, [router, searchParams]);
+  }, [searchParams]);
 
   const handleClose = () => {
     setIsOpen(false);
     setMagicLinkSent(false);
-    setErrorMessage("");
     form.reset();
   };
 
@@ -212,7 +143,15 @@ export default function AuthModalV2({
         return;
       }
 
-      // No need to check for user data here as we'll handle it in the callback
+      // Check if data has a user property
+      if (data && "user" in data) {
+        // Handle successful sign-in
+        console.log("Signed in user:", data.user);
+      } else {
+        // Handle case where user is not present
+        console.log("No user data returned from OAuth sign-in");
+        // toast.error("Sign in did not return user information.");
+      }
     } catch (error) {
       console.error("Error signing in with Google:", error);
       toast.error("Sign in with Google failed. Please try again.");
@@ -269,26 +208,16 @@ export default function AuthModalV2({
   };
 
   async function upsertUser(user: any) {
-    console.log("Starting upsertUser function", user.id);
     try {
-      console.log("Fetching existing user");
       const { data: existingUser, error: fetchError } = await supabase
         .from("users")
         .select("*")
         .eq("id", user.id)
         .single();
 
-      console.log("Fetch operation completed");
-
-      if (fetchError) {
-        if (fetchError.code === "PGRST116") {
-          console.log("User not found, will create new user");
-        } else {
-          console.error("Error fetching user:", fetchError.message);
-          throw fetchError;
-        }
-      } else {
-        console.log("Existing user found", existingUser?.id);
+      if (fetchError && fetchError.code !== "PGRST116") {
+        console.error("Error fetching user:", fetchError.message);
+        throw fetchError;
       }
 
       const userData = existingUser
@@ -299,14 +228,11 @@ export default function AuthModalV2({
         : {
             id: user.id,
             email: user.email,
-            name: user.user_metadata?.name || user.email,
-            image: user.user_metadata?.avatar_url,
+            name: user.user_metadata.name || user.email,
+            image: user.user_metadata.avatar_url,
             createdAt: user.created_at,
           };
 
-      console.log("Prepared user data for upsert", userData);
-
-      console.log("Upserting user data");
       const { data: upsertedUser, error: upsertError } = await supabase
         .from("users")
         .upsert(userData, {
@@ -316,19 +242,14 @@ export default function AuthModalV2({
         .select()
         .single();
 
-      console.log("Upsert operation completed");
-
       if (upsertError) {
         console.error("Error upserting user:", upsertError.message);
         throw upsertError;
       }
 
-      console.log("User upserted successfully", upsertedUser?.id);
-
       setUser(upsertedUser);
 
       if (!existingUser) {
-        console.log("New user, redirecting to onboarding");
         router.push("/onboarding");
         return upsertedUser;
       }
@@ -337,7 +258,6 @@ export default function AuthModalV2({
         !existingUser.onboardingCompleted &&
         !existingUser.hasSeenOnboarding
       ) {
-        console.log("Existing user hasn't completed onboarding, redirecting");
         router.push("/onboarding");
       }
 
@@ -389,7 +309,7 @@ export default function AuthModalV2({
                             className="error-message"
                             style={{ color: "red", marginTop: "8px" }}
                           >
-                            <span>{errorMessage}</span>
+                            {errorMessage}
                           </div>
                         )}
                       </FormItem>

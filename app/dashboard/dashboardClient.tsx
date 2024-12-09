@@ -33,13 +33,13 @@ import {
 } from "@/components/ui/navigation-menu";
 import dynamic from "next/dynamic";
 
-import { 
-  DashboardSkeleton, 
-  UserDetailsSkeleton, 
-  AddressSkeleton, 
-  PaymentSkeleton, 
-  OrdersSkeleton 
-} from './loading';
+import {
+  DashboardSkeleton,
+  UserDetailsSkeleton,
+  AddressSkeleton,
+  PaymentSkeleton,
+  OrdersSkeleton,
+} from "./loading";
 
 const UserDetailsPage = dynamic(() => import("./userdetails/userDetails"), {
   loading: () => <UserDetailsSkeleton />,

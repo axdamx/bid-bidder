@@ -19,36 +19,37 @@ export async function GET(request: Request) {
 
       if (sessionError) throw sessionError;
 
-      // if (session?.user) {
-      //   // Check if there's an existing user with the same email
-      //   const { data: existingUsers, error: userError } = await supabase
-      //     .from('users')
-      //     .select('id, email')
-      //     .eq('email', session.user.email)
-      //     .neq('id', session.user.id); // Exclude the current user
+      if (session?.user) {
+        // Check if there's an existing user with the same email
+        const { data: existingUsers, error: userError } = await supabase
+          .from("users")
+          .select("id, email")
+          .eq("email", session.user.email)
+          .neq("id", session.user.id); // Exclude the current user
 
-      //     console.log('existingUsers', existingUsers);
+        if (userError) {
+          console.error("Error checking existing user:", userError);
+          return NextResponse.redirect(
+            new URL("/?auth-error=true", requestUrl.origin)
+          );
+        }
 
-      //   if (userError) {
-      //     console.error('Error checking existing user:', userError);
-      //     return NextResponse.redirect(
-      //       new URL("/?auth-error=true", requestUrl.origin)
-      //     );
-      //   }
+        if (existingUsers?.length > 0) {
+          // We found an existing account with the same email
+          // Here we could either:
+          // 1. Merge the accounts (requires additional logic to handle data migration)
+          // 2. Link the accounts (requires additional database structure)
+          // 3. Or simply notify the user
 
-      //   if (existingUsers?.length > 0) {
-      //     // We found an existing account with the same email
-      //     // Here we could either:
-      //     // 1. Merge the accounts (requires additional logic to handle data migration)
-      //     // 2. Link the accounts (requires additional database structure)
-      //     // 3. Or simply notify the user
-
-      //     // For now, we'll just redirect with a special parameter
-      //     return NextResponse.redirect(
-      //       new URL("/?auth-success=true&account-exists=true", requestUrl.origin)
-      //     );
-      //   }
-      // }
+          // For now, we'll just redirect with a special parameter
+          return NextResponse.redirect(
+            new URL(
+              "/?auth-success=true&account-exists=true",
+              requestUrl.origin
+            )
+          );
+        }
+      }
 
       // No existing account found, proceed normally
       return NextResponse.redirect(

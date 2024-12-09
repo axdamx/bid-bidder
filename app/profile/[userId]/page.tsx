@@ -68,6 +68,7 @@ const ProfilePage = ({
   }
 
   console.log(`ProfilePage rendering completed for ownerId: ${ownerId}`);
+  console.log("userQuery.data", userQuery.data);
 
   return (
     <div className="min-h-screen">

@@ -14,7 +14,7 @@ const useProfileData = (ownerId: string, currentUserId: string) => {
           console.log(`Fetching user data for ownerId: ${ownerId}`);
           return fetchUser(ownerId);
         },
-        staleTime: 5 * 60 * 1000, // 5 minutes
+        // staleTime: 5 * 60 * 1000, // 5 minutes
         // cacheTime: 10 * 60 * 1000, // 10 minutes
       },
       {
