@@ -56,15 +56,17 @@ export default function AuthModalV2({
     const handleAuthStateChange = async (event: string, session: any) => {
       if (session?.user) {
         console.log("Auth state changed:", event, session.user);
+        console.log("luar try catch");
         try {
+          console.log("dalam try catch");
+          console.log("before upsert");
           setIsNavigating(true);
           const upsertedUser = await upsertUser(session.user);
           setUser(upsertedUser);
+          console.log("after upsert");
           handleClose();
-          console.log(
-            "window.location.href.includes('?code=')",
-            window.location.href
-          );
+          console.log("after close");
+          console.log("window.location.href.includes", window.location.href);
           // Force a client-side navigation to refresh the page state
           if (window.location.href.includes("?code=")) {
             console.log("dalam auth modal v2");
