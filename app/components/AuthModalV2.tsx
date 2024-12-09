@@ -61,10 +61,15 @@ export default function AuthModalV2({
           const upsertedUser = await upsertUser(session.user);
           setUser(upsertedUser);
           handleClose();
+          console.log(
+            "window.location.href.includes('?code=')",
+            window.location.href
+          );
           // Force a client-side navigation to refresh the page state
-          if (window.location.href.includes("code=")) {
+          if (window.location.href.includes("?code=")) {
+            console.log("dalam auth modal v2");
             // If we're on the callback URL, navigate to home
-            await router.push("/");
+            router.push("/");
           } else {
             // Otherwise, refresh the current route
             router.refresh();
