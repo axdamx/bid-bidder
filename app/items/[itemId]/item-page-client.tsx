@@ -28,6 +28,10 @@ import { formatCurrency } from "./utils/formatters";
 import { createClientSupabase } from "@/lib/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { AnimatePresence, motion } from "framer-motion";
+import { set } from "date-fns";
+import { ShoppingBag } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
+import AuthModalV2 from "@/app/components/AuthModalV2";
 
 export default function AuctionItem({
   item,
@@ -46,6 +50,7 @@ export default function AuctionItem({
   const [bids, setBids] = useState(allBids);
   const [showWinnerModal, setShowWinnerModal] = useState(false);
   const [showDisclaimerModal, setShowDisclaimerModal] = useState(false);
+  const [showBuyItNowModal, setShowBuyItNowModal] = useState(false);
   const [isAuthModalsOpen, setIsAuthModalsOpen] = useState(false);
   const [authModalView, setAuthModalView] = useState<
     "log-in" | "sign-up" | "forgot-password"
@@ -57,16 +62,25 @@ export default function AuctionItem({
   const [currentTab, setCurrentTab] = useState("history");
   const [messages, setMessages] = useState<any[]>([]);
   const [isLoadingMessages, setIsLoadingMessages] = useState(true);
+  const [showBinDisclaimerModal, setShowBinDisclaimerModal] = useState(false);
+  const [showBinWinnerModal, setShowBinWinnerModal] = useState(false);
 
   const [user] = useAtom(userAtom);
   const router = useRouter();
   const pathname = usePathname();
 
+  console.log("item", item);
   const isBidOver =
     new Date(item.endDate + "Z") < new Date() || item.isBoughtOut;
-  const isWinner = bids.length > 0 && bids[0].userId === userId;
+
+  // Check BIN winner first, then auction winner if not bought out
+  const isWinner = item.isBoughtOut
+    ? item.winnerId === userId // If bought out, only winnerId matters
+    : bids.length > 0 && bids[0].userId === userId; // If not bought out, check highest bidder
+
   const isOwner = item.users.id === userId;
 
+  console.log("item fuh", item);
   const { orderExists } = useAuctionQueries(
     item.id,
     userId,
@@ -185,6 +199,12 @@ export default function AuctionItem({
     submitBuyItNow();
   };
 
+  const handleBuyItNowConfirm = () => {
+    setShowBuyItNowModal(false);
+    setShowWinnerModal(true);
+    // updateItemStatusMutate();
+  };
+
   const handleDisclaimerConfirm = () => {
     updateBidAcknowledgment();
   };
@@ -194,6 +214,26 @@ export default function AuctionItem({
 
     setShowWinnerModal(true);
   }, [orderExists]);
+
+  const handleBinClick = () => {
+    if (!userId) {
+      setAuthModalView("log-in");
+      setIsAuthModalsOpen(true);
+      return;
+    }
+    setShowBinDisclaimerModal(true);
+  };
+
+  const handleBinDisclaimerConfirm = () => {
+    setShowBinDisclaimerModal(false);
+    submitBuyItNow();
+    setShowBinWinnerModal(true);
+  };
+
+  const handleBinCheckout = async () => {
+    await updateItemStatusMutate();
+    router.push(`/checkout/${item.id}`);
+  };
 
   return (
     <div className="container w-full px-4 py-8 md:py-12 overflow-x-hidden">
@@ -221,12 +261,14 @@ export default function AuctionItem({
           isWinner={isWinner}
           handleBidSubmit={handleBidSubmit}
           handleBuyItNowSubmit={handleBuyItNowSubmit}
+          handleBinClick={handleBinClick}
           isPending={isBidPending}
           isBuyItNowPending={isBuyItNowPending}
           handleAuctionEnd={handleAuctionEnd}
           handleLinkClick={handleLinkClick}
           isDescriptionExpanded={isDescriptionExpanded}
           setIsDescriptionExpanded={setIsDescriptionExpanded}
+          setShowBuyItNowModal={setShowBuyItNowModal}
         />
       </div>
 
@@ -301,6 +343,42 @@ export default function AuctionItem({
         </CardHeader>
       </Card>
 
+      <Dialog open={showBuyItNowModal} onOpenChange={setShowBuyItNowModal}>
+        <DialogContent className="[&>button]:hidden">
+          <DialogHeader>
+            <DialogTitle>Important Notice About Buy It Now</DialogTitle>
+            <DialogDescription className="pt-4">
+              By placing a bid, you are entering into a binding commitment to
+              purchase the item if you win. Your bid represents a legal
+              obligation to buy the item at the bid price if you are the winning
+              bidder.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowBuyItNowModal(false)}
+              disabled={isBidPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleBuyItNowConfirm}
+              disabled={isBuyItNowPending}
+            >
+              {isBuyItNowPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                "I Understand"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={showDisclaimerModal} onOpenChange={setShowDisclaimerModal}>
         <DialogContent className="[&>button]:hidden">
           <DialogHeader>
@@ -334,19 +412,119 @@ export default function AuctionItem({
         </DialogContent>
       </Dialog>
 
+      <Dialog
+        open={showBinDisclaimerModal}
+        onOpenChange={setShowBinDisclaimerModal}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ShoppingBag className="h-5 w-5 text-primary" />
+              Instant Purchase Confirmation
+            </DialogTitle>
+          </DialogHeader>
+          <div className="p-6 space-y-4">
+            <div className="bg-primary/5 p-4 rounded-lg">
+              <p className="text-xl font-semibold text-center">
+                {formatCurrency(item.binPrice)}
+              </p>
+            </div>
+            <div className="space-y-3">
+              <h4 className="font-medium">Please confirm that:</h4>
+              <ul className="space-y-2 list-disc list-inside text-muted-foreground">
+                <li>This is a final sale at the shown price</li>
+                <li>The auction will end immediately</li>
+                <li>You agree to complete the purchase</li>
+              </ul>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowBinDisclaimerModal(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleBinDisclaimerConfirm}
+              disabled={isBuyItNowPending}
+              className="bg-primary hover:bg-primary/90"
+            >
+              {isBuyItNowPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                "Confirm Purchase"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showBinWinnerModal} onOpenChange={setShowBinWinnerModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Trophy className="h-6 w-6 text-yellow-500" />
+              Purchase Successful!
+            </DialogTitle>
+          </DialogHeader>
+          <div className="p-6 space-y-4">
+            <div className="bg-green-50 p-4 rounded-lg text-center space-y-2">
+              <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto" />
+              <h3 className="font-semibold text-green-700">Congratulations!</h3>
+              <p className="text-green-600">
+                You have successfully purchased {item.name} for{" "}
+                {formatCurrency(item.binPrice)}
+              </p>
+            </div>
+            <p className="text-center text-muted-foreground">
+              Please proceed to checkout to complete your purchase
+            </p>
+          </div>
+          <DialogFooter>
+            <Button
+              onClick={handleBinCheckout}
+              disabled={isUpdating}
+              className="w-full bg-primary hover:bg-primary/90"
+            >
+              {isUpdating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing Checkout...
+                </>
+              ) : (
+                "Proceed to Checkout"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={showWinnerModal} onOpenChange={setShowWinnerModal}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             {isWinner ? (
               <WinnerDialog
                 item={item}
-                highestBid={highestBid!}
+                highestBid={item.isBoughtOut ? item.binPrice : highestBid!}
                 orderExists={orderExists!}
-                updateItemStatusMutate={updateItemStatusMutate}
+                updateItemStatusMutate={() => {
+                  updateItemStatusMutate();
+                  router.push(`/checkout/${item.id}`);
+                }}
                 isUpdating={isUpdating}
               />
             ) : bids.length > 0 ? (
-              <LoserDialog item={item} latestBidderName={bids[0].users.name} />
+              <LoserDialog
+                item={item}
+                latestBidderName={
+                  item.isBoughtOut ? "another buyer" : bids[0].users.name
+                }
+                finalPrice={item.isBoughtOut ? item.binPrice : item.currentBid}
+              />
             ) : (
               <NoWinnerDialog />
             )}
@@ -359,12 +537,13 @@ export default function AuctionItem({
         </DialogContent>
       </Dialog>
 
-      <AuthModals
+      {/* <AuthModals
         isOpen={isAuthModalsOpen}
         setIsOpen={setIsAuthModalsOpen}
         view={authModalView}
         setView={setAuthModalView}
-      />
+      /> */}
+      <AuthModalV2 isOpen={isAuthModalsOpen} setIsOpen={setIsAuthModalsOpen} />
     </div>
   );
 }
@@ -396,11 +575,20 @@ function WinnerDialog({
             You've won this auction!
           </h1>
           <h1 className="text-sm text-green-600 mt-2">
-            {item.name} for {formatCurrency(highestBid)}
+            {item.name} for{" "}
+            {item.isBoughtOut
+              ? formatCurrency(item.binPrice)
+              : formatCurrency(highestBid)}
           </h1>
-          <h1 className="text-sm text-green-600 mt-2">
-            The seller will contact you soon with payment and delivery details.
-          </h1>
+          {orderExists ? (
+            <h1 className="text-sm text-green-600 mt-2">
+              You can view your order in your dashboard
+            </h1>
+          ) : (
+            <h1 className="text-sm text-green-600 mt-2">
+              You can proceed to checkout to complete your purchase
+            </h1>
+          )}
         </div>
         <div className="text-center justify-center">
           {orderExists ? (
@@ -441,9 +629,11 @@ function WinnerDialog({
 function LoserDialog({
   item,
   latestBidderName,
+  finalPrice,
 }: {
   item: any;
   latestBidderName: string;
+  finalPrice: number;
 }) {
   return (
     <>
@@ -455,7 +645,7 @@ function LoserDialog({
         <div className="p-4 bg-blue-50 rounded-lg mt-4 text-center">
           <h1 className="font-medium text-blue-700">This auction has ended</h1>
           <h1 className="text-sm text-blue-600 mt-2">
-            The winning bid was {formatCurrency(item.currentBid)} by{" "}
+            The winning bid was {formatCurrency(finalPrice)} by{" "}
             {latestBidderName}
           </h1>
           <h1 className="text-sm text-blue-600 mt-2">

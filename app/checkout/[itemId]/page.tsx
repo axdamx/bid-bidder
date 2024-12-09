@@ -134,9 +134,10 @@ export default function CheckoutPage({
     );
   }
 
+  const soldPrice = item?.isBoughtOut ? item?.binPrice : item?.currentBid;
   const shippingCost = 20;
-  const buyersPremium = item?.currentBid! * 0.06;
-  const totalPrice = item?.currentBid! + shippingCost + buyersPremium;
+  const buyersPremium = soldPrice! * 0.06;
+  const totalPrice = soldPrice! + shippingCost + buyersPremium;
 
   const onSubmit = async (data: Partial<FormData>) => {
     setFormData({ ...formData, ...data });
@@ -669,7 +670,7 @@ export default function CheckoutPage({
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span>Sold Price</span>
-                    <span>{formatCurrency(item?.currentBid)}</span>
+                    <span>{formatCurrency(soldPrice)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Service fee (6%)</span>

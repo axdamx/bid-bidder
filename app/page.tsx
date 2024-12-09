@@ -13,6 +13,16 @@ import CategoryCarousell from "./home/components/sections/CategoryCarousell";
 import { useAtom } from "jotai";
 import { userAtom } from "./atom/userAtom";
 import { Gavel, Trophy, Users } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 function LoadingSection({ message }: { message: string }) {
   return (
@@ -38,8 +48,46 @@ function LoadingSection({ message }: { message: string }) {
 // }
 
 export default function Home() {
+  const [showErrorDialog, setShowErrorDialog] = useState(false);
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get("auth-error") === "true") {
+      setShowErrorDialog(true);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (showErrorDialog) {
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete("auth-error");
+      window.history.replaceState({}, "", newUrl.toString());
+    }
+  }, [showErrorDialog]);
+
   return (
     <>
+      {showErrorDialog && (
+        <Dialog open={showErrorDialog} onOpenChange={setShowErrorDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Error</DialogTitle>
+              <DialogDescription>
+                Email link is invalid or has expired. Please try logging in
+                again.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-end space-x-2">
+              <Button
+                onClick={() => setShowErrorDialog(false)}
+                variant="secondary"
+              >
+                Close
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
       <main className="flex flex-col">
         {/* Hero Section */}
         <HeroSection />

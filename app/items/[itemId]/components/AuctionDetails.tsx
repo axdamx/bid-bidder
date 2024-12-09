@@ -23,12 +23,14 @@ export function AuctionDetails({
   isWinner,
   handleBidSubmit,
   handleBuyItNowSubmit,
+  handleBinClick,
   isPending,
   isBuyItNowPending,
   handleAuctionEnd,
   handleLinkClick,
   isDescriptionExpanded,
   setIsDescriptionExpanded,
+  setShowBuyItNowModal,
 }: {
   item: any;
   highestBid: number;
@@ -38,12 +40,14 @@ export function AuctionDetails({
   isWinner: boolean;
   handleBidSubmit: () => void;
   handleBuyItNowSubmit: () => void;
+  handleBinClick: () => void;
   isPending: boolean;
   isBuyItNowPending: boolean;
   handleAuctionEnd: () => void;
   handleLinkClick: (e: React.MouseEvent, path: string) => void;
   isDescriptionExpanded: boolean;
   setIsDescriptionExpanded: (expanded: boolean) => void;
+  setShowBuyItNowModal: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   return (
     <Card className="w-full">
@@ -176,12 +180,12 @@ export function AuctionDetails({
                 "Place Bid"
               )}
             </Button>
-            {/* {!item.isBoughtOut && item.currentBid < item.binPrice && (
+            {!item.isBoughtOut && item.currentBid < item.binPrice && (
               <MovingBorderButton
                 className="bg-white dark:bg-slate-900 text-black dark:text-white border-neutral-200 dark:border-slate-800"
                 containerClassName="w-full"
                 disabled={isBuyItNowPending}
-                onClick={handleBuyItNowSubmit}
+                onClick={handleBinClick}
                 variant="destructive"
                 size="lg"
                 borderRadius="1.75rem"
@@ -195,7 +199,7 @@ export function AuctionDetails({
                   `BIN Price ${formatCurrency(item.binPrice)}`
                 )}
               </MovingBorderButton>
-            )} */}
+            )}
           </>
         )}
       </CardContent>

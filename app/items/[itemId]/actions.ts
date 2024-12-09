@@ -1,90 +1,13 @@
 "use server";
 
 // import { auth } from "@/app/auth";
-import { useSupabase } from "@/app/context/SupabaseContext";
 import { createServerSupabase } from "@/lib/supabase/server";
 // import { supabase } from "@/lib/utils";
 // import { database } from "@/src/db/database";
 // import { bidAcknowledgments, bids, items, users } from "@/src/db/schema";
-import { desc, eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 const supabase = createServerSupabase();
-
-// export async function createBidAction(itemId: number) {
-//   const session = await auth();
-
-//   if (!session || !session.user || !session.user.id) {
-//     throw new Error("You must be logged in");
-//   }
-
-//   const item = await database.query.items.findFirst({
-//     where: eq(items.id, itemId),
-//   });
-
-//   if (!item) {
-//     throw new Error("Item not found!");
-//   }
-
-//   const latestBidValue = item.currentBid
-//     ? item.currentBid + item.bidInterval
-//     : item.startingPrice + item.bidInterval;
-
-//   await database.insert(bids).values({
-//     amount: latestBidValue,
-//     itemId,
-//     userId: session.user.id,
-//     timestamp: new Date(),
-//   });
-
-//   await database
-//     .update(items)
-//     .set({
-//       currentBid: latestBidValue,
-//     })
-//     .where(eq(items.id, itemId));
-
-//   // Fetch the latest bid with user information
-//   const latestBid = await database.query.bids.findFirst({
-//     where: eq(bids.itemId, itemId),
-//     orderBy: desc(bids.id),
-//     with: {
-//       user: {
-//         columns: {
-//           image: true,
-//           name: true,
-//         },
-//       },
-//     },
-//   });
-
-//   // Send bid update to Socket.IO server via HTTP
-//   try {
-//     console.log("Sending bid update to Socket.IO server");
-//     const response = await fetch("http://localhost:8082/api/bids", {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json",
-//       },
-//       body: JSON.stringify({
-//         itemId,
-//         newBid: latestBidValue,
-//         bidInfo: latestBid,
-//       }),
-//     });
-
-//     if (!response.ok) {
-//       console.error("Failed to send bid update to Socket.IO server");
-//     }
-
-//     const result = await response.json();
-//     console.log("Socket.IO server response:", result);
-//   } catch (error) {
-//     console.error("Error sending bid update:", error);
-//   }
-
-//   revalidatePath(`/items/${itemId}`);
-// }
 
 export async function getLatestBidWithUser(itemId: number) {
   const { data: latestBid, error: latestBidError } = await supabase
@@ -138,44 +61,6 @@ export async function createBidAction(itemId: number, userId: string) {
     .eq("id", itemId);
 
   if (updateError) throw new Error("Failed to update item");
-
-  // // Fetch latest bid with user information
-  // const { data: latestBid, error: latestBidError } = await supabase
-  //   .from("bids")
-  //   .select("*, users (*)")
-  //   .eq("itemId", itemId)
-  //   .order("id", { ascending: false })
-  //   .limit(1)
-  //   .single();
-
-  // if (latestBidError) {
-  //   console.error("Error fetching latest bid:", latestBidError);
-  // }
-
-  // // Socket.IO update remains the same
-  // try {
-  //   console.log("Sending bid update to Socket.IO server");
-  //   const response = await fetch("http://localhost:8082/api/bids", {
-  //     method: "POST",
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //     },
-  //     body: JSON.stringify({
-  //       itemId,
-  //       newBid: latestBidValue,
-  //       bidInfo: latestBid,
-  //     }),
-  //   });
-
-  //   if (!response.ok) {
-  //     console.error("Failed to send bid update to Socket.IO server");
-  //   }
-
-  //   const result = await response.json();
-  //   console.log("Socket.IO server response:", result);
-  // } catch (error) {
-  //   console.error("Error sending bid update:", error);
-  // }
 
   revalidatePath(`/items/${itemId}`);
 }
@@ -326,10 +211,16 @@ export async function createOrderAction(
     // Update the item's isBoughtOut status
     const { error: updateError } = await supabase
       .from("items")
-      .update({ isBoughtOut: true })
+      .update({ 
+        isBoughtOut: true,
+        status: "PENDING",
+        winnerId: userId 
+      })
       .eq("id", itemId);
 
     if (updateError) throw updateError;
+
+    revalidatePath(`/items/${itemId}`);
 
     return order;
   } catch (error) {
