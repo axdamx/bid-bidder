@@ -136,36 +136,35 @@ export default function AuthModalV2({
       console.log("Auth state change detected", event);
       if (session?.user) {
         console.log("User session available", session.user.id);
+
         try {
-          console.log("Setting isNavigating to true");
+          console.log("Starting user upsert process");
           setIsNavigating(true);
 
-          console.log("Starting user upsert process");
-          const upsertedUser = await upsertUser(session.user);
+          if (!user) {
+            upsertUser(session.user);
+          }
+          // const upsertedUser = await upsertUser(session.user);
 
-          console.log("User upsert completed", upsertedUser);
-          setUser(upsertedUser);
+          // console.log("User upsert completed", upsertedUser);
+          // setUser(upsertedUser);
 
-          console.log("Closing any open modals");
-          handleClose();
-
-          console.log("Current URL:", window.location.href);
-          if (window.location.href.includes("?code=")) {
-            console.log("On callback URL, navigating to home");
-            router.push("/");
-          } else {
-            console.log("Refreshing current route");
-            router.refresh();
+          const shouldRedirect = searchParams.get("upsert-user") === "true";
+          if (shouldRedirect) {
+            // Remove the upsert-user flag from the URL
+            const newUrl = new URL(window.location.href);
+            newUrl.searchParams.delete("upsert-user");
+            router.replace(newUrl.toString());
           }
         } catch (error) {
-          console.error("Error in handleAuthStateChange:", error);
+          console.error("Error in user upsert:", error);
           toast.error("Failed to update user data. Please try again.");
         } finally {
-          console.log("Setting isNavigating to false");
           setIsNavigating(false);
         }
       } else {
         console.log("No user session");
+        setUser(null);
       }
     };
 
@@ -174,11 +173,16 @@ export default function AuthModalV2({
       handleAuthStateChange
     );
 
+    // Trigger the auth state change handler immediately
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      handleAuthStateChange("INITIAL", session);
+    });
+
     return () => {
       console.log("Cleaning up auth state change listener");
       authListener.subscription.unsubscribe();
     };
-  }, [router]);
+  }, [router, searchParams]);
 
   const handleClose = () => {
     setIsOpen(false);
@@ -320,6 +324,8 @@ export default function AuthModalV2({
       }
 
       console.log("User upserted successfully", upsertedUser?.id);
+
+      setUser(upsertedUser);
 
       if (!existingUser) {
         console.log("New user, redirecting to onboarding");
