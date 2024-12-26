@@ -41,6 +41,7 @@ export default function Home() {
   const [user] = useAtom(userAtom);
   const searchParams = useSearchParams();
   const hasSeenOnboarding = user?.hasSeenOnboarding;
+  const [hasTriggeredSuccess, setHasTriggeredSuccess] = useState(false);
 
   useEffect(() => {
     if (
@@ -56,11 +57,13 @@ export default function Home() {
     if (
       searchParams.get("auth-success") === "true" &&
       hasSeenOnboarding &&
-      user
+      user &&
+      !hasTriggeredSuccess
     ) {
       setShowSuccessDialog(true);
+      setHasTriggeredSuccess(true);
     }
-  }, [hasSeenOnboarding, searchParams, user]);
+  }, [hasSeenOnboarding, searchParams, user, hasTriggeredSuccess]);
 
   useEffect(() => {
     if (showErrorDialog) {
@@ -72,6 +75,19 @@ export default function Home() {
       window.history.replaceState({}, "", newUrl.toString());
     }
   }, [showErrorDialog]);
+
+  useEffect(() => {
+    if (showSuccessDialog) {
+      // Add a small delay before cleaning up the URL to ensure the dialog is shown
+      const timer = setTimeout(() => {
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete("auth-success");
+        newUrl.searchParams.delete("account-exists");
+        window.history.replaceState({}, "", newUrl.toString());
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [showSuccessDialog]);
 
   return (
     <>
