@@ -224,7 +224,11 @@ export function ActiveBidsClient() {
 
       {showModal && (
         <Dialog open={true} onOpenChange={handleCloseModal}>
-          <DialogContent>
+          <DialogContent
+            aria-describedby="success-message"
+            aria-labelledby="success-title"
+            className="[&>button]:hidden"
+          >
             <DialogHeader>
               <DialogTitle>
                 {showModal.isWinning ? `Congratulations!` : `Auction Ended!`}

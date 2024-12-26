@@ -72,17 +72,15 @@ const ProfilePage = ({
 
   return (
     <div className="min-h-screen">
-      {(isNavigating || isFetching) && (
-        <Dialog open={true} modal>
-          <DialogTitle className="[&>button]:hidden" />
-          <DialogContent className="[&>button]:hidden">
-            <div className="flex flex-col items-center justify-center space-y-4">
-              <Loader2 className="h-8 w-8 animate-spin" />
-              <p>Loading...</p>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
+      <Dialog open={isNavigating} modal>
+        <DialogTitle className="[&>button]:hidden" />
+        <DialogContent className="[&>button]:hidden">
+          <div className="flex flex-col items-center justify-center space-y-4">
+            <Loader2 className="h-8 w-8 animate-spin" />
+            <p>Loading...</p>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <UserHeader
         user={userQuery.data}

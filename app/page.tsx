@@ -2,14 +2,8 @@
 
 import { Suspense } from "react";
 import { LiveAuctions } from "./home/components/sections/LiveAuctions";
-import { UpcomingAuctions } from "./home/components/sections/UpcomingAuctions";
 import { EndedAuctions } from "./home/components/sections/EndedAuctions";
 import HeroSection from "./home/components/sections/HeroSection";
-import { Footer } from "./footer";
-import { getEndedAuctions } from "./action";
-import { TopBidsClient } from "./home/components/sections/TopSection";
-// import { supabase } from "@/lib/utils";
-import CategoryCarousell from "./home/components/sections/CategoryCarousell";
 import { useAtom } from "jotai";
 import { userAtom } from "./atom/userAtom";
 import { Gavel, Trophy, Users } from "lucide-react";
@@ -41,21 +35,24 @@ function LoadingSection({ message }: { message: string }) {
   );
 }
 
-// export async function TopBids() {
-//   const items = (await getEndedAuctions()).slice(0, 3);
-
-//   return <TopBidsClient initialItems={items} />;
-// }
-
 export default function Home() {
   const [showErrorDialog, setShowErrorDialog] = useState(false);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [user] = useAtom(userAtom);
   const searchParams = useSearchParams();
+  const hasSeenOnboarding = user?.hasSeenOnboarding;
 
   useEffect(() => {
     if (searchParams.get("auth-error") === "true") {
       setShowErrorDialog(true);
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    if (searchParams.get("auth-success") === "true" && !hasSeenOnboarding) {
+      setShowSuccessDialog(true);
+    }
+  }, [hasSeenOnboarding, searchParams]);
 
   useEffect(() => {
     if (showErrorDialog) {
@@ -69,7 +66,11 @@ export default function Home() {
     <>
       {showErrorDialog && (
         <Dialog open={showErrorDialog} onOpenChange={setShowErrorDialog}>
-          <DialogContent>
+          <DialogContent
+            aria-describedby="success-message"
+            aria-labelledby="success-title"
+            className="[&>button]:hidden"
+          >
             <DialogHeader>
               <DialogTitle>Error</DialogTitle>
               <DialogDescription>
@@ -81,6 +82,30 @@ export default function Home() {
               <Button
                 onClick={() => setShowErrorDialog(false)}
                 variant="secondary"
+              >
+                Close
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+      {showSuccessDialog && (
+        <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+          <DialogContent
+            aria-describedby="success-message"
+            aria-labelledby="success-title"
+            className="[&>button]:hidden"
+          >
+            <DialogHeader>
+              <DialogTitle>Successfully Logged In</DialogTitle>
+              <DialogDescription>
+                Welcome back! You have successfully logged into your account.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-end">
+              <Button
+                variant="default"
+                onClick={() => setShowSuccessDialog(false)}
               >
                 Close
               </Button>
@@ -182,6 +207,35 @@ export default function Home() {
           >
             <EndedAuctions limit={3} />
           </Suspense>
+        </section>
+
+        {/* Discord Community Section */}
+        <section className="container py-12 md:py-24">
+          <div className="flex flex-col items-center justify-center text-center space-y-6 max-w-2xl mx-auto">
+            <h2 className="text-3xl font-bold tracking-tighter md:text-4xl">
+              Join our Community.
+            </h2>
+            <p className="text-muted-foreground text-lg">
+              Meet the Renown Community, artists and collectors for platform
+              updates, announcements, and more...
+            </p>
+            <a
+              href="https://discord.gg/your-discord-link"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-[#5865F2] hover:bg-[#4752C4] text-white px-6 py-3 rounded-lg transition-colors"
+            >
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path d="M19.27 5.33C17.94 4.71 16.5 4.26 15 4a.09.09 0 0 0-.07.03c-.18.33-.39.76-.53 1.09a16.09 16.09 0 0 0-4.8 0c-.14-.34-.35-.76-.54-1.09c-.01-.02-.04-.03-.07-.03c-1.5.26-2.93.71-4.27 1.33c-.01 0-.02.01-.03.02c-2.72 4.07-3.47 8.03-3.1 11.95c0 .02.01.04.03.05c1.8 1.32 3.53 2.12 5.24 2.65c.03.01.06 0 .07-.02c.4-.55.76-1.13 1.07-1.74c.02-.04 0-.08-.04-.09c-.57-.22-1.11-.48-1.64-.78c-.04-.02-.04-.08-.01-.11c.11-.08.22-.17.33-.25c.02-.02.05-.02.07-.01c3.44 1.57 7.15 1.57 10.55 0c.02-.01.05-.01.07.01c.11.09.22.17.33.26c.04.03.04.09-.01.11c-.52.31-1.07.56-1.64.78c-.04.01-.05.06-.04.09c.32.61.68 1.19 1.07 1.74c.03.01.06.02.09.01c1.72-.53 3.45-1.33 5.25-2.65c.02-.01.03-.03.03-.05c.44-4.53-.73-8.46-3.1-11.95c-.01-.01-.02-.02-.04-.02zM8.52 14.91c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12c0 1.17-.84 2.12-1.89 2.12zm6.97 0c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12c0 1.17-.83 2.12-1.89 2.12z" />
+              </svg>
+              Launch Discord
+            </a>
+          </div>
         </section>
       </main>
     </>

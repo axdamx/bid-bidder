@@ -197,7 +197,7 @@ export function LiveAuctions() {
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["liveAuctions"],
     queryFn: () => getLiveAuctions(),
-    staleTime: 0,
+    // staleTime: 0,
     refetchOnMount: true,
   });
 

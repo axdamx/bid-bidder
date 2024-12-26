@@ -15,12 +15,21 @@ import { CalendarIcon } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 
 interface DateTimePickerProps {
+  value?: string;
   onChange?: (date: Date | undefined) => void;
 }
 
-export function DateTimePicker({ onChange }: DateTimePickerProps) {
-  const [date, setDate] = React.useState<Date>();
+export function DateTimePicker({ onChange, value }: DateTimePickerProps) {
+  const [date, setDate] = React.useState<Date | undefined>(() =>
+    value ? new Date(value) : undefined
+  );
   const [isOpen, setIsOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    if (value) {
+      setDate(new Date(value));
+    }
+  }, [value]);
 
   const hours = Array.from({ length: 12 }, (_, i) => i + 1);
   const handleDateSelect = (selectedDate: Date | undefined) => {

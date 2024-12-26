@@ -35,7 +35,7 @@ export function EndedAuctions({ limit }: { limit?: number }) {
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["endedAuctions"],
     queryFn: () => getEndedAuctions(),
-    staleTime: 0, // Set to 0 to always check for updates
+    // staleTime: 0, // Set to 0 to always check for updates
     refetchOnMount: true, // Refetch when component mounts
   });
   return (

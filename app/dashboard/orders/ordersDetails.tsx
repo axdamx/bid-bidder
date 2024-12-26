@@ -141,7 +141,7 @@ export default function OrderDetails() {
     refetchOnWindowFocus: true, // Enable refetch on window focus
     refetchOnMount: true, // Enable refetch on component mount
     refetchInterval: 30000, // Refresh every 30 seconds
-    staleTime: 10000, // Consider data stale after 10 seconds
+    // staleTime: 10000, // Consider data stale after 10 seconds
   });
 
   // Mutation for updating order status

@@ -10,17 +10,30 @@ import { OptimizedImage } from "@/app/components/OptimizedImage";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React from "react";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import {
   Search,
   PackageSearch,
   Loader2,
   ChevronLeft,
   ChevronRight,
+  Laptop,
+  Shirt,
+  Home,
+  Trophy,
+  Album,
+  BookOpen,
+  Palette,
+  Car,
+  MoreHorizontal,
+  LayoutGrid,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
+import { useDebounce } from "@/app/components/headerSearch";
 
 interface ItemsListingClientProps {
   items: any[];
@@ -28,6 +41,19 @@ interface ItemsListingClientProps {
   description: string;
   type: string;
 }
+
+const categories = [
+  { value: "all", label: "All Items", icon: LayoutGrid },
+  { value: "electronics", label: "Electronics", icon: Laptop },
+  { value: "fashion", label: "Fashion", icon: Shirt },
+  { value: "home", label: "Home & Living", icon: Home },
+  { value: "sports", label: "Sports & Outdoors", icon: Trophy },
+  { value: "collectibles", label: "Collectibles", icon: Album },
+  { value: "books", label: "Books & Media", icon: BookOpen },
+  { value: "art", label: "Art & Crafts", icon: Palette },
+  { value: "automotive", label: "Automotive", icon: Car },
+  { value: "others", label: "Others", icon: MoreHorizontal },
+];
 
 export default function ItemsListingClient({
   items,
@@ -41,24 +67,47 @@ export default function ItemsListingClient({
   const [isLoading, setIsLoading] = useState(false);
   const tabsListRef = useRef<HTMLDivElement>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [isNavigating, setIsNavigating] = useState(false);
   const pathname = usePathname();
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 9;
+  const [selectedCategory, setSelectedCategory] = useState("all");
 
-  // Filter items based on search
-  const filteredItems = React.useMemo(() => {
-    return items.filter((item) =>
-      item.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [items, searchTerm]);
+  // Reset page when search term or category changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearchTerm, selectedCategory]);
+
+  // Memoized filter function
+  const filterItem = useCallback(
+    (item: any) => {
+      const matchesSearch = item.name
+        .toLowerCase()
+        .includes(debouncedSearchTerm.toLowerCase());
+      const matchesCategory =
+        selectedCategory === "all" || item.category === selectedCategory;
+      return matchesSearch && matchesCategory;
+    },
+    [debouncedSearchTerm, selectedCategory]
+  );
+
+  // Filter items based on search and category
+  const filteredItems = useMemo(() => {
+    return items.filter(filterItem);
+  }, [items, filterItem]);
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
-  const paginatedItems = React.useMemo(() => {
+  const paginatedItems = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     return filteredItems.slice(startIndex, startIndex + itemsPerPage);
   }, [filteredItems, currentPage]);
+
+  // Handle search input with debounce
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  };
 
   useEffect(() => {
     // Scroll selected tab into view
@@ -73,11 +122,6 @@ export default function ItemsListingClient({
       });
     }
   }, [type]); // Run when tab type changes
-
-  useEffect(() => {
-    // Reset to first page when search changes
-    setCurrentPage(1);
-  }, [searchTerm]);
 
   useEffect(() => {
     setIsNavigating(false);
@@ -124,43 +168,71 @@ export default function ItemsListingClient({
               className="pl-9"
               placeholder="Search items..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={handleSearchChange}
             />
           </div>
         </div>
 
-        <Tabs defaultValue={type} onValueChange={handleTabChange}>
+        <Tabs
+          defaultValue={type}
+          onValueChange={handleTabChange}
+          className="w-full"
+        >
           <div className="relative">
-            <TabsList
-              ref={tabsListRef}
-              className="mb-6 md:mb-8 w-full md:w-fit flex md:inline-flex justify-start overflow-x-auto scrollbar-hide"
-            >
-              <TabsTrigger
-                className="flex-1 md:flex-none relative data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:w-full data-[state=active]:after:h-0.5 data-[state=active]:after:bg-primary"
-                value="live"
-              >
-                Live Auctions
-              </TabsTrigger>
-              <TabsTrigger
-                className="flex-1 md:flex-none relative data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:w-full data-[state=active]:after:h-0.5 data-[state=active]:after:bg-primary"
-                value="upcoming"
-              >
-                Upcoming Auctions
-              </TabsTrigger>
-              <TabsTrigger
-                className="flex-1 md:flex-none relative data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:w-full data-[state=active]:after:h-0.5 data-[state=active]:after:bg-primary"
-                value="ended"
-              >
-                Ended Auctions
-              </TabsTrigger>
+            <TabsList className="w-full justify-start rounded-none border-b bg-transparent p-0 overflow-x-auto">
+              <div className="flex min-w-full px-4">
+                <TabsTrigger
+                  value="live"
+                  className="relative h-9 rounded-none border-b-2 border-b-transparent bg-transparent px-4 pb-3 pt-2 font-semibold text-muted-foreground shadow-none transition-none data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none"
+                >
+                  Live Auctions
+                </TabsTrigger>
+                {/* <TabsTrigger
+                  value="upcoming"
+                  disabled
+                  className="relative h-9 rounded-none border-b-2 border-b-transparent bg-transparent px-4 pb-3 pt-2 font-semibold text-muted-foreground shadow-none transition-none data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none"
+                >
+                  Upcoming Auctions
+                </TabsTrigger> */}
+                <TabsTrigger
+                  value="ended"
+                  className="relative h-9 rounded-none border-b-2 border-b-transparent bg-transparent px-4 pb-3 pt-2 font-semibold text-muted-foreground shadow-none transition-none data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none"
+                >
+                  Ended Auctions
+                </TabsTrigger>
+              </div>
             </TabsList>
           </div>
 
-          {isLoading ? (
-            <TableSkeleton />
-          ) : (
-            <>
-              <TabsContent value="live">
+          <TabsContent value="live" className="border-none p-0 outline-none">
+            <ScrollArea className="w-full whitespace-nowrap rounded-md border my-4">
+              <div className="flex w-max space-x-4 p-4">
+                {categories.map((category) => {
+                  const Icon = category.icon;
+                  return (
+                    <Button
+                      key={category.value}
+                      variant={
+                        selectedCategory === category.value
+                          ? "default"
+                          : "outline"
+                      }
+                      className="flex-shrink-0 gap-2"
+                      onClick={() => setSelectedCategory(category.value)}
+                    >
+                      <Icon className="h-4 w-4" />
+                      {category.label}
+                    </Button>
+                  );
+                })}
+              </div>
+              <ScrollBar orientation="horizontal" />
+            </ScrollArea>
+
+            {isLoading ? (
+              <TableSkeleton />
+            ) : (
+              <>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-3">
                   {type === "live" && filteredItems.length > 0 ? (
                     paginatedItems.map((item, index) => (
@@ -260,8 +332,41 @@ export default function ItemsListingClient({
                     </Button>
                   </div>
                 )}
-              </TabsContent>
-              <TabsContent value="upcoming">
+              </>
+            )}
+          </TabsContent>
+          <TabsContent
+            value="upcoming"
+            className="border-none p-0 outline-none"
+          >
+            <ScrollArea className="w-full whitespace-nowrap rounded-md border my-4">
+              <div className="flex w-max space-x-4 p-4">
+                {categories.map((category) => {
+                  const Icon = category.icon;
+                  return (
+                    <Button
+                      key={category.value}
+                      variant={
+                        selectedCategory === category.value
+                          ? "default"
+                          : "outline"
+                      }
+                      className="flex-shrink-0 gap-2"
+                      onClick={() => setSelectedCategory(category.value)}
+                    >
+                      <Icon className="h-4 w-4" />
+                      {category.label}
+                    </Button>
+                  );
+                })}
+              </div>
+              <ScrollBar orientation="horizontal" />
+            </ScrollArea>
+
+            {isLoading ? (
+              <TableSkeleton />
+            ) : (
+              <>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-3">
                   {type === "upcoming" && filteredItems.length > 0 ? (
                     paginatedItems.map((item, index) => (
@@ -361,8 +466,38 @@ export default function ItemsListingClient({
                     </Button>
                   </div>
                 )}
-              </TabsContent>
-              <TabsContent value="ended">
+              </>
+            )}
+          </TabsContent>
+          <TabsContent value="ended" className="border-none p-0 outline-none">
+            <ScrollArea className="w-full whitespace-nowrap rounded-md border my-4">
+              <div className="flex w-max space-x-4 p-4">
+                {categories.map((category) => {
+                  const Icon = category.icon;
+                  return (
+                    <Button
+                      key={category.value}
+                      variant={
+                        selectedCategory === category.value
+                          ? "default"
+                          : "outline"
+                      }
+                      className="flex-shrink-0 gap-2"
+                      onClick={() => setSelectedCategory(category.value)}
+                    >
+                      <Icon className="h-4 w-4" />
+                      {category.label}
+                    </Button>
+                  );
+                })}
+              </div>
+              <ScrollBar orientation="horizontal" />
+            </ScrollArea>
+
+            {isLoading ? (
+              <TableSkeleton />
+            ) : (
+              <>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-3">
                   {type === "ended" && filteredItems.length > 0 ? (
                     paginatedItems.map((item, index) => (
@@ -462,9 +597,9 @@ export default function ItemsListingClient({
                     </Button>
                   </div>
                 )}
-              </TabsContent>
-            </>
-          )}
+              </>
+            )}
+          </TabsContent>
         </Tabs>
       </div>
 

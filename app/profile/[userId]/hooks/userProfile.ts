@@ -1,42 +1,42 @@
 import { useQueries } from "@tanstack/react-query";
 import { fetchFollowData, fetchOwnedItems, fetchUser } from "../action";
+import { useMemo } from "react";
 
 const useProfileData = (ownerId: string, currentUserId: string) => {
   console.log(
     `useProfileData hook called with ownerId: ${ownerId}, currentUserId: ${currentUserId}`
   );
 
+  const memoizedOwnerId = useMemo(() => ownerId, [ownerId]);
+  const memoizedCurrentUserId = useMemo(() => currentUserId, [currentUserId]);
+
   const results = useQueries({
     queries: [
       {
-        queryKey: ["user", ownerId],
+        queryKey: ["user", memoizedOwnerId],
         queryFn: () => {
-          console.log(`Fetching user data for ownerId: ${ownerId}`);
-          return fetchUser(ownerId);
+          console.log(`Fetching user data for ownerId: ${memoizedOwnerId}`);
+          return fetchUser(memoizedOwnerId);
         },
         // staleTime: 5 * 60 * 1000, // 5 minutes
-        // cacheTime: 10 * 60 * 1000, // 10 minutes
       },
       {
-        queryKey: ["followData", currentUserId, ownerId],
+        queryKey: ["followData", memoizedCurrentUserId, memoizedOwnerId],
         queryFn: () => {
           console.log(
-            `Fetching follow data for currentUserId: ${currentUserId}, ownerId: ${ownerId}`
+            `Fetching follow data for currentUserId: ${memoizedCurrentUserId}, ownerId: ${memoizedOwnerId}`
           );
-          return fetchFollowData(currentUserId, ownerId);
+          return fetchFollowData(memoizedCurrentUserId, memoizedOwnerId);
         },
-        staleTime: 1 * 60 * 1000, // 1 minute
-        // cacheTime: 5 * 60 * 1000, // 5 minutes
+        // staleTime: 5 * 60 * 1000, // 5 minutes
       },
       {
-        queryKey: ["ownedItems", ownerId],
+        queryKey: ["ownedItems", memoizedOwnerId],
         queryFn: () => {
-          console.log(`Fetching owned items for ownerId: ${ownerId}`);
-          return fetchOwnedItems(ownerId);
+          console.log(`Fetching owned items for ownerId: ${memoizedOwnerId}`);
+          return fetchOwnedItems(memoizedOwnerId);
         },
-        staleTime: 2 * 60 * 1000, // 2 minutes
-        // cacheTime: 10 * 60 * 1000, // 10 minutes
-        // keepPreviousData: true,
+        // staleTime: 5 * 60 * 1000, // 5 minutes
       },
     ],
   });

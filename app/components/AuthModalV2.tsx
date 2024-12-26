@@ -406,7 +406,7 @@ export default function AuthModalV2({
               <p className="text-sm text-muted-foreground">
                 Check your email for the magic link. You can close this window.
               </p>
-              <Button
+              {/* <Button
                 variant="outline"
                 className="w-full"
                 onClick={() => {
@@ -415,7 +415,7 @@ export default function AuthModalV2({
                 }}
               >
                 Send another link
-              </Button>
+              </Button> */}
             </div>
           )}
         </DialogContent>

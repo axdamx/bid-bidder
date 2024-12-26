@@ -73,7 +73,11 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full bg-gray-50/80 backdrop-blur-sm py-2 shadow-sm">
       <Dialog open={isNavigating} modal>
         <DialogTitle className="[&>button]:hidden" />
-        <DialogContent className="[&>button]:hidden">
+        <DialogContent
+          aria-describedby="success-message"
+          aria-labelledby="success-title"
+          className="[&>button]:hidden"
+        >
           <div className="flex flex-col items-center justify-center space-y-4">
             <Loader2 className="h-8 w-8 animate-spin" />
             <p>Loading...</p>

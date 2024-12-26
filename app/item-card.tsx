@@ -18,13 +18,13 @@ import { formatCurrency } from "@/lib/utils";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import Image from "next/image";
 
 interface ItemCardProps {
   item: ItemWithUser;
-  user?: UserType;
 }
 
-const ItemCard: React.FC<ItemCardProps> = ({ item, user }) => {
+const ItemCard: React.FC<ItemCardProps> = ({ item }) => {
   const [isNavigating, setIsNavigating] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
@@ -90,7 +90,17 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, user }) => {
               {item.name}
             </CardTitle>
             <div className="flex items-center text-sm text-muted-foreground shrink-0">
-              <User className="w-4 h-4 mr-1" />
+              {item.user?.image ? (
+                <Image
+                  src={item.user.image}
+                  width={16}
+                  height={16}
+                  alt={`${item.user.name}'s profile picture`}
+                  className="w-4 h-4 mr-1 rounded-full object-cover"
+                />
+              ) : (
+                <User className="w-4 h-4 mr-1" />
+              )}
               {item.user.name}
             </div>
           </div>

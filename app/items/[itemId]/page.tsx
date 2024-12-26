@@ -105,7 +105,7 @@ export default function ItemPage({
   const itemQuery = useQuery({
     queryKey: ["item", itemId],
     queryFn: () => fetchItem(itemId),
-    staleTime: 0, // Set to 0 to always check for updates
+    // staleTime: 0, // Set to 0 to always check for updates
     refetchOnMount: true, // Refetch when component mounts
   });
 
@@ -123,7 +123,7 @@ export default function ItemPage({
   const bidsQuery = useQuery({
     queryKey: ["bids", itemId],
     queryFn: () => fetchBids(itemId),
-    staleTime: 0, // Set to 0 to always check for updates
+    // staleTime: 0, // Set to 0 to always check for updates
     refetchOnMount: true, // Refetch when component mounts
   });
 

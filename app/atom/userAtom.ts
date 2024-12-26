@@ -5,6 +5,7 @@ export type User = {
   email: string;
   name: string;
   image?: string;
+  hasSeenOnboarding?: boolean;
 };
 
 export const userAtom = atom<User | null>(null);

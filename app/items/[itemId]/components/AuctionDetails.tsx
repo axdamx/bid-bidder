@@ -13,6 +13,8 @@ import CountdownTimer from "@/app/countdown-timer";
 import { Button as MovingBorderButton } from "@/components/ui/moving-border";
 import cn from "classnames";
 import { formatCurrency, getDateInfo } from "../utils/formatters";
+import { Badge } from "@/components/ui/badge";
+import Image from "next/image";
 
 export function AuctionDetails({
   item,
@@ -49,12 +51,69 @@ export function AuctionDetails({
   setIsDescriptionExpanded: (expanded: boolean) => void;
   setShowBuyItNowModal: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
+  const DealMethodDisplay = ({ item }: { item: any }) => {
+    switch (item.dealingMethodType) {
+      case "COD":
+        return (
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-1 bg-primary/10 text-primary rounded text-sm font-medium">
+                {item.dealingMethodType}
+              </span>
+            </div>
+            <p className="text-base">
+              Pickup at{" "}
+              <span className="font-medium">{item.dealingMethodLocation}</span>
+            </p>
+          </div>
+        );
+      case "SHIPPING":
+        return (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-1 bg-primary/10 text-primary rounded text-sm font-medium">
+                {item.dealingMethodType}
+              </span>
+            </div>
+            {(item.westMalaysiaShippingPrice ||
+              item.eastMalaysiaShippingPrice) && (
+              <div className="space-y-1">
+                {item.westMalaysiaShippingPrice && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-base">West Malaysia</span>
+                    <span className="font-medium">
+                      {formatCurrency(item.westMalaysiaShippingPrice)}
+                    </span>
+                  </div>
+                )}
+                {item.eastMalaysiaShippingPrice && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-base">East Malaysia</span>
+                    <span className="font-medium">
+                      {formatCurrency(item.eastMalaysiaShippingPrice)}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      default:
+        return (
+          <span className="px-2 py-1 bg-primary/10 text-primary rounded text-sm font-medium">
+            {item.dealingMethodType}
+          </span>
+        );
+    }
+  };
+
   return (
     <Card className="w-full">
       <CardHeader className="space-y-2">
         <div className="flex justify-between items-center">
-          <CardTitle className="text-xl md:text-2xl font-bold break-words">
+          <CardTitle className="text-xl md:text-2xl font-bold break-words flex items-center gap-2">
             {item.name}
+            <Badge variant="secondary">LOT #{item.id}</Badge>
           </CardTitle>
         </div>
         <CardDescription className="text-base md:text-lg">
@@ -64,72 +123,124 @@ export function AuctionDetails({
             className="hover:underline flex items-center gap-1"
             onClick={(e) => handleLinkClick(e, `/profile/${item.users.id}`)}
           >
-            <User className="h-4 w-4" />
+            {item.users?.image ? (
+              <Image
+                src={item.users.image}
+                width={16}
+                height={16}
+                alt={`${item.users.name}'s profile picture`}
+                className="w-8 h-8 mr-1 rounded-full object-cover"
+              />
+            ) : (
+              <User className="w-4 h-4 mr-1" />
+            )}
             {item.users.name}
           </Link>
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-12">
-        {/* Auction details grid */}
-        <div className="grid grid-cols-2 gap-8 w-full">
-          <div className="break-words">
-            <p className="text-sm text-muted-foreground">Current Bid</p>
-            <p className="text-2xl font-bold">
-              <AnimatePresence mode="wait">
-                <motion.span
-                  key={highestBid}
-                  initial={{ y: 20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  exit={{ y: -20, opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  {formatCurrency(highestBid ?? 0)}
-                </motion.span>
-              </AnimatePresence>
-            </p>
-          </div>
-          <div className="break-words">
-            <p className="text-sm text-muted-foreground">Bid Interval</p>
-            <p className="text-lg">{formatCurrency(item.bidInterval)}</p>
-          </div>
-          <div className="break-words">
-            <p className="text-sm text-muted-foreground">Starting Price</p>
-            <p className="text-lg">{formatCurrency(item.startingPrice)}</p>
-          </div>
-          <div className="break-words">
-            <p className="text-sm text-muted-foreground">Total Bids</p>
-            <p className="text-lg">
-              <AnimatePresence mode="wait">
-                <motion.span
-                  key={bids.length}
-                  initial={{ y: 20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  exit={{ y: -20, opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  {bids.length}
-                </motion.span>
-              </AnimatePresence>
-            </p>
-          </div>
-          <div className="break-words">
-            <p className="text-sm text-muted-foreground">End Date</p>
-            <p className="text-lg">
-              {getDateInfo(item.endDate + "Z").formattedDate}
-            </p>
-            <p className="text-lg">
-              {getDateInfo(item.endDate + "Z").formattedTime}
-            </p>
-          </div>
-          {item.binPrice && (
-            <div className="break-words">
-              <p className="text-sm text-muted-foreground">BIN Price</p>
-              <p className="text-lg">{formatCurrency(item.binPrice)}</p>
+      <CardContent className="space-y-8">
+        {/* Primary Auction Info */}
+        <div className="space-y-6">
+          <div className="flex flex-col md:flex-row justify-between gap-4 p-4 bg-muted/50 rounded-lg">
+            <div className="flex-1">
+              <p className="text-sm text-muted-foreground mb-1">Current Bid</p>
+              <p className="text-3xl font-bold">
+                <AnimatePresence mode="wait">
+                  <motion.span
+                    key={highestBid}
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: -20, opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {formatCurrency(highestBid ?? 0)}
+                  </motion.span>
+                </AnimatePresence>
+              </p>
             </div>
-          )}
+            {item.binPrice && (
+              <div className="flex-1">
+                <p className="text-sm text-muted-foreground mb-1">
+                  Buy It Now Price
+                </p>
+                <p className="text-3xl font-bold text-primary">
+                  {formatCurrency(item.binPrice)}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Auction Stats */}
+          <div className="space-y-6">
+            <div className="flex flex-col md:flex-row justify-between gap-4 p-4 bg-muted/50 rounded-lg">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">
+                    Bid Interval
+                  </p>
+                  <p className="text-xl">{formatCurrency(item.bidInterval)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">
+                    Starting Price
+                  </p>
+                  <p className="text-xl">
+                    {formatCurrency(item.startingPrice)}
+                  </p>
+                </div>
+                {item.category && (
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">
+                      Category
+                    </p>
+                    <p className="text-xl">{item.category.toUpperCase()}</p>
+                  </div>
+                )}
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">
+                    Total Bids
+                  </p>
+                  <p className="text-xl">
+                    <AnimatePresence mode="wait">
+                      <motion.span
+                        key={bids.length}
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: -20, opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        {bids.length}
+                      </motion.span>
+                    </AnimatePresence>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Shipping & End Date */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="p-4 bg-muted/30 rounded-lg">
+              <p className="text-sm text-muted-foreground mb-2">
+                Delivery Method
+              </p>
+              <DealMethodDisplay item={item} />
+            </div>
+            <div className="p-4 bg-muted/30 rounded-lg">
+              <p className="text-sm text-muted-foreground mb-2">End Date</p>
+              <p className="text-xl font-medium">
+                {getDateInfo(item.endDate + "Z").formattedDate}
+              </p>
+              <p className="text-lg text-muted-foreground">
+                {getDateInfo(item.endDate + "Z").formattedTime}
+              </p>
+            </div>
+          </div>
         </div>
-        <div>
-          <h3 className="text-lg font-semibold mb-2">Description</h3>
+
+        {/* Description Section */}
+        <div className="border-t pt-6">
+          <h3 className="text-xl font-semibold mb-3">Description</h3>
           <div
             className={cn(
               "text-muted-foreground relative",
@@ -139,7 +250,7 @@ export function AuctionDetails({
             )}
             style={{ overflowWrap: "break-word" }}
           >
-            <p>{item.description}</p>
+            <p className="text-base leading-relaxed">{item.description}</p>
             {!isDescriptionExpanded && item.description.length > 500 && (
               <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-background to-transparent" />
             )}
@@ -154,8 +265,6 @@ export function AuctionDetails({
             </Button>
           )}
         </div>
-        {/* Description */}
-        <div>{/* ... (description content) */}</div>
         <CountdownTimer
           endDate={item.endDate}
           onExpire={handleAuctionEnd}

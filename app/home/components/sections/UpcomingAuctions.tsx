@@ -15,7 +15,7 @@ export function UpcomingAuctions() {
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["upcomingAuctions"],
     queryFn: () => getUpcomingAuctions(),
-    staleTime: 0, // Set to 0 to always check for updates
+    // staleTime: 0, // Set to 0 to always check for updates
     refetchOnMount: true, // Refetch when component mounts
   });
 
