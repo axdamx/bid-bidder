@@ -43,21 +43,32 @@ export default function Home() {
   const hasSeenOnboarding = user?.hasSeenOnboarding;
 
   useEffect(() => {
-    if (searchParams.get("auth-error") === "true") {
+    if (
+      searchParams.get("auth-error") === "true" ||
+      (searchParams.get("error") === "access_denied" &&
+        searchParams.get("error_code") === "otp_expired")
+    ) {
       setShowErrorDialog(true);
     }
   }, [searchParams]);
 
   useEffect(() => {
-    if (searchParams.get("auth-success") === "true" && !hasSeenOnboarding) {
+    if (
+      searchParams.get("auth-success") === "true" &&
+      hasSeenOnboarding &&
+      user
+    ) {
       setShowSuccessDialog(true);
     }
-  }, [hasSeenOnboarding, searchParams]);
+  }, [hasSeenOnboarding, searchParams, user]);
 
   useEffect(() => {
     if (showErrorDialog) {
       const newUrl = new URL(window.location.href);
       newUrl.searchParams.delete("auth-error");
+      newUrl.searchParams.delete("error");
+      newUrl.searchParams.delete("error_code");
+      newUrl.searchParams.delete("error_description");
       window.history.replaceState({}, "", newUrl.toString());
     }
   }, [showErrorDialog]);
