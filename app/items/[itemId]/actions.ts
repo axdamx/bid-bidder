@@ -2,6 +2,7 @@
 
 // import { auth } from "@/app/auth";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { captureEvent } from "@/lib/posthog";
 // import { supabase } from "@/lib/utils";
 // import { database } from "@/src/db/database";
 // import { bidAcknowledgments, bids, items, users } from "@/src/db/schema";
@@ -48,6 +49,15 @@ export async function createBidAction(itemId: number, userId: string) {
     userId: userId,
     timestamp: new Date(), // Use plain Date object for timestamp without timezone
   });
+
+  if (!bidError) {
+    // Track successful bid
+    captureEvent('bid_placed', {
+      itemId,
+      userId,
+      amount: latestBidValue
+    });
+  }
 
   if (bidError) {
     console.error("Bid Error Details:", bidError);

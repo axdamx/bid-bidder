@@ -6,10 +6,11 @@ import { MotionGrid } from "@/app/components/motionGrid";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { userAtom } from "@/app/atom/userAtom";
 import { useAtom } from "jotai";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { createClientSupabase } from "@/lib/supabase/client";
 import { formatCurrency } from "@/lib/utils";
 import toast, { Toaster } from "react-hot-toast";
+import { captureEvent } from "@/lib/posthog";
 
 export default function ItemPage({
   params: { itemId },
@@ -21,6 +22,52 @@ export default function ItemPage({
   const [user] = useAtom(userAtom);
   const supabase = createClientSupabase();
   const queryClient = useQueryClient();
+  const hasTrackedView = useRef(false);
+
+  // Fetch item data
+  const { data: item } = useQuery({
+    queryKey: ["item", itemId],
+    queryFn: () => fetchItem(itemId),
+  });
+
+  // Fetch item's user data
+  const { data: itemUser } = useQuery({
+    queryKey: ["user", item?.userId],
+    queryFn: async () => {
+      if (!item?.userId) return null;
+      const { data } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", item.userId)
+        .single();
+      return data;
+    },
+    enabled: !!item?.userId,
+  });
+
+  useEffect(() => {
+    // Only track when we have all the data and haven't tracked yet
+    if (item && user && !hasTrackedView.current) {
+      hasTrackedView.current = true;
+      captureEvent('item_viewed', {
+        // Item details
+        itemId: item.id,
+        itemName: item.name,
+        itemPrice: item.currentBid || item.startingPrice,
+        itemStatus: item.status,
+        itemCategory: item.category,
+        // Viewer details
+        viewerId: user.id,
+        viewerName: user.name,
+        viewerEmail: user.email,
+        // Seller details
+        sellerId: itemUser?.id,
+        sellerName: itemUser?.name,
+        // Metadata
+        timestamp: new Date().toISOString()
+      });
+    }
+  }, [item, user, itemUser]);
 
   useEffect(() => {
     const channel = supabase

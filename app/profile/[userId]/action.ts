@@ -1,6 +1,5 @@
 "use server";
 import { getUserById } from "@/app/action";
-import { createClientSupabase } from "@/lib/supabase/client";
 import { createServerSupabase } from "@/lib/supabase/server";
 // import { supabase } from "@/lib/utils";
 // import { getUserById } from "@/app/action";

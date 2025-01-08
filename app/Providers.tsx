@@ -7,6 +7,7 @@ import { NotificationProvider } from "./context/NotificationContext";
 import QueryProvider from "@/lib/QueryClientComponentWrapper";
 import SessionProvider from "@/lib/supabase/SessionProvider";
 import { useEffect, useState } from "react";
+import { PostHogProvider } from "./providers/PostHogProvider";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   //   const [mounted, setMounted] = useState(false);
@@ -24,11 +25,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <Provider>
       <QueryProvider>
-        {/* <SupabaseProvider> */}
-        {/* <SessionProvider> */}
-        <NotificationProvider>{children}</NotificationProvider>
-        {/* </SessionProvider> */}
-        {/* </SupabaseProvider> */}
+        <PostHogProvider>
+          <NotificationProvider>{children}</NotificationProvider>
+        </PostHogProvider>
       </QueryProvider>
     </Provider>
   );
