@@ -6,7 +6,7 @@ import { SupabaseProvider } from "./context/SupabaseContext";
 import { NotificationProvider } from "./context/NotificationContext";
 import QueryProvider from "@/lib/QueryClientComponentWrapper";
 import SessionProvider from "@/lib/supabase/SessionProvider";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { PostHogProvider } from "./providers/PostHogProvider";
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -23,12 +23,14 @@ export function Providers({ children }: { children: React.ReactNode }) {
   //   }
 
   return (
-    <Provider>
-      <QueryProvider>
-        <PostHogProvider>
-          <NotificationProvider>{children}</NotificationProvider>
-        </PostHogProvider>
-      </QueryProvider>
-    </Provider>
+    <Suspense fallback={null}>
+      <Provider>
+        <QueryProvider>
+          <PostHogProvider>
+            <NotificationProvider>{children}</NotificationProvider>
+          </PostHogProvider>
+        </QueryProvider>
+      </Provider>
+    </Suspense>
   );
 }
