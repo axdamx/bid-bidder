@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -148,6 +148,7 @@ const DURATION_OPTIONS = [
 
 export default function CreatePage() {
   const [imageIds, setImageIds] = useState<string[]>([]);
+  const [coverImageId, setCoverImageId] = useState<string>("");
   const [isUploading, setIsUploading] = useState(false);
   const router = useRouter();
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -156,6 +157,13 @@ export default function CreatePage() {
   const [error, setError] = useState<string | null>(null);
   const [user] = useAtom(userAtom);
   const [isNavigating, setIsNavigating] = useState(false);
+
+  useEffect(() => {
+    // Set the first image as cover image by default when images change
+    if (imageIds.length > 0 && !imageIds.includes(coverImageId)) {
+      setCoverImageId(imageIds[0]);
+    }
+  }, [imageIds, coverImageId]);
 
   const {
     register,
@@ -195,13 +203,20 @@ export default function CreatePage() {
       return;
     }
 
+    // Reorder images array to put cover image first
+    const reorderedImages = [
+      coverImageId,
+      ...imageIds.filter((id) => id !== coverImageId),
+    ];
+
     const formData = new FormData();
     Object.entries(data).forEach(([key, value]) => {
       if (key !== "images" && value != null) {
         formData.append(key, value.toString());
       }
     });
-    imageIds.forEach((id) => formData.append("images[]", id));
+    // Use reordered images array instead of original imageIds
+    reorderedImages.forEach((id) => formData.append("images[]", id));
 
     try {
       const response = await createItemAction(formData, user?.id || "");
@@ -366,82 +381,115 @@ export default function CreatePage() {
                     }}
                   >
                     {({ open }) => (
-                      <div className="flex justify-center">
+                      <div className="flex items-center justify-center">
                         <Button
                           type="button"
                           variant="outline"
                           onClick={() => open()}
                           disabled={isMaxImages}
-                          className={`w-64 h-34 border-2 border-dashed hover:border-dashed hover:border-primary/50`}
+                          className="relative w-full max-w-[300px] h-[160px] border-2 border-dashed hover:border-primary/50 transition-colors"
                         >
-                          <div className="flex flex-col items-center gap-2">
-                            <div className="rounded-full bg-gradient-to-br from-purple-400 to-pink-500 p-4">
-                              <ImageIcon className="h-6 w-6 text-white" />
+                          <div className="flex flex-col items-center gap-3">
+                            <div className="rounded-full bg-primary/10 p-4">
+                              <ImageIcon className="h-6 w-6 text-primary" />
                             </div>
-                            <span className="text-lg font-medium text-center">
-                              {isMaxImages
-                                ? "Maximum images reached"
-                                : "Upload an image"}
-                            </span>
-                            <span className="text-sm text-muted-foreground text-center">
-                              {!isMaxImages &&
-                                `Supports png, jpg, jpeg (${imageIds.length}/5)`}
-                            </span>
+                            <div className="space-y-1 text-center">
+                              <p className="text-sm font-medium">
+                                {isMaxImages
+                                  ? "Maximum images reached"
+                                  : "Upload an image"}
+                              </p>
+                              {!isMaxImages && (
+                                <p className="text-xs text-muted-foreground">
+                                  Supports png, jpg, jpeg ({imageIds.length}/5)
+                                </p>
+                              )}
+                            </div>
                           </div>
                         </Button>
                       </div>
                     )}
                   </CldUploadWidget>
                   <div
-                    className={`grid gap-4 mt-4 ${
+                    className={`grid gap-6 mt-6 ${
                       imageIds.length === 1
-                        ? "grid-cols-1 max-w-2xl mx-auto"
+                        ? "grid-cols-1 max-w-2xl"
                         : imageIds.length === 2
-                        ? "grid-cols-2"
-                        : "grid-cols-1 md:grid-cols-2"
+                        ? "grid-cols-1 md:grid-cols-2"
+                        : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
                     }`}
                   >
-                    {imageIds.map((id) => (
-                      <div key={id} className="relative">
+                    {imageIds.map((id, index) => (
+                      <div
+                        key={id}
+                        className={`group relative aspect-[4/3] w-full bg-muted/10 rounded-lg p-2 cursor-pointer 
+                          ${
+                            coverImageId === id
+                              ? "ring-2 ring-primary"
+                              : "hover:ring-2 hover:ring-primary/50"
+                          }
+                          ${
+                            imageIds.length > 2 && index === 0
+                              ? "md:col-span-2 lg:col-span-3"
+                              : ""
+                          }
+                        `}
+                        onClick={() => setCoverImageId(id)}
+                      >
                         <OptimizedImage
                           width="400"
-                          height="200"
+                          height="300"
                           src={id}
                           alt="Uploaded image"
-                          className={`rounded-lg object-cover w-full ${
-                            imageIds.length === 1
-                              ? "max-h-[400px] object-contain"
-                              : imageIds.length === 2
-                              ? "min-h-[300px]"
-                              : "min-h-[200px]"
+                          className={`w-full h-full ${
+                            imageIds.length === 1 ||
+                            (imageIds.length > 2 && index === 0)
+                              ? "object-contain"
+                              : "object-cover"
                           }`}
                         />
                         <Button
                           type="button"
                           variant="destructive"
                           size="icon"
-                          className="absolute top-1 right-1"
-                          onClick={() => {
-                            setImageIds((prev) =>
-                              prev.filter((imgId) => imgId !== id)
+                          className="absolute -top-2 -right-2 h-8 w-8 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const newImageIds = imageIds.filter(
+                              (imgId) => imgId !== id
                             );
-                            setValue(
-                              "images",
-                              imageIds.filter((imgId) => imgId !== id)
-                            );
+                            setImageIds(newImageIds);
+                            setValue("images", newImageIds);
+                            if (coverImageId === id && newImageIds.length > 0) {
+                              setCoverImageId(newImageIds[0]);
+                            }
                           }}
                         >
                           <X className="h-4 w-4" />
                         </Button>
+                        {imageIds.length > 1 && (
+                          <div
+                            className={`absolute bottom-2 left-2 px-2 py-1 rounded-md text-xs font-medium 
+                              ${
+                                coverImageId === id
+                                  ? "bg-primary text-primary-foreground"
+                                  : "bg-background/80 text-foreground"
+                              } transition-colors`}
+                          >
+                            {coverImageId === id
+                              ? "Cover Image"
+                              : "Click to set as cover"}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
+                  {errors.images && (
+                    <p className="text-sm text-red-500 mt-1">
+                      {errors.images.message}
+                    </p>
+                  )}
                 </div>
-                {errors.images && (
-                  <p className="text-sm text-red-500 mt-1">
-                    {errors.images.message}
-                  </p>
-                )}
               </AccordionContent>
             </AccordionItem>
 
@@ -517,7 +565,10 @@ export default function CreatePage() {
                       <Label htmlFor="name">Item Name</Label>
                       <TooltipProvider>
                         <Tooltip>
-                          <TooltipTrigger asChild onClick={(e) => e.preventDefault()}>
+                          <TooltipTrigger
+                            asChild
+                            onClick={(e) => e.preventDefault()}
+                          >
                             <button type="button">
                               <HelpCircle className="h-4 w-4 text-muted-foreground" />
                             </button>
@@ -547,7 +598,10 @@ export default function CreatePage() {
                       <Label htmlFor="category">Category</Label>
                       <TooltipProvider>
                         <Tooltip>
-                          <TooltipTrigger asChild onClick={(e) => e.preventDefault()}>
+                          <TooltipTrigger
+                            asChild
+                            onClick={(e) => e.preventDefault()}
+                          >
                             <button type="button">
                               <HelpCircle className="h-4 w-4 text-muted-foreground" />
                             </button>
@@ -594,7 +648,10 @@ export default function CreatePage() {
                       <Label htmlFor="startingPrice">Starting Price (RM)</Label>
                       <TooltipProvider>
                         <Tooltip>
-                          <TooltipTrigger asChild onClick={(e) => e.preventDefault()}>
+                          <TooltipTrigger
+                            asChild
+                            onClick={(e) => e.preventDefault()}
+                          >
                             <button type="button">
                               <HelpCircle className="h-4 w-4 text-muted-foreground" />
                             </button>
@@ -623,7 +680,10 @@ export default function CreatePage() {
                       <Label htmlFor="bidInterval">Bid Interval (RM)</Label>
                       <TooltipProvider>
                         <Tooltip>
-                          <TooltipTrigger asChild onClick={(e) => e.preventDefault()}>
+                          <TooltipTrigger
+                            asChild
+                            onClick={(e) => e.preventDefault()}
+                          >
                             <button type="button">
                               <HelpCircle className="h-4 w-4 text-muted-foreground" />
                             </button>
@@ -655,7 +715,10 @@ export default function CreatePage() {
                       <Label htmlFor="binPrice">Buy It Now Price (RM)</Label>
                       <TooltipProvider>
                         <Tooltip>
-                          <TooltipTrigger asChild onClick={(e) => e.preventDefault()}>
+                          <TooltipTrigger
+                            asChild
+                            onClick={(e) => e.preventDefault()}
+                          >
                             <button type="button">
                               <HelpCircle className="h-4 w-4 text-muted-foreground" />
                             </button>
@@ -689,7 +752,10 @@ export default function CreatePage() {
                       <Label htmlFor="description">Description</Label>
                       <TooltipProvider>
                         <Tooltip>
-                          <TooltipTrigger asChild onClick={(e) => e.preventDefault()}>
+                          <TooltipTrigger
+                            asChild
+                            onClick={(e) => e.preventDefault()}
+                          >
                             <button type="button">
                               <HelpCircle className="h-4 w-4 text-muted-foreground" />
                             </button>
@@ -721,7 +787,10 @@ export default function CreatePage() {
                       <Label htmlFor="endDate">End Date and Time *</Label>
                       <TooltipProvider>
                         <Tooltip>
-                          <TooltipTrigger asChild onClick={(e) => e.preventDefault()}>
+                          <TooltipTrigger
+                            asChild
+                            onClick={(e) => e.preventDefault()}
+                          >
                             <button type="button">
                               <HelpCircle className="h-4 w-4 text-muted-foreground" />
                             </button>

@@ -31,7 +31,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { cn } from "@/lib/utils";
 import { useDebounce } from "@/app/components/headerSearch";
 
@@ -205,29 +205,33 @@ export default function ItemsListingClient({
           </div>
 
           <TabsContent value="live" className="border-none p-0 outline-none">
-            <ScrollArea className="w-full whitespace-nowrap rounded-md border my-4">
-              <div className="flex w-max space-x-4 p-4">
-                {categories.map((category) => {
-                  const Icon = category.icon;
-                  return (
-                    <Button
-                      key={category.value}
-                      variant={
-                        selectedCategory === category.value
-                          ? "default"
-                          : "outline"
-                      }
-                      className="flex-shrink-0 gap-2"
-                      onClick={() => setSelectedCategory(category.value)}
-                    >
-                      <Icon className="h-4 w-4" />
-                      {category.label}
-                    </Button>
-                  );
-                })}
-              </div>
-              <ScrollBar orientation="horizontal" />
-            </ScrollArea>
+            <div className="relative w-full my-4 group">
+              <Carousel className="w-full">
+                <CarouselContent>
+                  {categories.map((category) => {
+                    const Icon = category.icon;
+                    return (
+                      <CarouselItem key={category.value} className="basis-auto">
+                        <Button
+                          variant={
+                            selectedCategory === category.value
+                              ? "default"
+                              : "outline"
+                          }
+                          className="flex-shrink-0 gap-2"
+                          onClick={() => setSelectedCategory(category.value)}
+                        >
+                          <Icon className="h-4 w-4" />
+                          {category.label}
+                        </Button>
+                      </CarouselItem>
+                    );
+                  })}
+                </CarouselContent>
+                <CarouselPrevious className="hidden group-hover:flex left-0" />
+                <CarouselNext className="hidden group-hover:flex right-0" />
+              </Carousel>
+            </div>
 
             {isLoading ? (
               <TableSkeleton />
@@ -339,29 +343,33 @@ export default function ItemsListingClient({
             value="upcoming"
             className="border-none p-0 outline-none"
           >
-            <ScrollArea className="w-full whitespace-nowrap rounded-md border my-4">
-              <div className="flex w-max space-x-4 p-4">
-                {categories.map((category) => {
-                  const Icon = category.icon;
-                  return (
-                    <Button
-                      key={category.value}
-                      variant={
-                        selectedCategory === category.value
-                          ? "default"
-                          : "outline"
-                      }
-                      className="flex-shrink-0 gap-2"
-                      onClick={() => setSelectedCategory(category.value)}
-                    >
-                      <Icon className="h-4 w-4" />
-                      {category.label}
-                    </Button>
-                  );
-                })}
-              </div>
-              <ScrollBar orientation="horizontal" />
-            </ScrollArea>
+            <div className="relative w-full my-4 group">
+              <Carousel className="w-full">
+                <CarouselContent>
+                  {categories.map((category) => {
+                    const Icon = category.icon;
+                    return (
+                      <CarouselItem key={category.value} className="basis-auto">
+                        <Button
+                          variant={
+                            selectedCategory === category.value
+                              ? "default"
+                              : "outline"
+                          }
+                          className="flex-shrink-0 gap-2"
+                          onClick={() => setSelectedCategory(category.value)}
+                        >
+                          <Icon className="h-4 w-4" />
+                          {category.label}
+                        </Button>
+                      </CarouselItem>
+                    );
+                  })}
+                </CarouselContent>
+                <CarouselPrevious className="hidden group-hover:flex left-0" />
+                <CarouselNext className="hidden group-hover:flex right-0" />
+              </Carousel>
+            </div>
 
             {isLoading ? (
               <TableSkeleton />
@@ -470,29 +478,33 @@ export default function ItemsListingClient({
             )}
           </TabsContent>
           <TabsContent value="ended" className="border-none p-0 outline-none">
-            <ScrollArea className="w-full whitespace-nowrap rounded-md border my-4">
-              <div className="flex w-max space-x-4 p-4">
-                {categories.map((category) => {
-                  const Icon = category.icon;
-                  return (
-                    <Button
-                      key={category.value}
-                      variant={
-                        selectedCategory === category.value
-                          ? "default"
-                          : "outline"
-                      }
-                      className="flex-shrink-0 gap-2"
-                      onClick={() => setSelectedCategory(category.value)}
-                    >
-                      <Icon className="h-4 w-4" />
-                      {category.label}
-                    </Button>
-                  );
-                })}
-              </div>
-              <ScrollBar orientation="horizontal" />
-            </ScrollArea>
+            <div className="relative w-full my-4 group">
+              <Carousel className="w-full">
+                <CarouselContent>
+                  {categories.map((category) => {
+                    const Icon = category.icon;
+                    return (
+                      <CarouselItem key={category.value} className="basis-auto">
+                        <Button
+                          variant={
+                            selectedCategory === category.value
+                              ? "default"
+                              : "outline"
+                          }
+                          className="flex-shrink-0 gap-2"
+                          onClick={() => setSelectedCategory(category.value)}
+                        >
+                          <Icon className="h-4 w-4" />
+                          {category.label}
+                        </Button>
+                      </CarouselItem>
+                    );
+                  })}
+                </CarouselContent>
+                <CarouselPrevious className="hidden group-hover:flex left-0" />
+                <CarouselNext className="hidden group-hover:flex right-0" />
+              </Carousel>
+            </div>
 
             {isLoading ? (
               <TableSkeleton />
