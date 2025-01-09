@@ -4,8 +4,10 @@ import {
   createBidAction,
   createOrderAction,
   updateItemStatus,
+  updateBINItemStatus,
 } from "../actions";
 import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
 export function useAuctionMutations(
   itemId: number,
@@ -46,6 +48,8 @@ export function useAuctionMutations(
     },
   });
 
+  const router = useRouter();
+
   const { mutate: createOrder } = useMutation({
     mutationFn: () =>
       createOrderAction(item.id, userId, highestBid!, item.users.id),
@@ -54,7 +58,7 @@ export function useAuctionMutations(
       toast.error("Failed to create order. Please contact support.");
     },
     onSuccess: (payload) => {
-      // console.log("Apa ni, masuktak", payload);
+      router.push(`/checkout/${item.id}`);
     },
   });
 
@@ -65,12 +69,23 @@ export function useAuctionMutations(
         console.error("Failed to update item status:", error);
         toast.error("Failed to proceed to checkout. Please try again.");
       },
-      onSuccess: () => {
-        // console.log("we sure only winner can see this flow, so ");
-        createOrder(); // Ensure this is being called
+      onSuccess: (data) => {
+        createOrder();
       },
     }
   );
+
+  const { mutate: updateBINItemStatusMutate, isPending: isUpdatingBINItem } =
+    useMutation({
+      mutationFn: () => updateBINItemStatus(item.id, userId),
+      onError: (error) => {
+        console.error("Failed to update item status:", error);
+        toast.error("Failed to proceed to checkout. Please try again.");
+      },
+      onSuccess: (data) => {
+        createOrder();
+      },
+    });
 
   return {
     updateBidAcknowledgment,
@@ -80,5 +95,7 @@ export function useAuctionMutations(
     isBuyItNowPending,
     updateItemStatusMutate,
     isUpdating,
+    updateBINItemStatusMutate,
+    isUpdatingBINItem,
   };
 }

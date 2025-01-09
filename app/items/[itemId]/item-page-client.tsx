@@ -32,6 +32,7 @@ import { set } from "date-fns";
 import { ShoppingBag } from "lucide-react";
 import { CheckCircle2 } from "lucide-react";
 import AuthModalV2 from "@/app/components/AuthModalV2";
+import { updateBINItemStatus } from "./actions";
 
 export default function AuctionItem({
   item,
@@ -95,6 +96,8 @@ export default function AuctionItem({
     isBuyItNowPending,
     updateItemStatusMutate,
     isUpdating,
+    updateBINItemStatusMutate,
+    isUpdatingBINItem,
   } = useAuctionMutations(
     item.id,
     userId,
@@ -231,7 +234,7 @@ export default function AuctionItem({
   };
 
   const handleBinCheckout = async () => {
-    await updateItemStatusMutate();
+    await updateBINItemStatusMutate();
     router.push(`/checkout/${item.id}`);
   };
 
@@ -487,10 +490,10 @@ export default function AuctionItem({
           <DialogFooter>
             <Button
               onClick={handleBinCheckout}
-              disabled={isUpdating}
+              disabled={isUpdatingBINItem}
               className="w-full bg-primary hover:bg-primary/90"
             >
-              {isUpdating ? (
+              {isUpdatingBINItem ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Processing Checkout...

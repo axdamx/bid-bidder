@@ -7,7 +7,7 @@ import { captureEvent } from "@/lib/posthog";
 // import { database } from "@/src/db/database";
 // import { bidAcknowledgments, bids, items, users } from "@/src/db/schema";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+// import { redirect } from "next/navigation";
 const supabase = createServerSupabase();
 
 export async function getLatestBidWithUser(itemId: number) {
@@ -52,10 +52,10 @@ export async function createBidAction(itemId: number, userId: string) {
 
   if (!bidError) {
     // Track successful bid
-    captureEvent('bid_placed', {
+    captureEvent("bid_placed", {
       itemId,
       userId,
-      amount: latestBidValue
+      amount: latestBidValue,
     });
   }
 
@@ -79,18 +79,36 @@ export async function updateItemStatus(itemId: number, userId: string) {
   // Update the item status to "checkout" and associate with the winning user
   const { error: updateError } = await supabase
     .from("items")
-    .update({ status: "CHECKOUT", winnerId: userId }) // Assuming you have a winnerId field
+    .update({ status: "CHECKOUT", winnerId: userId })
     .eq("id", itemId);
 
   if (updateError) {
     throw new Error("Failed to update item status");
   }
 
-  // Optionally revalidate the page to reflect changes
+  // Revalidate the page to reflect changes
   revalidatePath("/");
 
-  // Redirect to the checkout page after updating the status
-  redirect(`/checkout/${itemId}`);
+  // Return the itemId instead of redirecting
+  return { itemId };
+}
+
+export async function updateBINItemStatus(itemId: number, userId: string) {
+  // Update the item status to "checkout" and associate with the winning user
+  const { error: updateError } = await supabase
+    .from("items")
+    .update({ status: "CHECKOUT", winnerId: userId, isBoughtOut: true })
+    .eq("id", itemId);
+
+  if (updateError) {
+    throw new Error("Failed to update item status");
+  }
+
+  // Revalidate the page to reflect changes
+  revalidatePath("/");
+
+  // Return the itemId instead of redirecting
+  return { itemId };
 }
 
 export async function updateBidAcknowledgmentAction(
@@ -221,10 +239,10 @@ export async function createOrderAction(
     // Update the item's isBoughtOut status
     const { error: updateError } = await supabase
       .from("items")
-      .update({ 
-        isBoughtOut: true,
+      .update({
+        // isBoughtOut: true,
         status: "PENDING",
-        winnerId: userId 
+        winnerId: userId,
       })
       .eq("id", itemId);
 

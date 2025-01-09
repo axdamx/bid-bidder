@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import {
-  ArrowLeft,
   ArrowRight,
   Building,
   CreditCard,
@@ -14,16 +13,12 @@ import {
   RotateCcw,
   Wallet2,
 } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
-import { Progress } from "@/components/ui/progress";
 import {
   Form,
   FormControl,
@@ -32,7 +27,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { useSupabase } from "@/app/context/SupabaseContext";
 import { getCheckoutItems, createPayment } from "./actions";
 import { CldImage } from "next-cloudinary";
 import { formatCurrency } from "@/lib/utils";
@@ -98,6 +92,8 @@ export default function CheckoutPage({
     enabled: !!user?.id, // Only run query when user.id exists
   });
 
+  console.log("checkoutItems", checkoutItems);
+
   const steps = [
     { id: "address", label: "Address" },
     { id: "billing", label: "Billing" },
@@ -138,6 +134,8 @@ export default function CheckoutPage({
   const shippingCost = 20;
   const buyersPremium = soldPrice! * 0.06;
   const totalPrice = soldPrice! + shippingCost + buyersPremium;
+
+  console.log("soldPrice", soldPrice);
 
   const onSubmit = async (data: Partial<FormData>) => {
     setFormData({ ...formData, ...data });

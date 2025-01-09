@@ -47,6 +47,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { captureEvent } from "@/lib/posthog";
 
 type UploadResult = {
   info: { public_id: string };
@@ -159,11 +160,12 @@ export default function CreatePage() {
   const [isNavigating, setIsNavigating] = useState(false);
 
   useEffect(() => {
-    // Set the first image as cover image by default when images change
-    if (imageIds.length > 0 && !imageIds.includes(coverImageId)) {
+    if (imageIds.length === 1) {
       setCoverImageId(imageIds[0]);
+    } else if (imageIds.length === 0) {
+      setCoverImageId("");
     }
-  }, [imageIds, coverImageId]);
+  }, [imageIds]);
 
   const {
     register,
@@ -226,6 +228,32 @@ export default function CreatePage() {
         setError(response.error || "Failed to create item");
         return;
       }
+
+      // Track item creation in PostHog
+      captureEvent("item_created", {
+        // Item details
+        itemId: response.id,
+        itemName: data.name,
+        startingPrice: data.startingPrice,
+        bidInterval: data.bidInterval,
+        binPrice: data.binPrice,
+        category: data.category,
+        endDate: data.endDate,
+        description: data.description,
+        // Dealing method details
+        dealingMethodType: data.dealingMethodType,
+        dealingMethodLocation: data.dealingMethodLocation,
+        westMalaysiaShippingPrice: data.westMalaysiaShippingPrice,
+        eastMalaysiaShippingPrice: data.eastMalaysiaShippingPrice,
+        // Creator details
+        creatorId: user?.id,
+        creatorName: user?.name,
+        creatorEmail: user?.email,
+        // Image details
+        numberOfImages: reorderedImages.length,
+        // Metadata
+        timestamp: new Date().toISOString(),
+      });
 
       // Reset form first
       reset({
@@ -387,7 +415,7 @@ export default function CreatePage() {
                           variant="outline"
                           onClick={() => open()}
                           disabled={isMaxImages}
-                          className="relative w-full max-w-[300px] h-[160px] border-2 border-dashed hover:border-primary/50 transition-colors"
+                          className="relative w-full h-[160px] border-2 border-dashed hover:border-primary/50 transition-colors"
                         >
                           <div className="flex flex-col items-center gap-3">
                             <div className="rounded-full bg-primary/10 p-4">
@@ -401,7 +429,9 @@ export default function CreatePage() {
                               </p>
                               {!isMaxImages && (
                                 <p className="text-xs text-muted-foreground">
-                                  Supports png, jpg, jpeg ({imageIds.length}/5)
+                                  Supports png, jpg, jpeg ({imageIds.length}/5).
+                                  <br />
+                                  Max 5MB per image
                                 </p>
                               )}
                             </div>
@@ -411,7 +441,7 @@ export default function CreatePage() {
                     )}
                   </CldUploadWidget>
                   <div
-                    className={`grid gap-6 mt-6 ${
+                    className={`grid gap-6 mt-6 rounded-xl ${
                       imageIds.length === 1
                         ? "grid-cols-1 max-w-2xl"
                         : imageIds.length === 2
@@ -422,11 +452,17 @@ export default function CreatePage() {
                     {imageIds.map((id, index) => (
                       <div
                         key={id}
-                        className={`group relative aspect-[4/3] w-full bg-muted/10 rounded-lg p-2 cursor-pointer 
+                        className={`group relative aspect-[4/3] w-full bg-muted/10 rounded-xl p-2 ${
+                          imageIds.length === 1
+                            ? "cursor-default"
+                            : "cursor-pointer"
+                        } 
                           ${
                             coverImageId === id
                               ? "ring-2 ring-primary"
-                              : "hover:ring-2 hover:ring-primary/50"
+                              : imageIds.length > 1
+                              ? "hover:ring-2 hover:ring-primary/50"
+                              : ""
                           }
                           ${
                             imageIds.length > 2 && index === 0
@@ -434,14 +470,18 @@ export default function CreatePage() {
                               : ""
                           }
                         `}
-                        onClick={() => setCoverImageId(id)}
+                        onClick={() => {
+                          if (imageIds.length > 1) {
+                            setCoverImageId(id);
+                          }
+                        }}
                       >
                         <OptimizedImage
                           width="400"
                           height="300"
                           src={id}
                           alt="Uploaded image"
-                          className={`w-full h-full ${
+                          className={`w-full h-full rounded-lg ${
                             imageIds.length === 1 ||
                             (imageIds.length > 2 && index === 0)
                               ? "object-contain"
@@ -467,7 +507,7 @@ export default function CreatePage() {
                         >
                           <X className="h-4 w-4" />
                         </Button>
-                        {imageIds.length > 1 && (
+                        {imageIds.length > 1 ? (
                           <div
                             className={`absolute bottom-2 left-2 px-2 py-1 rounded-md text-xs font-medium 
                               ${
@@ -479,6 +519,10 @@ export default function CreatePage() {
                             {coverImageId === id
                               ? "Cover Image"
                               : "Click to set as cover"}
+                          </div>
+                        ) : (
+                          <div className="absolute bottom-2 left-2 px-2 py-1 rounded-md text-xs font-medium bg-primary text-primary-foreground">
+                            Cover Image
                           </div>
                         )}
                       </div>
