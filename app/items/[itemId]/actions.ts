@@ -26,7 +26,8 @@ export async function getLatestBidWithUser(itemId: number) {
 
   return latestBid;
 }
-export async function createBidAction(itemId: number, userId: string) {
+
+export async function createBidAction(itemId: number, userId: string, isBuyItNow: boolean = false) {
   // Get item
   const { data: item, error: itemError } = await supabase
     .from("items")
@@ -38,24 +39,22 @@ export async function createBidAction(itemId: number, userId: string) {
     throw new Error("Item not found!");
   }
 
-  const latestBidValue = item.currentBid
-    ? item.currentBid + item.bidInterval
-    : item.startingPrice + item.bidInterval;
+  const bidAmount = isBuyItNow ? item.binPrice : (item.currentBid ? item.currentBid + item.bidInterval : item.startingPrice + item.bidInterval);
 
   // Insert new bid
   const { error: bidError } = await supabase.from("bids").insert({
-    amount: latestBidValue,
+    amount: bidAmount,
     itemId: itemId,
     userId: userId,
-    timestamp: new Date(), // Use plain Date object for timestamp without timezone
+    timestamp: new Date(),
   });
 
   if (!bidError) {
     // Track successful bid
-    captureEvent("bid_placed", {
+    captureEvent(isBuyItNow ? "bin_placed" : "bid_placed", {
       itemId,
       userId,
-      amount: latestBidValue,
+      amount: bidAmount,
     });
   }
 
@@ -64,10 +63,13 @@ export async function createBidAction(itemId: number, userId: string) {
     throw new Error(`Failed to create bid: ${bidError.message}`);
   }
 
-  // Update item's current bid
+  // Update item's current bid and bought out status if it's BIN
   const { error: updateError } = await supabase
     .from("items")
-    .update({ currentBid: latestBidValue })
+    .update({ 
+      currentBid: bidAmount,
+      ...(isBuyItNow ? { isBoughtOut: true, status: "CHECKOUT", winnerId: userId } : {})
+    })
     .eq("id", itemId);
 
   if (updateError) throw new Error("Failed to update item");

@@ -43,8 +43,9 @@ export function EndedAuctions({ limit }: { limit?: number }) {
       items={items.slice(0, 6)}
       isLoading={isLoading}
       title="Ended Auctions"
-      description="View all the ended auctions"
+      description="Auctions that have ended"
       viewAllLink="ended"
+      totalCount={items.length}
     />
   );
 }

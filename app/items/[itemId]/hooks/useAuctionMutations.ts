@@ -17,6 +17,8 @@ export function useAuctionMutations(
   setShowDisclaimerModal: React.Dispatch<React.SetStateAction<boolean>>,
   highestBid: number
 ) {
+  const router = useRouter();
+
   const { mutate: updateBidAcknowledgment } = useMutation({
     mutationFn: () => updateBidAcknowledgmentAction(item.id, userId),
     onSuccess: () => {
@@ -39,53 +41,49 @@ export function useAuctionMutations(
     },
   });
 
+  const { mutate: createBinOrder, isPending: isCreatingBinOrder } = useMutation({
+    mutationFn: () => createOrderAction(itemId, userId, item.binPrice, item.users.id),
+    onSuccess: () => {
+      navigateToCheckout();
+    },
+    onError: (error) => {
+      console.error("Failed to create order:", error);
+      toast.error("Failed to create order. Please try again.");
+    },
+  });
+
   const { mutate: submitBuyItNow, isPending: isBuyItNowPending } = useMutation({
-    mutationFn: () =>
-      createOrderAction(itemId, userId, item.binPrice, item.users.id),
+    mutationFn: () => createBidAction(itemId, userId, true),
+    onSuccess: () => {
+      createBinOrder();
+    },
     onError: (error) => {
       console.error("Error processing Buy It Now:", error);
       toast.error("Failed to process Buy It Now. Please try again.");
     },
   });
 
-  const router = useRouter();
-
-  const { mutate: createOrder } = useMutation({
-    mutationFn: () =>
-      createOrderAction(item.id, userId, highestBid!, item.users.id),
+  const { mutate: createOrder, isPending: isCreatingOrder } = useMutation({
+    mutationFn: () => createOrderAction(itemId, userId, highestBid, item.users.id),
+    onSuccess: (data) => {
+      // Order created successfully, now show winner dialog
+      setShowDisclaimerModal(false);
+    },
     onError: (error) => {
       console.error("Failed to create order:", error);
-      toast.error("Failed to create order. Please contact support.");
-    },
-    onSuccess: (payload) => {
-      router.push(`/checkout/${item.id}`);
+      toast.error("Failed to create order. Please try again.");
     },
   });
 
-  const { mutate: updateItemStatusMutate, isPending: isUpdating } = useMutation(
-    {
-      mutationFn: () => updateItemStatus(item.id, userId),
-      onError: (error) => {
-        console.error("Failed to update item status:", error);
-        toast.error("Failed to proceed to checkout. Please try again.");
-      },
-      onSuccess: (data) => {
-        createOrder();
-      },
-    }
-  );
-
-  const { mutate: updateBINItemStatusMutate, isPending: isUpdatingBINItem } =
-    useMutation({
-      mutationFn: () => updateBINItemStatus(item.id, userId),
-      onError: (error) => {
-        console.error("Failed to update item status:", error);
-        toast.error("Failed to proceed to checkout. Please try again.");
-      },
-      onSuccess: (data) => {
-        createOrder();
-      },
-    });
+  const { mutate: navigateToCheckout } = useMutation({
+    mutationFn: async () => {
+      return router.push(`/checkout/${itemId}`);
+    },
+    onError: (error) => {
+      console.error("Failed to navigate to checkout:", error);
+      toast.error("Failed to navigate to checkout. Please try again.");
+    },
+  });
 
   return {
     updateBidAcknowledgment,
@@ -93,9 +91,8 @@ export function useAuctionMutations(
     isBidPending,
     submitBuyItNow,
     isBuyItNowPending,
-    updateItemStatusMutate,
-    isUpdating,
-    updateBINItemStatusMutate,
-    isUpdatingBINItem,
+    createOrder,
+    isCreatingOrder,
+    navigateToCheckout,
   };
 }

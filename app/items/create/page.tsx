@@ -859,8 +859,9 @@ export default function CreatePage() {
                                 format(
                                   addDays(new Date(), option.days),
                                   "yyyy-MM-dd'T'HH:mm"
-                                ) &&
-                              "bg-primary text-primary-foreground hover:bg-primary/90"
+                                )
+                                ? "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground"
+                                : ""
                             }`}
                             onClick={() => {
                               const endDate = addDays(new Date(), option.days);

@@ -22,7 +22,7 @@ export default function CountdownTimer({
   useEffect(() => {
     const calculateTime = () => {
       const created = new Date(createdAt);
-      const deadline = new Date(created.getTime() + 60 * 60 * 1000); // 1 hour after creation
+      const deadline = new Date(created.getTime() + 30 * 60 * 1000); // 30 minutes after creation
       // const deadline = new Date(created.getTime() + 2 * 60 * 1000); // 2 minutes after creation
       const now = new Date();
       const diff = deadline.getTime() - now.getTime();

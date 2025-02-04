@@ -39,6 +39,7 @@ interface ItemCarouselProps {
   title: string;
   description: string;
   viewAllLink: string;
+  totalCount?: number;
 }
 
 export function ItemCarousel({
@@ -47,6 +48,7 @@ export function ItemCarousel({
   title,
   description,
   viewAllLink,
+  totalCount,
 }: ItemCarouselProps) {
   const [api] = useEmblaCarousel({
     align: "start",
@@ -97,7 +99,7 @@ export function ItemCarousel({
           >
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-2xl font-bold md:text-3xl">{title}</h2>
+                <h2 className="text-2xl font-bold md:text-3xl">{title} ({totalCount ?? items.length})</h2>
                 <p className="text-muted-foreground mt-1">{description}</p>
               </div>
               {/* <Link
@@ -126,8 +128,8 @@ export function ItemCarousel({
               <CarouselContent ref={api}>
                 {isLoading ? (
                   <CarouselItem className="w-full pl-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      {[...Array(3)].map((_, index) => (
+                    <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
+                      {[...Array(6)].map((_, index) => (
                         <SkeletonCard key={index} />
                       ))}
                     </div>
@@ -137,7 +139,7 @@ export function ItemCarousel({
                     {items.map((item, index) => (
                       <CarouselItem
                         key={item.id}
-                        className="basis-full md:basis-1/3 pl-4"
+                        className="basis-full md:basis-1/6 pl-4"
                       >
                         <MotionGrid
                           initial={{ opacity: 0 }}
@@ -148,7 +150,7 @@ export function ItemCarousel({
                         </MotionGrid>
                       </CarouselItem>
                     ))}
-                    <CarouselItem className="basis-full md:basis-1/3 pl-4">
+                    <CarouselItem className="basis-full md:basis-1/6 pl-4">
                       <div className="h-full">
                         <MotionGrid
                           initial={{ opacity: 0 }}

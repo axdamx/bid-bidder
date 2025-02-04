@@ -52,15 +52,13 @@ export async function getOrders(userId: string) {
   }
 }
 
-export async function updateOrderStatus(
+export async function updateOrderShippingStatus(
   orderId: number,
   status: string,
-  userId: string
+  userId: string,
+  shippingDetails?: { courier: string; trackingNumber: string }
 ) {
-  //   const supabase = createServerSupabaseClient();
-
   try {
-    // First verify that the user is the seller of this order
     const { data: order, error: fetchError } = await supabase
       .from("orders")
       .select("sellerId")
@@ -72,10 +70,18 @@ export async function updateOrderStatus(
       throw new Error("Unauthorized: Only the seller can update order status");
     }
 
-    // Update the order status
+    // Update the shipping status and details if provided
+    const updateData = {
+      shippingStatus: status,
+      ...(shippingDetails && {
+        courierService: shippingDetails.courier,
+        trackingNumber: shippingDetails.trackingNumber,
+      }),
+    };
+
     const { data, error } = await supabase
       .from("orders")
-      .update({ orderStatus: status })
+      .update(updateData)
       .eq("id", orderId)
       .select()
       .single();
@@ -84,6 +90,40 @@ export async function updateOrderStatus(
     return data;
   } catch (error) {
     console.error("Error updating order status:", error);
+    throw error;
+  }
+}
+
+export async function confirmDelivery(
+  orderId: number,
+  userId: string
+) {
+  try {
+    const { data: order, error: fetchError } = await supabase
+      .from("orders")
+      .select("buyerId")
+      .eq("id", orderId)
+      .single();
+
+    if (fetchError) throw fetchError;
+    if (order.buyerId !== userId) {
+      throw new Error("Unauthorized: Only the buyer can confirm delivery");
+    }
+
+    const { data, error } = await supabase
+      .from("orders")
+      .update({
+        shippingStatus: "delivered",
+        orderStatus: "delivered"
+      })
+      .eq("id", orderId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error("Error confirming delivery:", error);
     throw error;
   }
 }

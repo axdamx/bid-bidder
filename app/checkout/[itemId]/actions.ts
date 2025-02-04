@@ -1,7 +1,6 @@
 "use server";
 
 import { createServerSupabase } from "@/lib/supabase/server";
-import { timingSafeEqual, createHmac } from "crypto";
 
 // Function to get items for checkout
 export async function getCheckoutItems(userId: string, itemId: string) {
@@ -13,7 +12,6 @@ export async function getCheckoutItems(userId: string, itemId: string) {
       .select("*")
       .eq("itemId", parseInt(itemId))
       .eq("buyerId", userId)
-      .eq("orderStatus", "pending")
       .single();
 
     const { data: itemDetails } = await supabase
@@ -43,71 +41,6 @@ interface CreatePaymentParams {
   };
 }
 
-export async function createPayment(params: CreatePaymentParams) {
-  const supabase = createServerSupabase();
-
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-    const reference = `BID-${params.itemId}-${Date.now()}`;
-
-    const paymentData = {
-      amount: params.amount * 100,
-      currency: "MYR",
-      product: {
-        name: `Payment for Bid Item #${params.itemId}`,
-        description: "Bid payment",
-      },
-      customer: {
-        email: params.customerDetails.email,
-        phone: params.customerDetails.phone,
-        full_name: `${params.customerDetails.firstName} ${params.customerDetails.lastName}`,
-      },
-      reference,
-      success_callback: `${baseUrl}/api/payments/callback`,
-      cancel_callback: `${baseUrl}/api/payments/callback`,
-      success_redirect: `${baseUrl}/checkout/${params.itemId}/success`,
-      cancel_redirect: `${baseUrl}/checkout/${params.itemId}/cancel`,
-      send_email: true,
-      brand_id: process.env.CHIP_BRAND_ID,
-    };
-
-    const CHIP_API_ENDPOINT =
-      process.env.NODE_ENV === "production"
-        ? "https://gate.chip-in.asia/api/v1"
-        : "https://gate.sandbox.chip-in.asia/api/v1";
-
-    const response = await fetch(`${CHIP_API_ENDPOINT}/purchases/`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.CHIP_SECRET_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(paymentData),
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to create payment");
-    }
-
-    const payment = await response.json();
-
-    // Store payment information
-    await supabase.from("payments").insert({
-      item_id: params.itemId,
-      payment_id: payment.id,
-      reference,
-      amount: params.amount,
-      status: "pending",
-      customer_email: params.customerDetails.email,
-    });
-
-    return { checkout_url: payment.checkout_url };
-  } catch (error) {
-    console.error("Payment creation error:", error);
-    throw new Error("Failed to create payment");
-  }
-}
-
 export async function updateOrderStatusToCancelled(
   orderId: number,
   userId: string
@@ -130,7 +63,7 @@ export async function updateOrderStatusToCancelled(
     }
 
     const created = new Date(order.createdAt);
-    const deadline = new Date(created.getTime() + 60 * 60 * 1000); // 1 hour after creation
+    const deadline = new Date(created.getTime() + 30 * 60 * 1000); // 30 mins after creation
     const now = new Date();
 
     if (now > deadline) {
@@ -161,62 +94,233 @@ export async function updateOrderStatusToCancelled(
   }
 }
 
-export async function handlePaymentCallback(
-  signature: string | null,
-  payload: string
-) {
+// Create payment with Toyyib Pay
+export async function createToyyibPayment(params: CreatePaymentParams) {
+  console.log("Creating payment with params:", params);
   const supabase = createServerSupabase();
 
   try {
-    if (!signature) {
-      throw new Error("Missing signature");
+    // Get the order to get the buyer_id
+    const { data: order, error: orderError } = await supabase
+      .from("orders")
+      .select("buyerId")
+      .eq("itemId", parseInt(params.itemId))
+      .eq("orderStatus", "pending")
+      .single();
+
+    if (orderError) {
+      console.error("Order fetch error:", orderError);
+      throw new Error("Could not find the order");
     }
 
-    const hmac = createHmac("sha256", process.env.CHIP_WEBHOOK_SECRET || "");
-    const calculatedSignature = hmac.update(payload).digest("hex");
+    // Prepare Toyyib Pay bill details
+    const billDetails = {
+      userSecretKey: process.env.TOYYIB_SECRET_KEY,
+      categoryCode: process.env.TOYYIB_CATEGORY_ID,
+      billName: `Payment for Item #${params.itemId}`,
+      billDescription: `Bid Bidder Payment`,
+      billPriceSetting: 1,
+      billPayorInfo: 0,
+      billAmount: Math.round(params.amount * 100).toString(), // Convert to cents
+      billReturnUrl: `${process.env.NEXT_PUBLIC_APP_URL}/checkout/${params.itemId}/status`,
+      billCallbackUrl: `${process.env.NEXT_PUBLIC_APP_URL}/api/payment/toyyib-callback`,
+      billExpiryDays: 1,
+      billPaymentChannel: "0", // FPX
+      billPaymentCharge: "0",
+    };
 
-    if (
-      !timingSafeEqual(Buffer.from(signature), Buffer.from(calculatedSignature))
-    ) {
-      throw new Error("Invalid signature");
+    console.log("Bill details:", billDetails);
+
+    const formData = new FormData();
+    Object.entries(billDetails).forEach(([key, value]) => {
+      formData.append(key, value as string);
+    });
+
+    if (!process.env.TOYYIB_URL) {
+      throw new Error("TOYYIB_URL environment variable is not set");
     }
 
-    const { event, data } = JSON.parse(payload);
-
-    if (event === "payment.paid") {
-      await supabase
-        .from("payments")
-        .update({
-          status: "completed",
-          paid_at: new Date().toISOString(),
-        })
-        .eq("payment_id", data.id);
-
-      const { data: paymentRecord } = await supabase
-        .from("payments")
-        .select("item_id")
-        .eq("payment_id", data.id)
-        .single();
-
-      if (paymentRecord) {
-        await supabase
-          .from("items")
-          .update({ status: "sold" })
-          .eq("id", paymentRecord.item_id);
+    // Create bill at Toyyib Pay
+    const response = await fetch(
+      `${process.env.TOYYIB_URL}/index.php/api/createBill`,
+      {
+        method: "POST",
+        body: formData,
       }
-    } else if (event === "payment.failed") {
-      await supabase
-        .from("payments")
-        .update({
-          status: "failed",
-          error_message: data.failure_reason,
-        })
-        .eq("payment_id", data.id);
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Toyyib API error:", errorText);
+      throw new Error(`Toyyib API error: ${response.status} ${errorText}`);
     }
 
+    const bill = (await response.json()) as { BillCode: string }[];
+    console.log("Toyyib bill created:", bill);
+
+    if (!bill || !bill[0] || !bill[0].BillCode) {
+      throw new Error("Invalid response from Toyyib Pay");
+    }
+
+    // Create transaction with all details including bill code
+    const { data: transaction, error: transactionError } = await supabase
+      .from("transactions")
+      .insert({
+        itemId: parseInt(params.itemId),
+        buyerId: order.buyerId,
+        amount: params.amount,
+        status: "completed",
+        customerEmail: params.customerDetails.email,
+        customerPhone: params.customerDetails.phone,
+        customerName: `${params.customerDetails.firstName} ${params.customerDetails.lastName}`,
+        paymentProvider: "toyyibpay",
+        billCode: bill[0].BillCode,
+        paymentUrl: `${process.env.TOYYIB_URL}/${bill[0].BillCode}`,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      })
+      .select()
+      .single();
+
+    if (transactionError) {
+      console.error("Transaction creation error:", transactionError);
+      throw transactionError;
+    }
+
+    console.log("Transaction created:", transaction);
+
+    return {
+      success: true,
+      billCode: bill[0].BillCode,
+      paymentUrl: `${process.env.TOYYIB_URL}/${bill[0].BillCode}`,
+    };
+  } catch (error) {
+    console.error("[CREATE PAYMENT ERROR]", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to create payment",
+    };
+  }
+}
+
+// Handle Toyyib Pay callback
+export async function handleToyyibCallback(data: any) {
+  const supabase = createServerSupabase();
+  console.log("[HANDLE CALLBACK] Starting to process callback data:", data);
+
+  try {
+    const {
+      refno: billCode, // from redirect
+      billcode, // from callback
+      status,
+      reason,
+      order_id,
+      transaction_id,
+    } = data;
+
+    const finalBillCode = billCode || billcode;
+
+    if (!finalBillCode) {
+      throw new Error("Bill code not found in callback data");
+    }
+
+    console.log("[HANDLE CALLBACK] Processing bill code:", finalBillCode);
+
+    // Verify the transaction exists
+    const { data: transaction, error: transactionError } = await supabase
+      .from("transactions")
+      .select("*")
+      .eq("billCode", finalBillCode)
+      .single();
+
+    if (transactionError) {
+      console.error(
+        "[HANDLE CALLBACK] Transaction not found:",
+        transactionError
+      );
+      throw new Error("Transaction not found");
+    }
+
+    console.log("[HANDLE CALLBACK] Found transaction:", transaction);
+
+    // Don't update if already completed
+    if (transaction.status === "completed") {
+      console.log(
+        "[HANDLE CALLBACK] Transaction already completed, skipping update"
+      );
+      return { success: true };
+    }
+
+    // Update transaction status
+    const paymentStatus = status === "1" ? "completed" : "failed";
+    console.log("[HANDLE CALLBACK] Setting payment status to:", paymentStatus);
+
+    const { error: updateTransactionError } = await supabase
+      .from("transactions")
+      .update({
+        status: paymentStatus,
+        transactionId: transaction_id,
+        updatedAt: new Date().toISOString(),
+      })
+      .eq("id", transaction.id);
+
+    if (updateTransactionError) {
+      console.error(
+        "[HANDLE CALLBACK] Failed to update transaction:",
+        updateTransactionError
+      );
+      throw updateTransactionError;
+    }
+
+    // Update order status based on payment status
+    console.log(
+      `[HANDLE CALLBACK] Payment ${paymentStatus}, updating order status`
+    );
+    const orderStatus = paymentStatus === "completed" ? "paid" : "failed";
+    const { error: updateOrderError } = await supabase
+      .from("orders")
+      .update({
+        orderStatus,
+        updatedAt: new Date().toISOString(),
+        totalAmount: transaction.amount,
+      })
+      .eq("itemId", transaction.itemId);
+
+    if (updateOrderError) {
+      console.error(
+        "[HANDLE CALLBACK] Failed to update order:",
+        updateOrderError
+      );
+      throw updateOrderError;
+    }
+
+    // Update item status to ENDED when payment is successful
+    if (paymentStatus === "completed") {
+      const { error: updateItemError } = await supabase
+        .from("items")
+        .update({
+          status: "ENDED",
+          updatedAt: new Date().toISOString(),
+        })
+        .eq("id", transaction.itemId);
+
+      if (updateItemError) {
+        console.error(
+          "[HANDLE CALLBACK] Failed to update item status:",
+          updateItemError
+        );
+        throw updateItemError;
+      }
+      console.log(
+        "[HANDLE CALLBACK] Successfully updated item status to ENDED"
+      );
+    }
+
+    console.log("[HANDLE CALLBACK] Successfully processed callback");
     return { success: true };
   } catch (error) {
-    console.error("Webhook processing error:", error);
-    throw error;
+    console.error("[PAYMENT CALLBACK ERROR]", error);
+    return { success: false, error: "Failed to process payment callback" };
   }
 }

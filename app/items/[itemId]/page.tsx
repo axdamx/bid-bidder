@@ -49,7 +49,7 @@ export default function ItemPage({
     // Only track when we have all the data and haven't tracked yet
     if (item && user && !hasTrackedView.current) {
       hasTrackedView.current = true;
-      captureEvent('item_viewed', {
+      captureEvent("item_viewed", {
         // Item details
         itemId: item.id,
         itemName: item.name,
@@ -64,7 +64,7 @@ export default function ItemPage({
         sellerId: itemUser?.id,
         sellerName: itemUser?.name,
         // Metadata
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
   }, [item, user, itemUser]);
@@ -259,7 +259,7 @@ export default function ItemPage({
     >
       <Toaster
         toastOptions={{ duration: 3000 }}
-        position="bottom-right"
+        position="top-right"
         reverseOrder={false}
       />
       <ItemPageClient

@@ -183,7 +183,7 @@ export default function ChatComponent({
   }
 
   return (
-    <Card className="w-full mx-auto h-[600px] md:h-[700px] flex flex-col">
+    <Card className="w-full mx-auto h-[500px] md:h-[500px] flex flex-col">
       {error && (
         <div className="flex items-center justify-center gap-2 p-2 bg-yellow-100 rounded-md">
           <span className="text-sm text-yellow-800">{error}</span>

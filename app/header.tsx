@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import UserAvatar from "./components/userAvatar";
 import SearchCommand from "./components/headerSearch";
-import { Loader2, LogOut, Menu } from "lucide-react";
+import { ArrowRight, Loader2, LogOut, Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useSupabase } from "./context/SupabaseContext";
 import { fetchUser } from "./profile/[userId]/action";
@@ -70,207 +70,223 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-gray-50/80 backdrop-blur-sm py-2 shadow-sm">
-      <Dialog open={isNavigating} modal>
-        <DialogTitle className="[&>button]:hidden" />
-        <DialogContent
-          aria-describedby="success-message"
-          aria-labelledby="success-title"
-          className="[&>button]:hidden"
-        >
-          <div className="flex flex-col items-center justify-center space-y-4">
-            <Loader2 className="h-8 w-8 animate-spin" />
-            <p>Loading...</p>
-          </div>
-        </DialogContent>
-      </Dialog>
+    <>
+      <header className="sticky top-0 z-50 w-full bg-gray-50/80 backdrop-blur-sm py-2 shadow-sm">
+        <Dialog open={isNavigating} modal>
+          <DialogTitle className="[&>button]:hidden" />
+          <DialogContent
+            aria-describedby="success-message"
+            aria-labelledby="success-title"
+            className="[&>button]:hidden"
+          >
+            <div className="flex flex-col items-center justify-center space-y-4">
+              <Loader2 className="h-8 w-8 animate-spin" />
+              <p>Loading...</p>
+            </div>
+          </DialogContent>
+        </Dialog>
 
-      <div className="container px-4 mx-auto">
-        <nav className="flex items-center justify-between gap-2">
-          {/* Left Section: Logo and Navigation */}
-          <div className="flex items-center gap-4 sm:gap-8">
-            <Link
-              href="/"
-              className="flex-shrink-0"
-              onClick={(e) => handleLinkClick(e, "/")}
-            >
-              <Image
-                src="/renown-high-resolution-logo-transparent.png"
-                width={75}
-                height={75}
-                alt="Logo"
-                className="w-20 h-20" // Smaller logo
-              />
-            </Link>
+        <div className="container px-4 mx-auto">
+          <nav className="flex items-center justify-between gap-2">
+            {/* Left Section: Logo and Navigation */}
+            <div className="flex items-center gap-4 sm:gap-8">
+              <Link
+                href="/"
+                className="flex-shrink-0"
+                onClick={(e) => handleLinkClick(e, "/")}
+              >
+                <Image
+                  src="/renown-high-resolution-logo-transparent.png"
+                  width={75}
+                  height={75}
+                  alt="Logo"
+                  className="w-20 h-20" // Smaller logo
+                />
+              </Link>
 
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center gap-8">
+              {/* Desktop Navigation */}
+              <div className="hidden md:flex items-center gap-8">
+                {user && (
+                  <>
+                    <Link
+                      href="/items/create"
+                      className="hover:underline whitespace-nowrap"
+                      onClick={(e) => handleLinkClick(e, "/items/create")}
+                    >
+                      <Button>Create Auction</Button>
+                    </Link>
+                    <Link
+                      href="/active"
+                      className="hover:underline whitespace-nowrap"
+                      onClick={(e) => handleLinkClick(e, "/active")}
+                    >
+                      <Button variant="outline">Active Bids</Button>
+                    </Link>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Center Section: Search */}
+            <div className="flex-1 max-w-[200px] sm:max-w-xl mx-auto flex justify-center">
+              <SearchCommand />
+            </div>
+
+            {/* Right Section: User Controls */}
+            <div className="hidden md:flex items-center gap-4">
               {user && (
                 <>
-                  <Link
-                    href="/items/create"
-                    className="hover:underline whitespace-nowrap"
-                    onClick={(e) => handleLinkClick(e, "/items/create")}
-                  >
-                    <Button>Create Auction</Button>
-                  </Link>
-                  <Link
-                    href="/active"
-                    className="hover:underline whitespace-nowrap"
-                    onClick={(e) => handleLinkClick(e, "/active")}
-                  >
-                    <Button variant="outline">Active Bids</Button>
-                  </Link>
+                  {/* <Link
+              href="/items/create"
+              className="hover:underline whitespace-nowrap text-sm"
+              onClick={(e) => handleLinkClick(e, "/items/create")}
+            >
+              Create Auction
+            </Link> */}
+                  <UserAvatar
+                    name={user.name!}
+                    imageUrl={user.image!}
+                    email={user.email!}
+                    userId={user.id!}
+                  />
+                  <NotificationDropdown />
                 </>
               )}
+              {!user && <SignIn />}
             </div>
-          </div>
 
-          {/* Center Section: Search */}
-          <div className="flex-1 max-w-[200px] sm:max-w-xl mx-auto flex justify-center">
-            <SearchCommand />
-          </div>
+            {/* Mobile Menu */}
+            <Sheet open={isOpen} onOpenChange={setIsOpen}>
+              <SheetTrigger className="md:hidden">
+                <Menu className="h-5 w-5" />
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[300px] p-0">
+                <div className="flex flex-col h-full">
+                  {/* Header Section */}
+                  <div className="p-4 border-b">
+                    <h2 className="text-lg font-semibold">Renown</h2>
+                  </div>
 
-          {/* Right Section: User Controls */}
-          <div className="hidden md:flex items-center gap-4">
-            {user && (
-              <>
-                {/* <Link
-                  href="/items/create"
-                  className="hover:underline whitespace-nowrap text-sm"
-                  onClick={(e) => handleLinkClick(e, "/items/create")}
-                >
-                  Create Auction
-                </Link> */}
-                <UserAvatar
-                  name={user.name!}
-                  imageUrl={user.image!}
-                  email={user.email!}
-                  userId={user.id!}
-                />
-                <NotificationDropdown />
-              </>
-            )}
-            {!user && <SignIn />}
-          </div>
+                  {/* Navigation Content */}
+                  <div className="flex-1 overflow-auto py-4">
+                    {/* <div className="px-4 mb-4"><SearchCommand /></div> */}
 
-          {/* Mobile Menu */}
-          <Sheet open={isOpen} onOpenChange={setIsOpen}>
-            <SheetTrigger className="md:hidden">
-              <Menu className="h-5 w-5" />
-            </SheetTrigger>
-            <SheetContent side="right" className="w-[300px] p-0">
-              <div className="flex flex-col h-full">
-                {/* Header Section */}
-                <div className="p-4 border-b">
-                  <h2 className="text-lg font-semibold">Renown</h2>
-                </div>
-
-                {/* Navigation Content */}
-                <div className="flex-1 overflow-auto py-4">
-                  {/* <div className="px-4 mb-4"><SearchCommand /></div> */}
-
-                  <nav className="space-y-2">
-                    {user ? (
-                      <>
-                        {/* User Profile Section */}
-                        <div className="px-4 py-3 mb-2 border-b">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-3">
-                              <Avatar className="w-12 h-12">
-                                <AvatarImage src={user?.image} />
-                                <AvatarFallback>
-                                  {user?.name?.charAt(0) ||
-                                    user?.email?.charAt(0)}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div className="flex flex-col">
-                                <p className="font-medium">{user.name}</p>
-                                <p className="text-sm text-muted-foreground">
-                                  {user.email}
-                                </p>
+                    <nav className="space-y-2">
+                      {user ? (
+                        <>
+                          {/* User Profile Section */}
+                          <div className="px-4 py-3 mb-2 border-b">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-3">
+                                <Avatar className="w-12 h-12">
+                                  <AvatarImage src={user?.image} />
+                                  <AvatarFallback>
+                                    {user?.name?.charAt(0) ||
+                                      user?.email?.charAt(0)}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="flex flex-col">
+                                  <p className="font-medium">{user.name}</p>
+                                  <p className="text-sm text-muted-foreground">
+                                    {user.email}
+                                  </p>
+                                </div>
                               </div>
+                              <NotificationDropdown />
                             </div>
-                            <NotificationDropdown />
                           </div>
-                        </div>
 
-                        {/* Navigation Links */}
-                        <div className="px-2 py-2">
-                          <Link
-                            href={`/profile/${user.id}`}
-                            className="flex items-center space-x-2 px-2 py-2 rounded-md hover:bg-accent"
-                            onClick={(e) =>
-                              handleLinkClick(e, `/profile/${user.id}`)
-                            }
-                          >
-                            <span>Profile</span>
-                          </Link>
-                          <Link
-                            href="/dashboard"
-                            className="flex items-center space-x-2 px-2 py-2 rounded-md hover:bg-accent"
-                            onClick={(e) => handleLinkClick(e, "/dashboard")}
-                          >
-                            <span>Dashboard</span>
-                          </Link>
-                          <Link
-                            href="/items/create"
-                            className="flex items-center space-x-2 px-2 py-2 rounded-md hover:bg-accent"
-                            onClick={(e) => handleLinkClick(e, "/items/create")}
-                          >
-                            <span>Create Auction</span>
-                          </Link>
-                          <Link
-                            href="/active"
-                            className="flex items-center space-x-2 px-2 py-2 rounded-md hover:bg-accent"
-                            onClick={(e) => handleLinkClick(e, "/active")}
-                          >
-                            <span>Active Bids</span>
-                          </Link>
-                        </div>
-
-                        {/* Sign Out Section */}
-                        <div className="px-4 py-2 border-t mt-auto">
-                          <form
-                            onSubmit={async (e) => {
-                              e.preventDefault();
-                              try {
-                                const { error } = await supabase.auth.signOut();
-                                if (error) throw error;
-
-                                // Clear any local storage items if needed
-                                // localStorage.removeItem("supabase.auth.token");
-                                setUser(null);
-
-                                // Force reload to clear all state
-                                window.location.href = "/";
-                              } catch (error) {
-                                console.error("Error signing out:", error);
+                          {/* Navigation Links */}
+                          <div className="px-2 py-2">
+                            <Link
+                              href={`/profile/${user.id}`}
+                              className="flex items-center space-x-2 px-2 py-2 rounded-md hover:bg-accent"
+                              onClick={(e) =>
+                                handleLinkClick(e, `/profile/${user.id}`)
                               }
-                            }}
-                          >
-                            <button
-                              type="submit"
-                              className="flex items-center space-x-2 w-full px-2 py-2 rounded-md hover:bg-accent"
                             >
-                              <LogOut className="h-4 w-4" />
-                              <span>Sign Out</span>
-                            </button>
-                          </form>
+                              <span>Profile</span>
+                            </Link>
+                            <Link
+                              href="/dashboard"
+                              className="flex items-center space-x-2 px-2 py-2 rounded-md hover:bg-accent"
+                              onClick={(e) => handleLinkClick(e, "/dashboard")}
+                            >
+                              <span>Dashboard</span>
+                            </Link>
+                            <Link
+                              href="/items/create"
+                              className="flex items-center space-x-2 px-2 py-2 rounded-md hover:bg-accent"
+                              onClick={(e) =>
+                                handleLinkClick(e, "/items/create")
+                              }
+                            >
+                              <span>Create Auction</span>
+                            </Link>
+                            <Link
+                              href="/active"
+                              className="flex items-center space-x-2 px-2 py-2 rounded-md hover:bg-accent"
+                              onClick={(e) => handleLinkClick(e, "/active")}
+                            >
+                              <span>Active Bids</span>
+                            </Link>
+                          </div>
+
+                          {/* Sign Out Section */}
+                          <div className="px-4 py-2 border-t mt-auto">
+                            <form
+                              onSubmit={async (e) => {
+                                e.preventDefault();
+                                try {
+                                  const { error } =
+                                    await supabase.auth.signOut();
+                                  if (error) throw error;
+
+                                  // Clear any local storage items if needed
+                                  // localStorage.removeItem("supabase.auth.token");
+                                  setUser(null);
+
+                                  // Force reload to clear all state
+                                  window.location.href = "/";
+                                } catch (error) {
+                                  console.error("Error signing out:", error);
+                                }
+                              }}
+                            >
+                              <button
+                                type="submit"
+                                className="flex items-center space-x-2 w-full px-2 py-2 rounded-md hover:bg-accent"
+                              >
+                                <LogOut className="h-4 w-4" />
+                                <span>Sign Out</span>
+                              </button>
+                            </form>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="px-4">
+                          <SignInMobileButton />
                         </div>
-                      </>
-                    ) : (
-                      <div className="px-4">
-                        <SignInMobileButton />
-                      </div>
-                    )}
-                  </nav>
+                      )}
+                    </nav>
+                  </div>
                 </div>
-              </div>
-            </SheetContent>
-          </Sheet>
-        </nav>
+              </SheetContent>
+            </Sheet>
+          </nav>
+        </div>
+      </header>
+      <div className="sticky top-[64px] z-40 w-full bg-primary/90 backdrop-blur supports-[backdrop-filter]:bg-primary/60">
+        <div className="container flex h-10 items-center justify-center">
+          <Link
+            href="/how-auction-work"
+            className="text-sm font-medium text-primary-foreground hover:underline"
+          >
+            🎯 Learn how our auction platform works{" "}
+            <ArrowRight className="inline-block ml-1" size={16} />
+          </Link>
+        </div>
       </div>
-    </header>
+    </>
   );
 }

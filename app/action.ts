@@ -33,7 +33,7 @@ export async function getUserById(userId: string) {
 
 export const getItemsWithUsers = cache(async () => {
   const supabase = createServerSupabase(); // Create client inside function
-  
+
   try {
     // Verify supabase connection
     if (!supabase) {
@@ -84,13 +84,23 @@ export const getLiveAuctions = cache(async () => {
 export const getEndedAuctions = cache(async () => {
   const supabase = createServerSupabase(); // Create client inside function
   const { items } = await getItemsWithUsers();
-  return items.filter(
-    (item) =>
-      // Auction is ended if:
-      // 1. It has reached end date OR
-      // 2. It has been bought out
-      new Date(item.endDate + "Z") < new Date() || item.isBoughtOut
-  );
+  return items
+    .filter(
+      (item) =>
+        // Auction is ended if:
+        // 1. It has reached end date OR
+        // 2. It has been bought out
+        new Date(item.endDate + "Z") < new Date() || item.isBoughtOut
+    )
+    .sort((a, b) => {
+      const aEndTime = a.isBoughtOut
+        ? new Date(a.boughtOutDate + "Z")
+        : new Date(a.endDate + "Z");
+      const bEndTime = b.isBoughtOut
+        ? new Date(b.boughtOutDate + "Z")
+        : new Date(b.endDate + "Z");
+      return bEndTime.getTime() - aEndTime.getTime();
+    });
 });
 
 export const getUpcomingAuctions = cache(async (limit: number = 2) => {

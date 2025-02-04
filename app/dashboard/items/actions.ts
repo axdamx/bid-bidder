@@ -97,7 +97,7 @@ export async function updateItemEndDate(itemId: number, endDate: string) {
         status: "LIVE",
         winnerId: null,
         isBoughtOut: false,
-        currentBid: item.startingPrice, // Reset current bid to starting price
+        currentBid: 0, // Reset current bid to 0
       })
       .eq("id", itemId);
 

@@ -4,21 +4,21 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { Lock } from "lucide-react";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
-  ArrowRight,
-  Building,
-  CreditCard,
-  HelpCircle,
-  Package,
-  RotateCcw,
-  Wallet2,
-} from "lucide-react";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Separator } from "@/components/ui/separator";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -27,92 +27,171 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { getCheckoutItems, createPayment } from "./actions";
-import { CldImage } from "next-cloudinary";
-import { formatCurrency } from "@/lib/utils";
-import CheckoutSkeleton from "../components/CheckoutSkeleton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { OptimizedImage } from "@/app/components/OptimizedImage";
 import { useQuery } from "@tanstack/react-query";
 import { useAtom } from "jotai";
 import { userAtom } from "@/app/atom/userAtom";
+import { createToyyibPayment, getCheckoutItems } from "./actions";
+import CheckoutSkeleton from "../components/CheckoutSkeleton";
 import CountdownTimer from "../components/CheckoutCountdownTimer";
-import toast from "react-hot-toast";
+import { formatCurrency } from "@/lib/utils";
 
-const addressSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
+const checkoutFormSchema = z.object({
+  fullName: z.string().min(1, "Full name is required"),
   email: z.string().email("Invalid email address"),
   phone: z.string().min(1, "Phone number is required"),
-  marketing: z.enum(["yes", "no"]),
+  country: z.string().min(1, "Country is required"),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  zipCode: z.string().optional(),
+  shippingRegion: z.enum(["WEST", "EAST"]).optional(),
 });
 
-const billingSchema = z.object({
-  address: z.string().min(1, "Address is required"),
-  city: z.string().min(1, "City is required"),
-  postcode: z.string().min(1, "Postcode is required"),
-});
-
-const paymentSchema = z.object({
-  cardNumber: z.string().min(16, "Invalid card number"),
-  expiry: z.string().min(5, "Invalid expiry date"),
-  cvc: z.string().min(3, "Invalid CVC"),
-  paymentMethod: z.object({
-    type: z.enum(["credit_card", "online_transfer", "e_wallet"]),
-    // Credit Card Fields
-    cardNumber: z.string().optional(),
-    expiryDate: z.string().optional(),
-    cvv: z.string().optional(),
-    // Online Transfer Fields
-    bankName: z.string().optional(),
-    accountNumber: z.string().optional(),
-    // E-wallet Fields
-    walletProvider: z.string().optional(),
-    walletId: z.string().optional(),
-  }),
-});
-
-type FormData = z.infer<typeof addressSchema> &
-  z.infer<typeof billingSchema> &
-  z.infer<typeof paymentSchema>;
+type CheckoutFormData = z.infer<typeof checkoutFormSchema>;
 
 export default function CheckoutPage({
   params: { itemId },
 }: {
   params: { itemId: string };
 }) {
-  const [step, setStep] = useState<"address" | "billing" | "payment">(
-    "address"
-  );
-  const [formData, setFormData] = useState<Partial<FormData>>({});
+  const router = useRouter();
   const [user] = useAtom(userAtom);
   const [isTimerExpired, setIsTimerExpired] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showTimerDialog, setShowTimerDialog] = useState(false);
+  const [showExpiredDialog, setShowExpiredDialog] = useState(false);
+  const [selectedShippingRegion, setSelectedShippingRegion] = useState<"WEST" | "EAST">("WEST");
+
+  const handleGoToDashboard = () => {
+    router.push("/dashboard?tab=orders");
+  };
+
+  const calculateTotalAmount = (item: any, shippingRegion: "WEST" | "EAST") => {
+    if (!item) return 0;
+    const shippingCost = shippingRegion === "WEST" 
+      ? item.westMalaysiaShippingPrice 
+      : item.eastMalaysiaShippingPrice;
+    return item.currentBid + (shippingCost || 0) + (item.currentBid * 0.06);
+  };
+
+  const handlePayment = async (formData: CheckoutFormData) => {
+    try {
+      setError(null);
+      setIsSubmitting(true);
+
+      // Split full name into first and last name
+      const [firstName, ...lastNameParts] = formData.fullName.split(" ");
+      const lastName = lastNameParts.join(" ");
+
+      const totalAmount = calculateTotalAmount(item, selectedShippingRegion);
+
+      console.log("Creating payment with:", {
+        itemId,
+        amount: totalAmount,
+        customerDetails: {
+          email: formData.email,
+          phone: formData.phone,
+          firstName,
+          lastName,
+        },
+      });
+
+      const paymentResult = await createToyyibPayment({
+        itemId,
+        amount: totalAmount,
+        customerDetails: {
+          email: formData.email,
+          phone: formData.phone,
+          firstName: firstName || "",
+          lastName: lastName || firstName || "",
+        },
+      });
+
+      if (!paymentResult.success) {
+        throw new Error(paymentResult.error || "Failed to create payment");
+      }
+
+      // Redirect to Toyyib Pay payment page
+      if (!paymentResult.paymentUrl) {
+        throw new Error("Payment URL is missing");
+      }
+      window.location.href = paymentResult.paymentUrl;
+    } catch (error) {
+      console.error("[PAYMENT ERROR]", error);
+      setError(
+        error instanceof Error
+          ? error.message
+          : "An error occurred while processing your payment"
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const { data: checkoutItems, isLoading } = useQuery({
-    queryKey: ["checkoutItems", user?.id],
+    queryKey: ["checkoutItems", user?.id, itemId],
     queryFn: () => getCheckoutItems(user?.id!, itemId),
-    enabled: !!user?.id, // Only run query when user.id exists
+    enabled: !!user?.id,
+    staleTime: 0, // Don't cache the data
+    gcTime: 0, // Remove data from cache immediately
   });
 
-  console.log("checkoutItems", checkoutItems);
+  // Show timer dialog when component mounts
+  useEffect(() => {
+    if (checkoutItems?.order && !isTimerExpired) {
+      setShowTimerDialog(true);
+    }
+  }, [checkoutItems?.order, isTimerExpired]);
 
-  const steps = [
-    { id: "address", label: "Address" },
-    { id: "billing", label: "Billing" },
-    { id: "payment", label: "Payment" },
-  ];
+  // Handle timer expiration
+  useEffect(() => {
+    if (isTimerExpired) {
+      setShowTimerDialog(false);
+      setShowExpiredDialog(true);
+    }
+  }, [isTimerExpired]);
 
-  const currentSchema = {
-    address: addressSchema,
-    billing: billingSchema,
-    payment: paymentSchema,
-  }[step];
-
-  const form = useForm<Partial<FormData>>({
-    resolver: zodResolver(currentSchema),
-    defaultValues: formData,
+  const form = useForm<CheckoutFormData>({
+    resolver: zodResolver(checkoutFormSchema),
+    mode: "onChange",
+    defaultValues: {
+      fullName: "",
+      email: "",
+      phone: "",
+      country: "",
+      city: "",
+      state: "",
+      zipCode: "",
+      shippingRegion: "WEST",
+    },
   });
 
-  const progress =
-    ((steps.findIndex((s) => s.id === step) + 1) / steps.length) * 100;
+  // Debug form state
+  console.log("Form State:", {
+    values: form.getValues(),
+    isValid: form.formState.isValid,
+    errors: form.formState.errors,
+    isDirty: form.formState.isDirty,
+  });
+
+  if (!user?.id) {
+    return (
+      <div className="container mx-auto py-12 text-center">
+        <h2 className="text-xl font-semibold">Please login to continue</h2>
+        <p className="mt-2 text-muted-foreground">
+          You need to be logged in to view this page.
+        </p>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return <CheckoutSkeleton />;
@@ -120,598 +199,353 @@ export default function CheckoutPage({
 
   const { order, item } = checkoutItems || {};
 
-  // console.log("checkoutItems", checkoutItems); // Add check for buyer ID
-  if (!order || isTimerExpired) {
-    return (
-      <div className="container mx-auto py-12 text-center">
-        <h2 className="text-xl font-semibold">NO orders found</h2>
-        <p className="mt-2 text-muted-foreground">You cannot view this page.</p>
-      </div>
-    );
-  }
-
-  const soldPrice = item?.isBoughtOut ? item?.binPrice : item?.currentBid;
-  const shippingCost = 20;
-  const buyersPremium = soldPrice! * 0.06;
-  const totalPrice = soldPrice! + shippingCost + buyersPremium;
-
-  console.log("soldPrice", soldPrice);
-
-  const onSubmit = async (data: Partial<FormData>) => {
-    setFormData({ ...formData, ...data });
-
-    if (step === "address") {
-      setStep("billing");
-    } else if (step === "billing") {
-      setStep("payment");
-    } else if (step === "payment") {
-      try {
-        // Initialize CHIP-IN payment using server action
-        const { checkout_url } = await createPayment({
-          itemId,
-          amount: totalPrice,
-          customerDetails: {
-            email: formData.email!,
-            phone: formData.phone!,
-            firstName: formData.firstName!,
-            lastName: formData.lastName!,
-          },
-        });
-
-        if (checkout_url) {
-          // Redirect to CHIP-IN checkout page
-          window.location.href = checkout_url;
-        } else {
-          toast.error("Failed to initialize payment");
-        }
-      } catch (error) {
-        console.error("Payment error:", error);
-        toast.error("Payment initialization failed");
-      }
-    }
-  };
-
-  if (isTimerExpired) {
-    return (
-      <div className="container mx-auto py-12 text-center">
-        <h2 className="text-xl font-semibold">Order Expired</h2>
-        <p className="mt-2 text-muted-foreground">
-          Your order has expired. Please place a new order.
-        </p>
-      </div>
-    );
-  }
+  console.log("isTimerExpired", isTimerExpired);
 
   return (
-    <div className="container mx-auto py-12 rounded-xl">
-      <main className="mx-auto max-w-6xl px-4 py-8">
-        <div className="mb-8">
-          <div className="flex flex-col items-center space-y-4 sm:flex-row sm:items-center sm:justify-center sm:space-x-8 sm:space-y-0">
-            {steps.map((s, i) => (
-              <div
-                key={s.id}
-                className="relative flex items-center text-center"
-              >
-                <div
-                  className={`flex h-8 w-8 items-center justify-center rounded-full ${
-                    step === s.id
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground"
-                  }`}
-                >
-                  {i + 1}
-                </div>
-                <span className="ml-2 font-medium">{s.label}</span>
-                {i < steps.length - 1 && (
-                  <div className="absolute left-1/2 top-10 h-8 w-px -translate-x-1/2 bg-muted sm:static sm:left-auto sm:top-auto sm:ml-8 sm:h-px sm:w-8 sm:translate-x-0" />
-                )}
+    <>
+      {!isTimerExpired && (
+        <Dialog open={showTimerDialog} onOpenChange={setShowTimerDialog}>
+          <DialogContent className="[&>button]:hidden">
+            <DialogHeader>
+              <DialogTitle>Time Remaining to Complete Checkout</DialogTitle>
+              <DialogDescription>
+                Please complete your checkout before the timer expires:
+              </DialogDescription>
+            </DialogHeader>
+            {checkoutItems?.order && (
+              <div className="py-4">
+                <CountdownTimer
+                  createdAt={checkoutItems.order.createdAt}
+                  orderId={checkoutItems.order.id}
+                  userId={user.id!}
+                  onTimerExpired={() => setIsTimerExpired(true)}
+                />
               </div>
-            ))}
+            )}
+            <div className="flex justify-center">
+              <Button onClick={() => setShowTimerDialog(false)}>
+                Continue
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      <Dialog open={showExpiredDialog} onOpenChange={setShowExpiredDialog}>
+        <DialogContent className="[&>button]:hidden">
+          <DialogHeader>
+            <DialogTitle>Order Expired</DialogTitle>
+            <DialogDescription>
+              You have missed the checkout window. This order has been
+              cancelled.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-center">
+            <Button onClick={handleGoToDashboard}>Go to Orders</Button>
           </div>
-          {checkoutItems?.order && (
-            <CountdownTimer
-              createdAt={checkoutItems.order.createdAt}
-              orderId={checkoutItems.order.id}
-              userId={user?.id!}
-              onTimerExpired={() => setIsTimerExpired(true)}
-            />
-          )}
-        </div>
+        </DialogContent>
+      </Dialog>
 
-        <div className="grid gap-8 lg:grid-cols-3">
-          <div className="lg:col-span-2">
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)}>
-                {step === "address" && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Delivery Method</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      <div className="grid gap-4 sm:grid-cols-2">
-                        <FormField
-                          control={form.control}
-                          name="firstName"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>First Name</FormLabel>
-                              <FormControl>
-                                <Input
-                                  placeholder="Enter first name"
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="lastName"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Last Name</FormLabel>
-                              <FormControl>
-                                <Input
-                                  placeholder="Enter last name"
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <FormField
-                        control={form.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Email Address</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="email"
-                                placeholder="Enter email address"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="phone"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Phone</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="tel"
-                                placeholder="Enter phone number"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="marketing"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Marketing Preferences</FormLabel>
-                            <FormControl>
-                              <RadioGroup
-                                onValueChange={field.onChange}
-                                defaultValue={field.value}
-                                className="flex flex-col space-y-1"
-                              >
-                                <FormItem className="flex items-center space-x-3 space-y-0">
-                                  <FormControl>
-                                    <RadioGroupItem value="yes" />
-                                  </FormControl>
-                                  <FormLabel className="font-normal">
-                                    Yes, I&apos;d like to receive exclusive
-                                    offers and updates
-                                  </FormLabel>
-                                </FormItem>
-                                <FormItem className="flex items-center space-x-3 space-y-0">
-                                  <FormControl>
-                                    <RadioGroupItem value="no" />
-                                  </FormControl>
-                                  <FormLabel className="font-normal">
-                                    No, I don&apos;t want to receive marketing
-                                    communications
-                                  </FormLabel>
-                                </FormItem>
-                              </RadioGroup>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </CardContent>
-                  </Card>
+      {!isTimerExpired && (
+        <>
+          {!order || !item ? (
+            <div className="container mx-auto py-12 text-center">
+              <h2 className="text-xl font-semibold">No orders found</h2>
+              <p className="mt-2 text-muted-foreground">
+                You cannot view this page.
+              </p>
+            </div>
+          ) : (
+            <div className="grid lg:grid-cols-2 gap-8 max-w-7xl mx-auto p-4">
+              <div className="space-y-8">
+                {checkoutItems?.order && (
+                  <div className="mb-8">
+                    <CountdownTimer
+                      createdAt={checkoutItems.order.createdAt}
+                      orderId={checkoutItems.order.id}
+                      userId={user?.id!}
+                      onTimerExpired={() => setIsTimerExpired(true)}
+                    />
+                  </div>
                 )}
 
-                {step === "billing" && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h1 className="text-2xl font-semibold">{item?.name}</h1>
+                    <span className="text-xl">
+                      {formatCurrency(item?.currentBid)}
+                    </span>
+                  </div>
+
                   <Card>
-                    <CardHeader>
-                      <CardTitle>Billing Address</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      <FormField
-                        control={form.control}
-                        name="address"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Street Address</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="Enter street address"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <div className="grid gap-4 sm:grid-cols-2">
-                        <FormField
-                          control={form.control}
-                          name="city"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>City</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Enter city" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
+                    <CardContent className="p-0">
+                      <div className="relative aspect-[4/3] bg-black border border-gray-200 rounded-lg">
+                        <OptimizedImage
+                          width={800}
+                          height={600}
+                          src={item?.imageId}
+                          alt={item?.name}
+                          className="object-contain"
+                          quality="eco"
                         />
-                        <FormField
-                          control={form.control}
-                          name="postcode"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Postcode</FormLabel>
-                              <FormControl>
-                                <Input
-                                  placeholder="Enter postcode"
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                        {/* <button className="absolute left-4 top-1/2 -translate-y-1/2 h-8 w-8 flex items-center justify-center bg-white rounded-full">
+                          <ChevronLeft className="h-4 w-4" />
+                        </button>
+                        <button className="absolute right-4 top-1/2 -translate-y-1/2 h-8 w-8 flex items-center justify-center bg-white rounded-full">
+                          <ChevronRight className="h-4 w-4" />
+                        </button> */}
                       </div>
+                      {/* Add thumbnail gallery here if you have multiple images */}
                     </CardContent>
                   </Card>
-                )}
 
-                {step === "payment" && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Payment Details</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      <div className="space-y-4">
-                        <FormField
-                          control={form.control}
-                          name="paymentMethod.type"
-                          render={({ field }) => (
-                            <FormItem className="space-y-4">
-                              <FormControl>
-                                <RadioGroup
-                                  onValueChange={field.onChange}
-                                  defaultValue={field.value}
-                                  className="grid grid-cols-3 gap-4"
-                                >
-                                  <FormItem>
-                                    <FormControl>
-                                      <div>
-                                        <RadioGroupItem
-                                          value="credit_card"
-                                          id="credit_card"
-                                          className="peer sr-only"
-                                        />
-                                        <FormLabel
-                                          htmlFor="credit_card"
-                                          className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
-                                        >
-                                          <CreditCard className="mb-3 h-6 w-6" />
-                                          Credit Card
-                                        </FormLabel>
-                                      </div>
-                                    </FormControl>
-                                  </FormItem>
-                                  <FormItem>
-                                    <FormControl>
-                                      <div>
-                                        <RadioGroupItem
-                                          value="online_transfer"
-                                          id="online_transfer"
-                                          className="peer sr-only"
-                                        />
-                                        <FormLabel
-                                          htmlFor="online_transfer"
-                                          className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
-                                        >
-                                          <Building className="mb-3 h-6 w-6" />
-                                          Bank Transfer
-                                        </FormLabel>
-                                      </div>
-                                    </FormControl>
-                                  </FormItem>
-                                  <FormItem>
-                                    <FormControl>
-                                      <div>
-                                        <RadioGroupItem
-                                          value="e_wallet"
-                                          id="e_wallet"
-                                          className="peer sr-only"
-                                        />
-                                        <FormLabel
-                                          htmlFor="e_wallet"
-                                          className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
-                                        >
-                                          <Wallet2 className="mb-3 h-6 w-6" />
-                                          E-Wallet
-                                        </FormLabel>
-                                      </div>
-                                    </FormControl>
-                                  </FormItem>
-                                </RadioGroup>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                  {/* <p className="text-gray-600">{item?.description}</p> */}
+                </div>
+              </div>
 
-                        {form.watch("paymentMethod.type") === "credit_card" && (
-                          <Card>
-                            <CardHeader>
-                              <CardTitle>Enter your card details</CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-6">
-                              <FormField
-                                control={form.control}
-                                name="paymentMethod.cardNumber"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Card Number</FormLabel>
-                                    <FormControl>
-                                      <Input
-                                        placeholder="Enter card number"
-                                        {...field}
-                                      />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                              <div className="grid gap-4 sm:grid-cols-3">
-                                <FormField
-                                  control={form.control}
-                                  name="paymentMethod.expiryDate"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>Expiry Date</FormLabel>
-                                      <FormControl>
-                                        <Input placeholder="MM/YY" {...field} />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                                <FormField
-                                  control={form.control}
-                                  name="paymentMethod.cvv"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>CVC</FormLabel>
-                                      <FormControl>
-                                        <Input placeholder="CVC" {...field} />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                              </div>
-                            </CardContent>
-                          </Card>
-                        )}
+              <div className="space-y-8">
+                <div>
+                  <h2 className="text-2xl font-semibold mb-4">
+                    Payment Details
+                  </h2>
+                  <p className="text-gray-600">
+                    Complete your purchase by providing your payment details.
+                  </p>
+                </div>
 
-                        {form.watch("paymentMethod.type") ===
-                          "online_transfer" && (
-                          <Card>
-                            <CardHeader>
-                              <CardTitle>Enter your bank details</CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-6">
-                              <div className="grid gap-4">
-                                <FormField
-                                  control={form.control}
-                                  name="paymentMethod.bankName"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>Bank Name</FormLabel>
-                                      <FormControl>
-                                        <Input
-                                          placeholder="Enter bank name"
-                                          {...field}
-                                        />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                                <FormField
-                                  control={form.control}
-                                  name="paymentMethod.accountNumber"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>Account Number</FormLabel>
-                                      <FormControl>
-                                        <Input
-                                          placeholder="Enter account number"
-                                          {...field}
-                                        />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                              </div>
-                            </CardContent>
-                          </Card>
-                        )}
-
-                        {form.watch("paymentMethod.type") === "e_wallet" && (
-                          <Card>
-                            <CardHeader>
-                              <CardTitle>
-                                Choose your ewallet provider
-                              </CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-6">
-                              <div className="grid gap-4">
-                                <FormField
-                                  control={form.control}
-                                  name="paymentMethod.walletProvider"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>
-                                        Ewallet Provider Name
-                                      </FormLabel>
-                                      <FormControl>
-                                        <Input
-                                          placeholder="Enter provider name"
-                                          {...field}
-                                        />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                                <FormField
-                                  control={form.control}
-                                  name="paymentMethod.accountNumber"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>Wallet ID</FormLabel>
-                                      <FormControl>
-                                        <Input
-                                          placeholder="Enter wallet ID"
-                                          {...field}
-                                        />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                              </div>
-                            </CardContent>
-                          </Card>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-
-                <div className="mt-6 flex justify-between">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      if (step === "billing") setStep("address");
-                      if (step === "payment") setStep("billing");
-                    }}
-                    disabled={step === "address"}
+                <Form {...form}>
+                  <form
+                    onSubmit={form.handleSubmit(handlePayment)}
+                    className="space-y-6"
                   >
-                    Previous
-                  </Button>
-                  <Button type="submit">
-                    {step === "payment" ? "Place Order" : "Continue"}
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </div>
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email address</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter your email" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-          <div>
-            <Card>
-              <CardHeader>
-                <CardTitle>Order Summary</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="flex space-x-4">
-                  <CldImage
-                    src={item?.imageId}
-                    alt="Alana Double Bed"
-                    className="h-36 w-36 rounded-md object-cover"
-                    width={96}
-                    height={96}
-                  />
-                  <div>
-                    <h3 className="font-medium">{item?.name}</h3>
-                    {/* <p className="text-sm text-muted-foreground">Qty: 1</p> */}
-                    {/* <p className="mt-1 font-medium">£399.00</p> */}
-                  </div>
-                </div>
-                <Separator />
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span>Sold Price</span>
-                    <span>{formatCurrency(soldPrice)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Service fee (6%)</span>
-                    <span>{formatCurrency(buyersPremium)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Shipping</span>
-                    <span>{formatCurrency(shippingCost)}</span>
-                  </div>
-                  <Separator />
-                  <div className="flex justify-between font-medium">
-                    <span>Total</span>
-                    <span>{formatCurrency(totalPrice)}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                    <FormField
+                      control={form.control}
+                      name="fullName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Full name</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Enter your full name"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-            <div className="mt-8 grid grid-cols-3 gap-4 text-center text-sm">
-              <div>
-                <HelpCircle className="mx-auto h-6 w-6" />
-                <h3 className="mt-2 font-medium">Help</h3>
-                <p className="mt-1 text-muted-foreground">Mon-Fri: 8am-9pm</p>
-                <p className="text-muted-foreground">Sat-Sun: 10am-6pm</p>
-              </div>
-              <div>
-                <Package className="mx-auto h-6 w-6" />
-                <h3 className="mt-2 font-medium">Delivery</h3>
-                <p className="mt-1 text-muted-foreground">
-                  Track your order in real time
-                </p>
-              </div>
-              <div>
-                <RotateCcw className="mx-auto h-6 w-6" />
-                <h3 className="mt-2 font-medium">Returns</h3>
-                <p className="mt-1 text-muted-foreground">
-                  14 day money-back guarantee
-                </p>
+                    <FormField
+                      control={form.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Phone number</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Enter phone number"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="country"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Billing address</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select country" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="my">Malaysia</SelectItem>
+                              <SelectItem value="gb">United Kingdom</SelectItem>
+                              <SelectItem value="ca">Canada</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="grid grid-cols-3 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="city"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>City</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Enter city" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="state"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>State</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Enter state" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="zipCode"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>ZIP Code</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Enter ZIP code" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="flex justify-between text-sm">
+                        <span>Subtotal</span>
+                        <span>{formatCurrency(item?.currentBid)}</span>
+                      </div>
+                      {item?.dealingMethodType === "SHIPPING" && (
+                        <>
+                          <div className="space-y-2">
+                            <span className="text-sm font-medium">Shipping Region</span>
+                            <div className="flex gap-4">
+                              <label className="flex items-center space-x-2">
+                                <input
+                                  type="radio"
+                                  name="shippingRegion"
+                                  value="WEST"
+                                  checked={selectedShippingRegion === "WEST"}
+                                  onChange={(e) => {
+                                    setSelectedShippingRegion("WEST");
+                                    form.setValue("shippingRegion", "WEST");
+                                  }}
+                                  className="h-4 w-4"
+                                />
+                                <span className="text-sm">
+                                  West Malaysia (RM {item?.westMalaysiaShippingPrice})
+                                </span>
+                              </label>
+                              <label className="flex items-center space-x-2">
+                                <input
+                                  type="radio"
+                                  name="shippingRegion"
+                                  value="EAST"
+                                  checked={selectedShippingRegion === "EAST"}
+                                  onChange={(e) => {
+                                    setSelectedShippingRegion("EAST");
+                                    form.setValue("shippingRegion", "EAST");
+                                  }}
+                                  className="h-4 w-4"
+                                />
+                                <span className="text-sm">
+                                  East Malaysia (RM {item?.eastMalaysiaShippingPrice})
+                                </span>
+                              </label>
+                            </div>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span>Shipping Cost</span>
+                            <span>
+                              {formatCurrency(
+                                selectedShippingRegion === "WEST"
+                                  ? item?.westMalaysiaShippingPrice
+                                  : item?.eastMalaysiaShippingPrice
+                              )}
+                            </span>
+                          </div>
+                        </>
+                      )}
+                      <div className="flex justify-between text-sm">
+                        <span>Service Fee (6%)</span>
+                        <span>{formatCurrency(item?.currentBid! * 0.06)}</span>
+                      </div>
+                      <div className="flex justify-between font-medium">
+                        <span>Total</span>
+                        <span>
+                          {formatCurrency(
+                            calculateTotalAmount(item, selectedShippingRegion)
+                          )}
+                        </span>
+                      </div>
+                    </div>
+
+                    {error && (
+                      <div className="p-4 text-sm text-red-500 bg-red-50 rounded-lg">
+                        {error}
+                      </div>
+                    )}
+
+                    <Button
+                      className="w-full"
+                      size="lg"
+                      type="submit"
+                      disabled={!form.formState.isValid || isSubmitting}
+                    >
+                      {isSubmitting
+                        ? "Processing..."
+                        : `Pay ${formatCurrency(
+                            calculateTotalAmount(item, selectedShippingRegion)
+                          )}`}
+                    </Button>
+
+                    <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
+                      <Lock className="h-4 w-4" />
+                      Payments are secure and encrypted
+                    </div>
+
+                    <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
+                      <span>Powered by Toyyib Pay</span>
+                      <span>·</span>
+                      <a href="#" className="hover:underline">
+                        Terms
+                      </a>
+                      <span>·</span>
+                      <a href="#" className="hover:underline">
+                        Privacy
+                      </a>
+                    </div>
+                  </form>
+                </Form>
               </div>
             </div>
-          </div>
-        </div>
-      </main>
-    </div>
+          )}
+        </>
+      )}
+    </>
   );
 }

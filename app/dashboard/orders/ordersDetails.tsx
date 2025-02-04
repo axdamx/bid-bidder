@@ -1,13 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
@@ -19,7 +12,6 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetTrigger } from "@/components/ui/sheet";
 import {
   Package,
   Truck,
@@ -38,7 +30,7 @@ import {
 import { userAtom } from "@/app/atom/userAtom";
 import { useAtom } from "jotai";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getOrders, updateOrderStatus } from "./action";
+import { getOrders, updateOrderShippingStatus } from "./action";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/lib/utils";
 import { LoadingModal } from "@/app/components/LoadingModal";
@@ -61,24 +53,23 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-
-// Extended mock data
-
-interface Order {
-  id: number;
-  orderStatus: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
-  item: {
-    name: string;
-  };
-  orderDate: string;
-  amount: number;
-  itemId: number;
-}
+import { Order } from "@/app/types/order";
+import { ShippingDetailsModal } from "@/app/components/ShippingDetailsModal";
+import { OrderStatusSheet } from "@/app/components/OrderStatusSheet";
 
 const StatusBadge = ({
   status,
 }: {
-  status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
+  status:
+    | "pending"
+    | "processing"
+    | "shipped"
+    | "delivered"
+    | "cancelled"
+    | "paid"
+    | "failed"
+    | "unpaid"
+    | "refunded";
 }) => {
   const statusConfig = {
     pending: {
@@ -106,6 +97,26 @@ const StatusBadge = ({
       variant: "destructive" as const,
       icon: XCircle,
     },
+    paid: {
+      label: "Paid",
+      variant: "default" as const,
+      icon: ShoppingBag,
+    },
+    failed: {
+      label: "Failed",
+      variant: "destructive" as const,
+      icon: XCircle,
+    },
+    unpaid: {
+      label: "Unpaid",
+      variant: "default" as const,
+      icon: Clock,
+    },
+    refunded: {
+      label: "Refunded",
+      variant: "default" as const,
+      icon: ShoppingBag,
+    },
   };
 
   const config = statusConfig[status] || statusConfig.pending;
@@ -127,11 +138,10 @@ export default function OrderDetails() {
   const queryClient = useQueryClient();
   const [isUpdating, setIsUpdating] = useState(false);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
+  const [isShippingModalOpen, setIsShippingModalOpen] = useState(false);
 
   const {
     data: orders,
-    error,
-    isError,
     refetch,
     isLoading,
   } = useQuery({
@@ -142,12 +152,26 @@ export default function OrderDetails() {
     refetchOnMount: true, // Enable refetch on component mount
     refetchInterval: 30000, // Refresh every 30 seconds
     // staleTime: 10000, // Consider data stale after 10 seconds
+    staleTime: 0, // Don't cache the data
+    gcTime: 0, // Remove data from cache immediately
   });
 
-  // Mutation for updating order status
-  const { mutate: updateStatus } = useMutation({
-    mutationFn: ({ orderId, status }: { orderId: number; status: string }) =>
-      updateOrderStatus(orderId, status, user?.id!),
+  // Mutation for updating order shipping status
+  const updateOrderShippingStatusMutation = useMutation({
+    mutationFn: ({
+      orderId,
+      status,
+      userId,
+      shippingDetails,
+    }: {
+      orderId: number;
+      status: string;
+      userId: string;
+      shippingDetails?: {
+        courier: string;
+        trackingNumber: string;
+      };
+    }) => updateOrderShippingStatus(orderId, status, userId, shippingDetails),
     onMutate: () => {
       setIsUpdating(true);
     },
@@ -170,8 +194,62 @@ export default function OrderDetails() {
     },
   });
 
-  const handleStatusUpdate = (orderId: number, newStatus: string) => {
-    updateStatus({ orderId, status: newStatus });
+  const handleOrderShippingStatusUpdate = async (
+    orderId: number,
+    status: string
+  ) => {
+    if (status === "shipped") {
+      setSelectedOrder({ id: orderId } as Order);
+      setIsShippingModalOpen(true);
+      return;
+    }
+
+    try {
+      await updateOrderShippingStatusMutation.mutateAsync({
+        orderId,
+        status,
+        userId: user?.id as string,
+      });
+      toast({
+        title: "Success",
+        description: "Order status updated successfully",
+      });
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Error",
+        description: "Failed to update order status",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleShippingDetailsSubmit = async (details: {
+    courier: string;
+    trackingNumber: string;
+  }) => {
+    if (!selectedOrder) return;
+
+    try {
+      await updateOrderShippingStatusMutation.mutateAsync({
+        orderId: selectedOrder.id,
+        status: "shipped",
+        userId: user?.id as string,
+        shippingDetails: details,
+      });
+      toast({
+        title: "Success",
+        description: "Shipping details updated successfully",
+      });
+      setIsShippingModalOpen(false);
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Error",
+        description: "Failed to update shipping details",
+        variant: "destructive",
+      });
+    }
   };
 
   const OrdersTable = ({
@@ -195,8 +273,9 @@ export default function OrderDetails() {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     const currentOrders = orders?.slice(startIndex, endIndex);
+
     return (
-      <div className="overflow-x-auto rounded-md border">
+      <div className="rounded-md border h-full flex flex-col">
         {/* Desktop view */}
         <div className="hidden md:block">
           <div className="flex justify-end p-2">
@@ -219,9 +298,14 @@ export default function OrderDetails() {
                 <TableHead>Order ID</TableHead>
                 <TableHead>Item</TableHead>
                 <TableHead>Date</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Amount</TableHead>
-                {showStatusUpdate && <TableHead>Action</TableHead>}
+                <TableHead>Order Status</TableHead>
+                <TableHead>Shipping Status</TableHead>
+                <TableHead>Final Amount</TableHead>
+                {type === "selling" ? (
+                  <TableHead>Update Status</TableHead>
+                ) : (
+                  <TableHead>Action</TableHead>
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -241,16 +325,33 @@ export default function OrderDetails() {
                     {new Date(order.orderDate).toLocaleDateString()}
                   </TableCell>
                   <TableCell>
-                    {false ? (
+                    <StatusBadge status={order.orderStatus} />
+                  </TableCell>
+                  <TableCell>
+                    <StatusBadge status={order.shippingStatus || "pending"} />
+                    {order.courierService && order.trackingNumber && (
+                      <div className="mt-2 text-sm text-gray-500">
+                        <p>Courier: {order.courierService}</p>
+                        <p>Tracking: {order.trackingNumber}</p>
+                      </div>
+                    )}
+                  </TableCell>
+                  <TableCell>{formatCurrency(order.amount)}</TableCell>
+                  <TableCell>
+                    {type === "selling" ? (
                       <div className="space-y-2">
                         <Select
-                          defaultValue={order.orderStatus}
+                          defaultValue={order.shippingStatus}
                           onValueChange={(value) =>
-                            handleStatusUpdate(order.id, value)
+                            handleOrderShippingStatusUpdate(order.id, value)
+                          }
+                          disabled={
+                            order.orderStatus === "cancelled" ||
+                            order.shippingStatus === "shipped"
                           }
                         >
                           <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Update status" />
+                            <SelectValue placeholder="Update shipping status" />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="pending">Pending</SelectItem>
@@ -263,16 +364,20 @@ export default function OrderDetails() {
                           </SelectContent>
                         </Select>
                       </div>
+                    ) : order.orderStatus === "paid" ||
+                      order.orderStatus === "delivered" ? (
+                      <OrderStatusSheet order={order} disabled={false} />
                     ) : (
-                      <StatusBadge status={order.orderStatus} />
-                    )}
-                  </TableCell>
-                  <TableCell>{formatCurrency(order.amount)}</TableCell>
-                  <TableCell>
-                    {type !== "selling" && (
-                      <Button variant="outline" size="sm" className="w-[180px]">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-[180px]"
+                        disabled={order.orderStatus === "cancelled"}
+                      >
                         <Link href={`/checkout/${order.itemId}`}>
-                          Proceed to checkout
+                          {order.orderStatus === "cancelled"
+                            ? "Order Cancelled"
+                            : "Proceed to checkout"}
                         </Link>
                       </Button>
                     )}
@@ -334,111 +439,150 @@ export default function OrderDetails() {
         </div>
 
         {/* Mobile view */}
-        <div className="md:hidden overflow-y-auto max-h-[400px] max-w-[75vw] space-y-4 px-2 sm:px-4">
-          {/* <div className="space-y-4 px-2 sm:px-4 max-w-[85vw] overflow-hidden mb-6"> */}
+        <div className="md:hidden h-full flex flex-col">
+          <div className="sticky top-0 z-10 bg-background border-b">
+            <div className="flex justify-end p-2">
+              <Button
+                onClick={() => refetch()}
+                variant="outline"
+                size="sm"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <span>Refreshing...</span>
+                ) : (
+                  <span>Refresh Orders</span>
+                )}
+              </Button>
+            </div>
+          </div>
 
-          <div className="min-w-[320px] overflow-x-auto w-full">
-            {" "}
-            {/* Added wrapper with min-width */}
-            {/* Set max height and enable vertical scrolling */}
+          <div className="px-4 pb-4 space-y-4 overflow-y-auto flex-1">
             {currentOrders?.map((order: Order) => (
-              <div key={order.id} className="border-b p-2 space-y-3">
+              <div
+                key={order.id}
+                className="bg-card rounded-lg shadow-sm border p-4 space-y-3"
+              >
                 <div className="flex justify-between items-start">
-                  <div>
-                    <p className="text-sm">{order.item.name}</p>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-medium text-card-foreground break-words">
+                      Order #{order.id}
+                    </h3>
                     <p className="text-sm text-muted-foreground">
-                      ID: {order.id}
+                      {new Date(order.orderDate).toLocaleDateString()}
                     </p>
                   </div>
-                  <StatusBadge status={order.orderStatus} />
+                  <div className="text-right shrink-0 ml-3">
+                    <p className="text-sm font-medium text-card-foreground">
+                      {formatCurrency(order.amount)}
+                    </p>
+                  </div>
                 </div>
 
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-muted-foreground">
-                    {new Date(order.orderDate).toLocaleDateString()}
-                  </span>
-                  <span className="text-sm">
-                    {formatCurrency(order.amount)}
-                  </span>
-                </div>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Item</span>
+                    <Link
+                      href={`/items/${order.itemId}`}
+                      className="text-sm font-medium text-primary hover:underline"
+                    >
+                      {order.item.name}
+                    </Link>
+                  </div>
 
-                <div className="flex flex-col gap-2">
-                  {showStatusUpdate && (
-                    <div className="space-y-2">
-                      <Select
-                        defaultValue={order.orderStatus}
-                        onValueChange={(value) =>
-                          handleStatusUpdate(order.id, value)
-                        }
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Update status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="pending">Pending</SelectItem>
-                          <SelectItem value="processing">Processing</SelectItem>
-                          <SelectItem value="shipped">Shipped</SelectItem>
-                          <SelectItem value="delivered">Delivered</SelectItem>
-                          <SelectItem value="cancelled">Cancelled</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Button variant="outline" size="sm" className="w-full">
-                        <Link href={`/checkout/${order.itemId}`}>
-                          Proceed to checkout
-                        </Link>
-                      </Button>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">
+                      Order Status
+                    </span>
+                    <StatusBadge status={order.orderStatus} />
+                  </div>
+
+                  <div className="flex justify-between items-start">
+                    <span className="text-sm text-muted-foreground">
+                      Shipping Status
+                    </span>
+                    <div className="text-right">
+                      <StatusBadge status={order.shippingStatus || "pending"} />
+                      {order.courierService && order.trackingNumber && (
+                        <div className="mt-2 text-xs text-muted-foreground">
+                          <p>Courier: {order.courierService}</p>
+                          <p>Tracking: {order.trackingNumber}</p>
+                        </div>
+                      )}
                     </div>
+                  </div>
+                </div>
+
+                <div className="pt-3 border-t">
+                  {type === "selling" ? (
+                    <Select
+                      defaultValue={order.shippingStatus}
+                      onValueChange={(value) =>
+                        handleOrderShippingStatusUpdate(order.id, value)
+                      }
+                      disabled={
+                        order.orderStatus === "cancelled" ||
+                        order.shippingStatus === "shipped"
+                      }
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Update shipping status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="processing">Processing</SelectItem>
+                        <SelectItem value="shipped">Shipped</SelectItem>
+                        <SelectItem value="delivered">Delivered</SelectItem>
+                        <SelectItem value="cancelled">Cancelled</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : order.orderStatus === "paid" ||
+                    order.orderStatus === "delivered" ? (
+                    <OrderStatusSheet order={order} disabled={false} />
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      disabled={order.orderStatus === "cancelled"}
+                    >
+                      <Link
+                        href={`/checkout/${order.itemId}`}
+                        className="w-full"
+                      >
+                        {order.orderStatus === "cancelled"
+                          ? "Order Cancelled"
+                          : "Proceed to checkout"}
+                      </Link>
+                    </Button>
                   )}
                 </div>
               </div>
             ))}
           </div>
-          {totalPages > 1 && (
-            <Pagination className="justify-center p-4">
-              {/* Added padding to the pagination */}
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.max(prev - 1, 1))
-                    }
-                    className={
-                      currentPage === 1
-                        ? "pointer-events-none opacity-50"
-                        : "cursor-pointer"
-                    }
-                  />
-                </PaginationItem>
 
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                  (page) => (
-                    <PaginationItem key={page}>
-                      <PaginationLink
-                        onClick={() => setCurrentPage(page)}
-                        isActive={currentPage === page}
-                        className="cursor-pointer"
-                      >
-                        {page}
-                      </PaginationLink>
-                    </PaginationItem>
-                  )
-                )}
-
-                <PaginationItem>
-                  <PaginationNext
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                    }
-                    className={
-                      currentPage === totalPages
-                        ? "pointer-events-none opacity-50"
-                        : "cursor-pointer"
-                    }
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-          )}
+          <div className="sticky bottom-0 bg-background border-t p-2">
+            <div className="flex justify-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+              >
+                Previous
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
+                disabled={currentPage === totalPages}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -480,34 +624,45 @@ export default function OrderDetails() {
         </AlertDialogContent>
       </AlertDialog>
 
+      <ShippingDetailsModal
+        isOpen={isShippingModalOpen}
+        onClose={() => setIsShippingModalOpen(false)}
+        onSubmit={handleShippingDetailsSubmit}
+      />
+
       <div className="max-w-7xl mx-auto p-4 space-y-8">
-        {/* <Card>
-          <CardHeader>
-            <CardTitle>Order History</CardTitle>
-            <CardDescription>View and manage your orders</CardDescription>
-          </CardHeader>
-          <CardContent className="p-0 sm:p-6"> */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="winning">Winning</TabsTrigger>
-            <TabsTrigger value="selling">Selling</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 mb-4">
+            <TabsTrigger
+              value="winning"
+              className="px-2 py-1.5 text-sm sm:text-base sm:px-4 sm:py-2"
+            >
+              Winning
+            </TabsTrigger>
+            <TabsTrigger
+              value="selling"
+              className="px-2 py-1.5 text-sm sm:text-base sm:px-4 sm:py-2"
+            >
+              Selling
+            </TabsTrigger>
           </TabsList>
-          <TabsContent value="winning">
-            <OrdersTable
-              orders={orders?.winningOrders}
-              showStatusUpdate={true}
-            />
-          </TabsContent>
-          <TabsContent value="selling">
-            <OrdersTable
-              orders={orders?.sellingOrders}
-              showStatusUpdate={false}
-              type={"selling"}
-            />
-          </TabsContent>
+          <div className="w-full">
+            <TabsContent value="winning" className="w-full">
+              <div className="md:h-auto h-[calc(100vh-12rem)] w-full overflow-hidden">
+                <OrdersTable orders={orders?.winningOrders} type="winning" />
+              </div>
+            </TabsContent>
+            <TabsContent value="selling" className="w-full">
+              <div className="md:h-auto h-[calc(100vh-12rem)] w-full overflow-hidden">
+                <OrdersTable
+                  orders={orders?.sellingOrders}
+                  showStatusUpdate={true}
+                  type="selling"
+                />
+              </div>
+            </TabsContent>
+          </div>
         </Tabs>
-        {/* </CardContent>
-        </Card> */}
       </div>
     </>
   );

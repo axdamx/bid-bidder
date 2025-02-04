@@ -1,145 +1,159 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
+import { ChevronUp } from "lucide-react";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
+  const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <footer className="border-t border-border bg-background">
-      <div className="w-full px-4 md:px-6 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Company Info */}
-          <div className="space-y-4">
-            <h3 className="font-bold text-lg">Renown</h3>
-            <p className="text-sm text-muted-foreground">
-              Discover the largest auction marketplace with exclusive, rare
-              finds waiting for your bid.
-            </p>
-          </div>
+    <footer className="border-t border-border bg-background mt-auto">
+      <div className={`transition-all duration-300 ease-in-out overflow-hidden ${isExpanded ? 'h-auto opacity-100' : 'h-0 opacity-0'}`}>
+        <div className="w-full px-4 md:px-6 py-12">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            {/* Company Info */}
+            <div className="space-y-4">
+              <h3 className="font-bold text-lg">Renown</h3>
+              <p className="text-sm text-muted-foreground">
+                Discover the largest auction marketplace with exclusive, rare
+                finds waiting for your bid.
+              </p>
+            </div>
 
-          {/* Quick Links */}
-          <div className="space-y-4">
-            <h3 className="font-bold text-lg">Marketplace</h3>
-            <ul className="space-y-2">
-              <li>
-                <Link
-                  href="/auctions"
-                  className="text-sm text-muted-foreground hover:text-primary"
-                >
-                  All NFTs
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/art"
-                  className="text-sm text-muted-foreground hover:text-primary"
-                >
-                  Art
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/collectibles"
-                  className="text-sm text-muted-foreground hover:text-primary"
-                >
-                  Collectibles
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/photography"
-                  className="text-sm text-muted-foreground hover:text-primary"
-                >
-                  Photography
-                </Link>
-              </li>
-            </ul>
-          </div>
+            {/* Quick Links */}
+            <div className="space-y-4">
+              <h3 className="font-bold text-lg">Marketplace</h3>
+              <ul className="space-y-2">
+                <li>
+                  <Link
+                    href="/auctions"
+                    className="text-sm text-muted-foreground hover:text-primary"
+                  >
+                    All NFTs
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/art"
+                    className="text-sm text-muted-foreground hover:text-primary"
+                  >
+                    Art
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/collectibles"
+                    className="text-sm text-muted-foreground hover:text-primary"
+                  >
+                    Collectibles
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/photography"
+                    className="text-sm text-muted-foreground hover:text-primary"
+                  >
+                    Photography
+                  </Link>
+                </li>
+              </ul>
+            </div>
 
-          {/* Resources */}
-          <div className="space-y-4">
-            <h3 className="font-bold text-lg">Resources</h3>
-            <ul className="space-y-2">
-              <li>
-                <Link
-                  href="/help"
-                  className="text-sm text-muted-foreground hover:text-primary"
-                >
-                  Help Center
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/platform-status"
-                  className="text-sm text-muted-foreground hover:text-primary"
-                >
-                  Platform Status
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/partners"
-                  className="text-sm text-muted-foreground hover:text-primary"
-                >
-                  Partners
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/blog"
-                  className="text-sm text-muted-foreground hover:text-primary"
-                >
-                  Blog
-                </Link>
-              </li>
-            </ul>
-          </div>
+            {/* Resources */}
+            <div className="space-y-4">
+              <h3 className="font-bold text-lg">Resources</h3>
+              <ul className="space-y-2">
+                <li>
+                  <Link
+                    href="/help"
+                    className="text-sm text-muted-foreground hover:text-primary"
+                  >
+                    Help Center
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/platform-status"
+                    className="text-sm text-muted-foreground hover:text-primary"
+                  >
+                    Platform Status
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/partners"
+                    className="text-sm text-muted-foreground hover:text-primary"
+                  >
+                    Partners
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/blog"
+                    className="text-sm text-muted-foreground hover:text-primary"
+                  >
+                    Blog
+                  </Link>
+                </li>
+              </ul>
+            </div>
 
-          {/* Company */}
-          <div className="space-y-4">
-            <h3 className="font-bold text-lg">Company</h3>
-            <ul className="space-y-2">
-              <li>
-                <Link
-                  href="/about"
-                  className="text-sm text-muted-foreground hover:text-primary"
-                >
-                  About
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/careers"
-                  className="text-sm text-muted-foreground hover:text-primary"
-                >
-                  Careers
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/privacy"
-                  className="text-sm text-muted-foreground hover:text-primary"
-                >
-                  Privacy Policy
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/terms"
-                  className="text-sm text-muted-foreground hover:text-primary"
-                >
-                  Terms of Service
-                </Link>
-              </li>
-            </ul>
+            {/* Company */}
+            <div className="space-y-4">
+              <h3 className="font-bold text-lg">Company</h3>
+              <ul className="space-y-2">
+                <li>
+                  <Link
+                    href="/about"
+                    className="text-sm text-muted-foreground hover:text-primary"
+                  >
+                    About
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/careers"
+                    className="text-sm text-muted-foreground hover:text-primary"
+                  >
+                    Careers
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/privacy"
+                    className="text-sm text-muted-foreground hover:text-primary"
+                  >
+                    Privacy Policy
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/terms"
+                    className="text-sm text-muted-foreground hover:text-primary"
+                  >
+                    Terms of Service
+                  </Link>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
+      </div>
 
-        {/* Bottom Bar */}
-        <div className="flex flex-col md:flex-row justify-between items-center pt-8 mt-8 border-t border-border">
+      {/* Always visible bottom bar */}
+      <div className="relative border-t border-border">
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="absolute left-1/2 -translate-x-1/2 -top-4 bg-background border border-border rounded-full p-2 hover:bg-accent transition-colors duration-200"
+          aria-label={isExpanded ? "Collapse footer" : "Expand footer"}
+        >
+          <ChevronUp className={`h-4 w-4 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+        </button>
+        <div className="flex flex-col md:flex-row justify-between items-center px-4 md:px-6 py-4">
           <p className="text-sm text-muted-foreground">
-            © {currentYear} Renown. All rights reserved.
+            {currentYear} Renown. All rights reserved.
           </p>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <Link href="#" className="text-muted-foreground hover:text-primary">

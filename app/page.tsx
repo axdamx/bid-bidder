@@ -151,7 +151,7 @@ export default function Home() {
         {/* <CategoryCarousell /> */}
 
         {/* Live Auctions - Featured Section */}
-        <section className="w-full px-0 sm:container">
+        <section className="w-full px-0 my-12">
           <div className="w-full">
             <Suspense
               fallback={<LoadingSection message="Loading live auctions..." />}
@@ -161,53 +161,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="border bg-muted/50 my-6 rounded-xl">
-          <div className="container py-12 md:py-24">
-            <div className="grid gap-8 md:gap-12">
-              <div className="flex flex-col items-center justify-center space-y-4 text-center">
-                <div className="space-y-2">
-                  <h2 className="text-3xl font-bold tracking-tighter md:text-4xl">
-                    How It Works
-                  </h2>
-                  <p className="max-w-[900px] text-muted-foreground md:text-xl">
-                    Start buying or selling in three simple steps
-                  </p>
-                </div>
-              </div>
-              <div className="grid gap-8 md:grid-cols-3">
-                <div className="flex flex-col items-center space-y-4 text-center">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                    <Users className="h-8 w-8" />
-                  </div>
-                  <h3 className="text-xl font-bold">Create an Account</h3>
-                  <p className="text-muted-foreground">
-                    Sign up for free and join our community of buyers and
-                    sellers.
-                  </p>
-                </div>
-                <div className="flex flex-col items-center space-y-4 text-center">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                    <Gavel className="h-8 w-8" />
-                  </div>
-                  <h3 className="text-xl font-bold">Place Bids</h3>
-                  <p className="text-muted-foreground">
-                    Browse listings and bid on items you're interested in.
-                  </p>
-                </div>
-                <div className="flex flex-col items-center space-y-4 text-center">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                    <Trophy className="h-8 w-8" />
-                  </div>
-                  <h3 className="text-xl font-bold">Win & Collect</h3>
-                  <p className="text-muted-foreground">
-                    Get your dream items through secure payment method, with
-                    only 6% service charges and shipping.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+        {/* Removed "How It Works" section - moved to /how-auction-works page */}
 
         {/* Upcoming Auctions - Notable Drops */}
         {/* <section className="container px-4 md:px-6">
@@ -219,7 +173,7 @@ export default function Home() {
         </section> */}
 
         {/* Ended Auctions - Trending */}
-        <section className="w-full px-0 sm:container mb-6">
+        <section className="w-full px-0 mb-6">
           {/* <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-2xl font-bold md:text-3xl">Past Auctions</h2>

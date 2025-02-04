@@ -9,7 +9,7 @@ import { userAtom } from "@/app/atom/userAtom";
 import { ImageGallery } from "./components/ImageGallery";
 import { AuctionDetails } from "./components/AuctionDetails";
 import { BidHistory } from "./components/BidHistory";
-import { Card, CardHeader } from "@/components/ui/card";
+import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
@@ -21,18 +21,15 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, Loader2, Trophy } from "lucide-react";
-import toast, { Toaster } from "react-hot-toast";
-import AuthModals from "@/app/components/AuthModal";
+import { Toaster } from "react-hot-toast";
 import ChatComponent from "./components/ChatComponents";
 import { formatCurrency } from "./utils/formatters";
 import { createClientSupabase } from "@/lib/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { AnimatePresence, motion } from "framer-motion";
-import { set } from "date-fns";
 import { ShoppingBag } from "lucide-react";
 import { CheckCircle2 } from "lucide-react";
 import AuthModalV2 from "@/app/components/AuthModalV2";
-import { updateBINItemStatus } from "./actions";
 
 export default function AuctionItem({
   item,
@@ -65,6 +62,7 @@ export default function AuctionItem({
   const [isLoadingMessages, setIsLoadingMessages] = useState(true);
   const [showBinDisclaimerModal, setShowBinDisclaimerModal] = useState(false);
   const [showBinWinnerModal, setShowBinWinnerModal] = useState(false);
+  const [isCreatingOrder, setIsCreatingOrder] = useState(false);
 
   const [user] = useAtom(userAtom);
   const router = useRouter();
@@ -94,10 +92,7 @@ export default function AuctionItem({
     isBidPending,
     submitBuyItNow,
     isBuyItNowPending,
-    updateItemStatusMutate,
-    isUpdating,
-    updateBINItemStatusMutate,
-    isUpdatingBINItem,
+    createOrder,
   } = useAuctionMutations(
     item.id,
     userId,
@@ -142,7 +137,7 @@ export default function AuctionItem({
 
     fetchMessages();
 
-    // Setup real-time subscription
+    // Setup real-time subscription for chat and bids/item updates
     const channel = supabase
       .channel(`room:${item.id}`)
       .on(
@@ -166,12 +161,32 @@ export default function AuctionItem({
           }
         }
       )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "items",
+          filter: `id=eq.${Number(item.id)}`,
+        },
+        (payload) => {
+          const updatedItem = payload.new as any;
+          // Show BIN dialog when item is bought out
+          if (
+            updatedItem.isBoughtOut &&
+            updatedItem.winnerId !== userId &&
+            !isOwner
+          ) {
+            setShowBinWinnerModal(true);
+          }
+        }
+      )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [item.id, userId, currentTab]);
+  }, [item.id, userId, currentTab, isOwner]);
 
   const handleLinkClick = async (e: React.MouseEvent, path: string) => {
     e.preventDefault();
@@ -215,8 +230,21 @@ export default function AuctionItem({
   const handleAuctionEnd = useCallback(() => {
     if (orderExists) return;
 
-    setShowWinnerModal(true);
-  }, [orderExists]);
+    if (isWinner && !item.isBoughtOut) {
+      createOrder();
+      setShowWinnerModal(true);
+    } else {
+      setShowWinnerModal(true);
+    }
+  }, [orderExists, isWinner, item.isBoughtOut, createOrder]);
+
+  const handleCheckout = () => {
+    navigateToCheckout();
+  };
+
+  const navigateToCheckout = () => {
+    router.push(`/checkout/${item.id}`);
+  };
 
   const handleBinClick = () => {
     if (!userId) {
@@ -230,12 +258,6 @@ export default function AuctionItem({
   const handleBinDisclaimerConfirm = () => {
     setShowBinDisclaimerModal(false);
     submitBuyItNow();
-    setShowBinWinnerModal(true);
-  };
-
-  const handleBinCheckout = async () => {
-    await updateBINItemStatusMutate();
-    router.push(`/checkout/${item.id}`);
   };
 
   return (
@@ -249,7 +271,38 @@ export default function AuctionItem({
         </DialogContent>
       </Dialog>
 
-      <Toaster position="bottom-right" reverseOrder={false} />
+      {/* <Toaster position="bottom-right" reverseOrder={false} /> */}
+
+      <div className="mb-6 bg-amber-50 border-l-4 border-amber-400 p-4 rounded-md">
+        <div className="flex">
+          <div className="flex-shrink-0">
+            <svg
+              className="h-5 w-5 text-amber-400"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 6a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 6zm0 9a1 1 0 100-2 1 1 0 000 2z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </div>
+          <div className="ml-3">
+            <h3 className="text-sm font-medium text-amber-800">
+              For the Best Bidding Experience
+            </h3>
+            <div className="mt-2 text-sm text-amber-700">
+              <p>
+                To ensure you don't miss any crucial updates about your bid
+                status, we recommend staying on this page until the auction
+                ends. Real-time bid information is only available while viewing
+                this auction page.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
         <ImageGallery
@@ -466,7 +519,7 @@ export default function AuctionItem({
         </DialogContent>
       </Dialog>
 
-      <Dialog open={showBinWinnerModal} onOpenChange={setShowBinWinnerModal}>
+      {/* <Dialog open={showBinWinnerModal} onOpenChange={setShowBinWinnerModal}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -489,7 +542,7 @@ export default function AuctionItem({
           </div>
           <DialogFooter>
             <Button
-              onClick={handleBinCheckout}
+              onClick={() => router.push(`/checkout/${item.id}`)}
               disabled={isUpdatingBINItem}
               className="w-full bg-primary hover:bg-primary/90"
             >
@@ -504,39 +557,101 @@ export default function AuctionItem({
             </Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
+      </Dialog> */}
 
-      <Dialog open={showWinnerModal} onOpenChange={setShowWinnerModal}>
-        <DialogContent className="sm:max-w-md">
+      <Dialog
+        open={showWinnerModal}
+        onOpenChange={(open) => {
+          // Only allow closing if we're not in the middle of creating an order
+          if (!isCreatingOrder) {
+            setShowWinnerModal(open);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md [&>button]:hidden">
           <DialogHeader>
             {isWinner ? (
-              <WinnerDialog
-                item={item}
-                highestBid={item.isBoughtOut ? item.binPrice : highestBid!}
-                orderExists={orderExists!}
-                updateItemStatusMutate={() => {
-                  updateItemStatusMutate();
-                  router.push(`/checkout/${item.id}`);
-                }}
-                isUpdating={isUpdating}
-              />
+              <div>
+                <DialogTitle className="flex items-center justify-center gap-2 text-2xl ">
+                  <Trophy className="h-8 w-8 text-yellow-500" />
+                  <span>Congratulations! You Won!</span>
+                </DialogTitle>
+              </div>
             ) : bids.length > 0 ? (
               <LoserDialog
-                item={item}
+                setShowWinnerModal={setShowWinnerModal}
                 latestBidderName={
                   item.isBoughtOut ? "another buyer" : bids[0].users.name
                 }
                 finalPrice={item.isBoughtOut ? item.binPrice : item.currentBid}
               />
             ) : (
-              <NoWinnerDialog />
+              <NoWinnerDialog setShowWinnerModal={setShowWinnerModal} />
             )}
           </DialogHeader>
-          <div className="flex justify-end mt-4">
-            <Button onClick={() => setShowWinnerModal(false)} className="mt-2">
-              Close
-            </Button>
-          </div>
+          {isWinner && (
+            <Card className="border-none bg-green-50">
+              <CardContent className="space-y-4 p-6 text-center">
+                <div className="space-y-2">
+                  <h3 className="text-xl font-semibold text-green-800">
+                    You&apos;ve won this auction!
+                  </h3>
+                  <p className="text-green-700">
+                    You won <span className="font-semibold">{item.name}</span>{" "}
+                    with a final bid of
+                  </p>
+                  <Badge
+                    variant="secondary"
+                    className="mx-auto text-lg font-bold"
+                  >
+                    {item.isBoughtOut
+                      ? formatCurrency(item.binPrice)
+                      : formatCurrency(highestBid!)}
+                  </Badge>
+                </div>
+                <p className="text-sm text-green-600">
+                  {orderExists!
+                    ? "You can view your order in your dashboard"
+                    : "You can proceed to checkout to complete your purchase"}
+                </p>
+              </CardContent>
+            </Card>
+          )}
+          {isWinner && (
+            <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
+              {orderExists! ? (
+                <Button
+                  variant="default"
+                  className="bg-primary hover:bg-primary/90"
+                  onClick={() => router.push("/dashboard?tab=orders")}
+                >
+                  View Order
+                </Button>
+              ) : (
+                <Button
+                  variant="default"
+                  className="bg-primary hover:bg-primary/90"
+                  onClick={handleCheckout}
+                  disabled={isCreatingOrder}
+                >
+                  {isCreatingOrder ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Creating order...
+                    </>
+                  ) : (
+                    "Proceed to Checkout"
+                  )}
+                </Button>
+              )}
+              {/* <Button
+                variant="outline"
+                onClick={() => setShowWinnerModal(false)}
+              >
+                Close
+              </Button> */}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
@@ -551,90 +666,12 @@ export default function AuctionItem({
   );
 }
 
-function WinnerDialog({
-  item,
-  highestBid,
-  orderExists,
-  updateItemStatusMutate,
-  isUpdating,
-}: {
-  item: any;
-  highestBid: number;
-  orderExists: boolean;
-  updateItemStatusMutate: () => void;
-  isUpdating: boolean;
-}) {
-  const router = useRouter();
-
-  return (
-    <>
-      <DialogTitle className="flex items-center gap-2">
-        <Trophy className="w-6 h-6 text-yellow-500" />
-        Congratulations! You Won!
-      </DialogTitle>
-      <DialogDescription className="space-y-4">
-        <div className="p-4 bg-green-50 rounded-lg mt-4 text-center">
-          <h1 className="font-medium text-green-700">
-            You've won this auction!
-          </h1>
-          <h1 className="text-sm text-green-600 mt-2">
-            {item.name} for{" "}
-            {item.isBoughtOut
-              ? formatCurrency(item.binPrice)
-              : formatCurrency(highestBid)}
-          </h1>
-          {orderExists ? (
-            <h1 className="text-sm text-green-600 mt-2">
-              You can view your order in your dashboard
-            </h1>
-          ) : (
-            <h1 className="text-sm text-green-600 mt-2">
-              You can proceed to checkout to complete your purchase
-            </h1>
-          )}
-        </div>
-        <div className="text-center justify-center">
-          {orderExists ? (
-            <Button
-              type="button"
-              className="mt-8"
-              onClick={() => {
-                router.push("/dashboard?tab=orders");
-              }}
-            >
-              View Order
-            </Button>
-          ) : (
-            <form
-              onSubmit={async (e) => {
-                e.preventDefault();
-                await updateItemStatusMutate();
-              }}
-            >
-              <Button type="submit" className="mt-8" disabled={isUpdating}>
-                {isUpdating ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  "Proceed to Checkout"
-                )}
-              </Button>
-            </form>
-          )}
-        </div>
-      </DialogDescription>
-    </>
-  );
-}
-
 function LoserDialog({
-  item,
+  setShowWinnerModal,
   latestBidderName,
   finalPrice,
 }: {
-  item: any;
+  setShowWinnerModal: React.Dispatch<React.SetStateAction<boolean>>;
   latestBidderName: string;
   finalPrice: number;
 }) {
@@ -654,13 +691,24 @@ function LoserDialog({
           <h1 className="text-sm text-blue-600 mt-2">
             Better luck next time! Check out our other active auctions.
           </h1>
+          <Button
+            variant="outline"
+            className="mt-8 mb-4 mx-auto"
+            onClick={() => setShowWinnerModal(false)}
+          >
+            Close
+          </Button>
         </div>
       </DialogDescription>
     </>
   );
 }
 
-function NoWinnerDialog() {
+function NoWinnerDialog({
+  setShowWinnerModal,
+}: {
+  setShowWinnerModal: React.Dispatch<React.SetStateAction<boolean>>;
+}) {
   return (
     <>
       <DialogTitle className="flex items-center gap-2">
@@ -669,13 +717,21 @@ function NoWinnerDialog() {
       </DialogTitle>
       <DialogDescription className="space-y-4">
         <div className="p-4 bg-red-50 rounded-lg mt-4 text-center">
-          <h1 className="font-medium text-red-700">No bids were placed</h1>
           <h1 className="text-sm text-red-600 mt-2">
-            Unfortunately, this auction ended without any bids.
+            Unfortunately, this auction has ended.
           </h1>
           <h1 className="text-sm text-red-600 mt-2">
             Please check out our other active auctions.
           </h1>
+        </div>
+        <div className="flex justify-center">
+          <Button
+            variant="default"
+            className="mt-8 mb-4"
+            onClick={() => setShowWinnerModal(false)}
+          >
+            Close
+          </Button>
         </div>
       </DialogDescription>
     </>

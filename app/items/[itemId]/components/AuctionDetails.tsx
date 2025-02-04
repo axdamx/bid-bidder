@@ -176,9 +176,21 @@ export function AuctionDetails({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">
-                    Bid Interval
+                    Total Bids
                   </p>
-                  <p className="text-xl">{formatCurrency(item.bidInterval)}</p>
+                  <p className="text-xl">
+                    <AnimatePresence mode="wait">
+                      <motion.span
+                        key={bids.length}
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: -20, opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        {bids.length}
+                      </motion.span>
+                    </AnimatePresence>
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">
@@ -198,21 +210,9 @@ export function AuctionDetails({
                 )}
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">
-                    Total Bids
+                    Bid Interval
                   </p>
-                  <p className="text-xl">
-                    <AnimatePresence mode="wait">
-                      <motion.span
-                        key={bids.length}
-                        initial={{ y: 20, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        exit={{ y: -20, opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        {bids.length}
-                      </motion.span>
-                    </AnimatePresence>
-                  </p>
+                  <p className="text-xl">{formatCurrency(item.bidInterval)}</p>
                 </div>
               </div>
             </div>
@@ -265,6 +265,23 @@ export function AuctionDetails({
             </Button>
           )}
         </div>
+
+        {/* Buyer's Premium Section */}
+        <div className="border-t pt-6">
+          <h3 className="text-xl font-semibold mb-3">Buyer's Premium</h3>
+          <div className="text-muted-foreground">
+            <p className="text-base leading-relaxed">
+              The Buyer's Premium is charged in addition to the sale price and
+              is payable directly to Renown.
+            </p>
+            <p className="text-base leading-relaxed mt-2 font-medium">
+              Buyer's premium rate: 6.0%
+            </p>
+          </div>
+        </div>
+
+        <div className="border-t pt-6" />
+
         <CountdownTimer
           endDate={item.endDate}
           onExpire={handleAuctionEnd}
@@ -289,25 +306,42 @@ export function AuctionDetails({
                 "Place Bid"
               )}
             </Button>
-            {!item.isBoughtOut && item.currentBid < item.binPrice && (
-              <MovingBorderButton
-                className="bg-white dark:bg-slate-900 text-black dark:text-white border-neutral-200 dark:border-slate-800"
-                containerClassName="w-full"
-                disabled={isBuyItNowPending}
-                onClick={handleBinClick}
-                variant="destructive"
-                size="lg"
-                borderRadius="1.75rem"
-              >
-                {isBuyItNowPending ? (
+            {!item.isBoughtOut && item.binPrice !== null && (
+              <>
+                {item.currentBid >= item.binPrice ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processing...
+                    <Button
+                      className="w-full bg-destructive text-destructive-foreground hover:bg-destructive/90 cursor-not-allowed"
+                      disabled
+                    >
+                      Current BID price is higher than BIN price
+                    </Button>
+                    <p className="text-sm text-destructive text-center mt-2">
+                      Current Bid: {formatCurrency(item.currentBid)} | BIN
+                      Price: {formatCurrency(item.binPrice)}
+                    </p>
                   </>
                 ) : (
-                  `BIN Price ${formatCurrency(item.binPrice)}`
+                  <MovingBorderButton
+                    className="bg-white dark:bg-slate-900 text-black dark:text-white border-neutral-200 dark:border-slate-800"
+                    containerClassName="w-full"
+                    disabled={isBuyItNowPending}
+                    onClick={handleBinClick}
+                    variant="destructive"
+                    size="lg"
+                    borderRadius="1.75rem"
+                  >
+                    {isBuyItNowPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      `BIN Price: ${formatCurrency(item.binPrice)}`
+                    )}
+                  </MovingBorderButton>
                 )}
-              </MovingBorderButton>
+              </>
             )}
           </>
         )}
