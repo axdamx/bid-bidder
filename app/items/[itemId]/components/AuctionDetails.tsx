@@ -229,10 +229,10 @@ export function AuctionDetails({
             <div className="p-4 bg-muted/30 rounded-lg">
               <p className="text-sm text-muted-foreground mb-2">End Date</p>
               <p className="text-xl font-medium">
-                {getDateInfo(item.endDate + "Z").formattedDate}
+                {getDateInfo(item.endDate).formattedDate}
               </p>
               <p className="text-lg text-muted-foreground">
-                {getDateInfo(item.endDate + "Z").formattedTime}
+                {getDateInfo(item.endDate).formattedTime}
               </p>
             </div>
           </div>

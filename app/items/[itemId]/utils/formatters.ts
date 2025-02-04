@@ -42,10 +42,14 @@ export function formatCurrency(value: number): string {
 }
 
 export function getDateInfo(dateString: string) {
-  const targetDate = new Date(dateString);
+  // If the date doesn't end with Z, assume it's UTC and add Z
+  const utcDate = dateString.endsWith('Z') ? dateString : dateString + 'Z';
+  const targetDate = new Date(utcDate);
+  
+  // Format in local timezone
   const formattedDate = format(targetDate, "MMMM d, yyyy");
   const formattedTime = format(targetDate, "hh:mm a");
-
+  
   return {
     formattedDate,
     formattedTime,
