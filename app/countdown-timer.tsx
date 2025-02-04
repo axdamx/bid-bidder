@@ -1,4 +1,4 @@
-// "use client";
+"use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -58,7 +58,12 @@ export default function CountdownTimer({
     }
 
     const now = new Date().getTime();
-    const targetDate = new Date(endDate + "Z").getTime();
+    // Convert the date string to include the local timezone offset
+    const localDate =
+      typeof endDate === "string"
+        ? endDate.replace(" ", "T") + "+08:00"
+        : endDate;
+    const targetDate = new Date(localDate).getTime();
     const difference = targetDate - now;
 
     if (difference <= 0) {
