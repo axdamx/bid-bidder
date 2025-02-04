@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAtom } from "jotai";
 import { userAtom } from "../atom/userAtom";
@@ -11,27 +11,46 @@ export default function OnboardingPage() {
   const router = useRouter();
   const [user, setUser] = useAtom(userAtom);
   const supabase = createClientSupabase();
+  const [isAuthChecked, setIsAuthChecked] = useState(false);
 
   useEffect(() => {
+    let mounted = true;
+
     const checkUser = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session) {
-        router.push("/");
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (!mounted) return;
+
+        if (!session) {
+          router.replace("/");
+          return;
+        }
+
+        setIsAuthChecked(true);
+      } catch (error) {
+        console.error("Auth check error:", error);
+        if (mounted) {
+          router.replace("/");
+        }
       }
     };
 
     checkUser();
-  }, [router]);
 
-  console.log("user", user);
+    return () => {
+      mounted = false;
+    };
+  }, [router, supabase.auth]);
 
   const handleOnboardingComplete = () => {
     router.push("/");
   };
 
-  if (!user) {
+  // Only render content when both auth is checked and user exists
+  if (!isAuthChecked || !user) {
     return null;
   }
 
