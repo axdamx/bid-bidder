@@ -44,13 +44,13 @@ export function formatCurrency(value: number): string {
 export function getDateInfo(dateString: string) {
   // Convert the date string to include the local timezone offset
   // This ensures the date is interpreted in the local timezone
-  const localDate = dateString.replace(' ', 'T') + '+08:00';
-  const targetDate = new Date(localDate);
-  
+  const localDate = dateString.replace(" ", "T");
+  const targetDate = new Date(localDate + "Z");
+
   // Format in local timezone
   const formattedDate = format(targetDate, "MMMM d, yyyy");
   const formattedTime = format(targetDate, "hh:mm a");
-  
+
   return {
     formattedDate,
     formattedTime,

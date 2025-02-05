@@ -99,6 +99,10 @@ export async function createItemAction(
     const endDate = formData.get("endDate") as string;
     const category = formData.get("category") as string;
 
+    // The endDate is already in UTC from the form
+    // Just need to append Z to make it explicit
+    const utcEndDate = endDate + "Z";
+
     const itemData = {
       name,
       description,
@@ -106,7 +110,7 @@ export async function createItemAction(
       userId,
       bidInterval,
       binPrice,
-      endDate: new Date(endDate).toISOString(),
+      endDate: utcEndDate,
       imageId: imageIds[0],
       status: "LIVE",
       createdAt: new Date().toISOString(),
@@ -159,5 +163,22 @@ export async function createItemAction(
       success: false,
       error: error.message || "Failed to create item",
     };
+  }
+}
+
+export async function updateItemStatusToEndedAction(itemId: string) {
+  try {
+    const { error } = await supabase
+      .from('items')
+      .update({ status: 'ENDED' })
+      .eq('id', itemId);
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: 'Failed to update item status' };
   }
 }

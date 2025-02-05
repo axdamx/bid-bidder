@@ -299,7 +299,6 @@ export default function OrderDetails() {
                 <TableHead>Item</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Order Status</TableHead>
-                <TableHead>Shipping Status</TableHead>
                 <TableHead>Final Amount</TableHead>
                 {type === "selling" ? (
                   <TableHead>Update Status</TableHead>
@@ -327,15 +326,6 @@ export default function OrderDetails() {
                   <TableCell>
                     <StatusBadge status={order.orderStatus} />
                   </TableCell>
-                  <TableCell>
-                    <StatusBadge status={order.shippingStatus || "pending"} />
-                    {order.courierService && order.trackingNumber && (
-                      <div className="mt-2 text-sm text-gray-500">
-                        <p>Courier: {order.courierService}</p>
-                        <p>Tracking: {order.trackingNumber}</p>
-                      </div>
-                    )}
-                  </TableCell>
                   <TableCell>{formatCurrency(order.amount)}</TableCell>
                   <TableCell>
                     {type === "selling" ? (
@@ -355,12 +345,12 @@ export default function OrderDetails() {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="pending">Pending</SelectItem>
-                            <SelectItem value="processing">
+                            {/* <SelectItem value="processing">
                               Processing
-                            </SelectItem>
+                            </SelectItem> */}
                             <SelectItem value="shipped">Shipped</SelectItem>
                             <SelectItem value="delivered">Delivered</SelectItem>
-                            <SelectItem value="cancelled">Cancelled</SelectItem>
+                            {/* <SelectItem value="cancelled">Cancelled</SelectItem> */}
                           </SelectContent>
                         </Select>
                       </div>

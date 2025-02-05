@@ -856,18 +856,22 @@ export default function CreatePage() {
                             variant="outline"
                             className={`flex-1 min-w-[100px] ${
                               watch("endDate") ===
-                                format(
-                                  addDays(new Date(), option.days),
-                                  "yyyy-MM-dd'T'HH:mm"
-                                )
+                              format(
+                                addDays(new Date(), option.days),
+                                "yyyy-MM-dd'T'HH:mm"
+                              )
                                 ? "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground"
                                 : ""
                             }`}
                             onClick={() => {
                               const endDate = addDays(new Date(), option.days);
+                              // Convert to UTC by subtracting 8 hours
+                              const utcDate = new Date(
+                                endDate.getTime() - 8 * 60 * 60 * 1000
+                              );
                               setValue(
                                 "endDate",
-                                format(endDate, "yyyy-MM-dd'T'HH:mm")
+                                format(utcDate, "yyyy-MM-dd'T'HH:mm")
                               );
                             }}
                           >
@@ -881,6 +885,15 @@ export default function CreatePage() {
                           type="datetime-local"
                           {...register("endDate", {
                             required: "End date is required",
+                            setValueAs: (value) => {
+                              if (!value) return value;
+                              // Convert local time to UTC by subtracting 8 hours
+                              const date = new Date(value);
+                              const utcDate = new Date(
+                                date.getTime() - 8 * 60 * 60 * 1000
+                              );
+                              return format(utcDate, "yyyy-MM-dd'T'HH:mm");
+                            },
                           })}
                           min={format(new Date(), "yyyy-MM-dd'T'HH:mm")}
                         />

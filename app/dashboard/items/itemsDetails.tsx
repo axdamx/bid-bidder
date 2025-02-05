@@ -35,8 +35,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-// import { toast } from "sonner";
+import { format } from "date-fns";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchUserItems, updateItemEndDate } from "./actions";
 import toast from "react-hot-toast";
@@ -48,7 +47,6 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { DateTimePicker } from "@/app/items/create/components/DateTimePicker";
 import { formatTimestamp } from "@/app/items/[itemId]/utils/formatters";
 
 export default function ItemsDetails() {
@@ -74,6 +72,7 @@ export default function ItemsDetails() {
       name: string;
     };
     currentBid: number;
+    orderStatus: string;
   }
 
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
@@ -134,6 +133,7 @@ export default function ItemsDetails() {
       setIsUpdateDialogOpen(false);
       setSelectedDate(undefined);
       setSelectedItem(null);
+      window.location.reload();
     },
     onError: (error) => {
       console.error("Error updating end date:", error);
@@ -230,7 +230,7 @@ export default function ItemsDetails() {
 
   const getStatusBadge = (item: Item) => {
     if (item.status === "CANCELLED") {
-      return <Badge variant="destructive">Cancelled</Badge>;
+      return <Badge variant="destructive">CANCELLED</Badge>;
     }
 
     const variants: Record<
@@ -250,7 +250,10 @@ export default function ItemsDetails() {
   };
 
   const canReopen = (item: Item) => {
-    return item.status === "CANCELLED";
+    return (
+      (item.status === "ENDED" || item.status === "CANCELLED") &&
+      item.orderStatus !== "delivered"
+    );
   };
 
   return (
@@ -264,14 +267,19 @@ export default function ItemsDetails() {
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            {/* <CalendarComponent
-              mode="single"
-              selected={selectedDate}
-              onSelect={setSelectedDate}
-              disabled={(date) => date < new Date()}
-              initialFocus
-            /> */}
-            <DateTimePicker onChange={setSelectedDate} />
+            <Input
+              id="endDate"
+              type="datetime-local"
+              onChange={(e) => {
+                const value = e.target.value;
+                if (!value) return;
+                // Convert local time to UTC by subtracting 8 hours
+                const date = new Date(value);
+                const utcDate = new Date(date.getTime() - 8 * 60 * 60 * 1000);
+                setSelectedDate(utcDate);
+              }}
+              min={format(new Date(), "yyyy-MM-dd'T'HH:mm")}
+            />
           </div>
           <div className="flex justify-end space-x-2">
             <Button

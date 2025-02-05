@@ -244,83 +244,94 @@ export async function handleToyyibCallback(data: any) {
 
     console.log("[HANDLE CALLBACK] Found transaction:", transaction);
 
-    // Don't update if already completed
-    if (transaction.status === "completed") {
-      console.log(
-        "[HANDLE CALLBACK] Transaction already completed, skipping update"
-      );
-      return { success: true };
+    // Determine payment status first
+    const paymentStatus = status === "1" ? "COMPLETED" : "FAILED";
+    console.log(
+      "[HANDLE CALLBACK] Payment status determined as:",
+      paymentStatus
+    );
+
+    // If payment failed, we can return early
+    if (paymentStatus === "FAILED") {
+      return { success: false, error: "Payment failed", status: paymentStatus };
     }
 
-    // Update transaction status
-    const paymentStatus = status === "1" ? "completed" : "failed";
-    console.log("[HANDLE CALLBACK] Setting payment status to:", paymentStatus);
+    // For successful payments, trigger background updates and return success immediately
+    // We'll handle any update errors in the background
+    updatePaymentRecords(
+      supabase,
+      transaction,
+      transaction_id,
+      paymentStatus
+    ).catch((error) => {
+      console.error("[BACKGROUND UPDATE ERROR]", error);
+      // Here you might want to implement some retry logic or notification system
+    });
 
+    return { success: true, status: paymentStatus };
+  } catch (error) {
+    console.error("[PAYMENT CALLBACK ERROR]", error);
+    return { success: false, error: "Failed to process payment callback" };
+  }
+}
+
+// Separate function to handle all database updates
+async function updatePaymentRecords(
+  supabase: any,
+  transaction: any,
+  transactionId: string,
+  paymentStatus: string
+) {
+  try {
+    // Update transaction status
     const { error: updateTransactionError } = await supabase
       .from("transactions")
       .update({
         status: paymentStatus,
-        transactionId: transaction_id,
+        transactionId: transactionId,
         updatedAt: new Date().toISOString(),
       })
       .eq("id", transaction.id);
 
     if (updateTransactionError) {
-      console.error(
-        "[HANDLE CALLBACK] Failed to update transaction:",
-        updateTransactionError
-      );
       throw updateTransactionError;
     }
 
-    // Update order status based on payment status
-    console.log(
-      `[HANDLE CALLBACK] Payment ${paymentStatus}, updating order status`
-    );
-    const orderStatus = paymentStatus === "completed" ? "paid" : "failed";
+    // Update order status
+    const paymentStatusUpdate =
+      paymentStatus === "COMPLETED" ? "paid" : "pending";
+    const orderStatusUpdate =
+      paymentStatus === "COMPLETED" ? "paid" : "pending";
     const { error: updateOrderError } = await supabase
       .from("orders")
       .update({
-        orderStatus,
+        orderStatus: orderStatusUpdate,
+        paymentStatus: paymentStatusUpdate,
         updatedAt: new Date().toISOString(),
-        totalAmount: transaction.amount,
+        totalAmount: Math.round(transaction.amount),
       })
       .eq("itemId", transaction.itemId);
 
     if (updateOrderError) {
-      console.error(
-        "[HANDLE CALLBACK] Failed to update order:",
-        updateOrderError
-      );
       throw updateOrderError;
     }
 
-    // Update item status to ENDED when payment is successful
-    if (paymentStatus === "completed") {
-      const { error: updateItemError } = await supabase
-        .from("items")
-        .update({
-          status: "ENDED",
-          updatedAt: new Date().toISOString(),
-        })
-        .eq("id", transaction.itemId);
+    // Update item status
+    const { error: updateItemError } = await supabase
+      .from("items")
+      .update({
+        status: "ENDED",
+        statusUpdatedAt: new Date().toISOString(),
+      })
+      .eq("id", transaction.itemId);
 
-      if (updateItemError) {
-        console.error(
-          "[HANDLE CALLBACK] Failed to update item status:",
-          updateItemError
-        );
-        throw updateItemError;
-      }
-      console.log(
-        "[HANDLE CALLBACK] Successfully updated item status to ENDED"
-      );
+    if (updateItemError) {
+      throw updateItemError;
     }
 
-    console.log("[HANDLE CALLBACK] Successfully processed callback");
-    return { success: true };
+    console.log("[BACKGROUND UPDATE] Successfully completed all updates");
   } catch (error) {
-    console.error("[PAYMENT CALLBACK ERROR]", error);
-    return { success: false, error: "Failed to process payment callback" };
+    console.error("[BACKGROUND UPDATE ERROR] Failed to update records:", error);
+    throw error;
   }
 }

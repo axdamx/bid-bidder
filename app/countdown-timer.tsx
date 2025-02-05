@@ -59,11 +59,11 @@ export default function CountdownTimer({
 
     const now = new Date().getTime();
     // Convert the date string to include the local timezone offset
-    const localDate =
-      typeof endDate === "string"
-        ? endDate.replace(" ", "T") + "+08:00"
-        : endDate;
-    const targetDate = new Date(localDate).getTime();
+    // const localDate =
+    //   typeof endDate === "string"
+    //     ? endDate.replace(" ", "T") + "+08:00"
+    //     : endDate;
+    const targetDate = new Date(endDate + "Z").getTime();
     const difference = targetDate - now;
 
     if (difference <= 0) {

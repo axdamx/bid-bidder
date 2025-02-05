@@ -1,5 +1,6 @@
 "use client";
 
+import { updateItemStatusToEndedAction } from "../create/actions";
 import { useState, useEffect, useCallback } from "react";
 import { useAuctionQueries } from "./hooks/useAuctionQueries";
 import { useAuctionMutations } from "./hooks/useAuctionMutations";
@@ -230,13 +231,19 @@ export default function AuctionItem({
   const handleAuctionEnd = useCallback(() => {
     if (orderExists) return;
 
+    if (bids.length === 0) {
+      updateItemStatusToEndedAction(item.id);
+      setShowWinnerModal(true);
+      return;
+    }
+
     if (isWinner && !item.isBoughtOut) {
       createOrder();
       setShowWinnerModal(true);
     } else {
       setShowWinnerModal(true);
     }
-  }, [orderExists, isWinner, item.isBoughtOut, createOrder]);
+  }, [orderExists, isWinner, item.isBoughtOut, createOrder, bids.length, item.id]);
 
   const handleCheckout = () => {
     navigateToCheckout();

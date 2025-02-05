@@ -68,15 +68,20 @@ export function OrderStatusSheet({ order, disabled }: OrderStatusSheetProps) {
       title: "Pending",
       icon: Clock,
     },
-    {
-      status: "processing",
-      title: "Processing",
-      icon: Package,
-    },
+    // {
+    //   status: "processing",
+    //   title: "Processing",
+    //   icon: Package,
+    // },
     {
       status: "shipped",
       title: "Shipped",
       icon: Truck,
+    },
+    {
+      status: "delivered",
+      title: "Delivered",
+      icon: CheckCircle2,
     },
   ];
 
@@ -134,7 +139,11 @@ export function OrderStatusSheet({ order, disabled }: OrderStatusSheetProps) {
               </div>
               <div>
                 <p className="text-muted-foreground">Payment Status</p>
-                <p className="font-medium capitalize">{order.orderStatus}</p>
+                <p className="font-medium capitalize">{order.paymentStatus}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Shipping Status</p>
+                <p className="font-medium capitalize">{order.shippingStatus}</p>
               </div>
             </div>
           </div>
@@ -167,7 +176,7 @@ export function OrderStatusSheet({ order, disabled }: OrderStatusSheetProps) {
           </div>
 
           {/* Order Status Timeline */}
-          {order.orderStatus !== "delivered" && (
+          {
             <div className="space-y-2">
               <h3 className="font-semibold text-lg">Order Status</h3>
               <div className="relative space-y-4">
@@ -189,7 +198,7 @@ export function OrderStatusSheet({ order, disabled }: OrderStatusSheetProps) {
                       >
                         <Icon className="h-4 w-4" />
                       </div>
-                      <div>
+                      <div className="flex-1">
                         <p
                           className={cn(
                             "font-medium",
@@ -200,13 +209,22 @@ export function OrderStatusSheet({ order, disabled }: OrderStatusSheetProps) {
                         >
                           {step.title}
                         </p>
+                        {isCurrent &&
+                          step.status === "shipped" &&
+                          order.courierService &&
+                          order.trackingNumber && (
+                            <div className="mt-2 text-sm text-muted-foreground">
+                              <p>Courier: {order.courierService}</p>
+                              <p>Tracking: {order.trackingNumber}</p>
+                            </div>
+                          )}
                       </div>
                     </div>
                   );
                 })}
               </div>
             </div>
-          )}
+          }
 
           {/* Delivery Confirmation Section */}
           {order.shippingStatus === "shipped" && order.buyerId === user?.id && (
