@@ -45,7 +45,7 @@ export function getDateInfo(dateString: string) {
   // Convert the date string to include the local timezone offset
   // This ensures the date is interpreted in the local timezone
   const localDate = dateString.replace(" ", "T");
-  const targetDate = new Date(localDate + "Z");
+  const targetDate = new Date(localDate);
 
   // Format in local timezone
   const formattedDate = format(targetDate, "MMMM d, yyyy");
@@ -55,4 +55,9 @@ export function getDateInfo(dateString: string) {
     formattedDate,
     formattedTime,
   };
+}
+
+export function formatDateWithTime(dateString: string) {
+  const date = new Date(dateString);
+  return format(date, "dd/MM/yyyy, hh:mm:ss aa");
 }

@@ -279,7 +279,7 @@ export async function handleToyyibCallback(data: any) {
 async function updatePaymentRecords(
   supabase: any,
   transaction: any,
-  transactionId: string,
+  transaction_id: string,
   paymentStatus: string
 ) {
   try {
@@ -288,7 +288,7 @@ async function updatePaymentRecords(
       .from("transactions")
       .update({
         status: paymentStatus,
-        transactionId: transactionId,
+        transactionId: transaction_id,
         updatedAt: new Date().toISOString(),
       })
       .eq("id", transaction.id);

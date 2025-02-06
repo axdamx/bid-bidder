@@ -9,7 +9,14 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Package, Truck, Clock, CheckCircle2, XCircle } from "lucide-react";
+import {
+  Package,
+  Truck,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  DollarSign,
+} from "lucide-react";
 import { cn, formatCurrency } from "@/lib/utils";
 import { OptimizedImage } from "./OptimizedImage";
 import { Order } from "@/app/types/order";
@@ -18,6 +25,10 @@ import { confirmDelivery } from "../dashboard/orders/action";
 import { userAtom } from "../atom/userAtom";
 import { useAtom } from "jotai";
 import { useToast } from "@/hooks/use-toast";
+import {
+  formatDateWithTime,
+  getDateInfo,
+} from "../items/[itemId]/utils/formatters";
 
 interface OrderStatusSheetProps {
   order: Order;
@@ -28,6 +39,8 @@ export function OrderStatusSheet({ order, disabled }: OrderStatusSheetProps) {
   const [user] = useAtom(userAtom);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  console.log("inside order status sheet", order);
 
   const { mutate: confirmDeliveryMutation, isPending } = useMutation({
     mutationFn: async () => {
@@ -63,6 +76,11 @@ export function OrderStatusSheet({ order, disabled }: OrderStatusSheetProps) {
   };
 
   const steps = [
+    {
+      status: "paid",
+      title: "Payment Completed",
+      icon: DollarSign,
+    },
     {
       status: "pending",
       title: "Pending",
@@ -103,12 +121,12 @@ export function OrderStatusSheet({ order, disabled }: OrderStatusSheetProps) {
           View Details
         </Button>
       </SheetTrigger>
-      <SheetContent className="w-[400px] sm:w-[540px]">
+      <SheetContent className="w-[400px] sm:w-[540px] overflow-y-auto">
         <SheetHeader>
           <SheetTitle>Order Details</SheetTitle>
         </SheetHeader>
 
-        <div className="mt-6 space-y-6">
+        <div className="mt-6 space-y-6 pb-6 px-6">
           {/* Order Summary */}
           <div className="space-y-2">
             <h3 className="font-semibold text-lg">Order Summary</h3>
@@ -116,6 +134,19 @@ export function OrderStatusSheet({ order, disabled }: OrderStatusSheetProps) {
               <div>
                 <p className="text-muted-foreground">Order ID</p>
                 <p className="font-medium">#{order.id}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Dealing Method</p>
+                {order.item.dealingMethodType === "SHIPPING" ? (
+                  <p className="font-medium capitalize">
+                    {order.item.dealingMethodType}
+                  </p>
+                ) : (
+                  <p className="font-medium">
+                    {order.item.dealingMethodType} at{" "}
+                    {order.item.dealingMethodLocation}
+                  </p>
+                )}
               </div>
               <div>
                 <p className="text-muted-foreground">Order Date</p>
@@ -128,11 +159,11 @@ export function OrderStatusSheet({ order, disabled }: OrderStatusSheetProps) {
                 <p className="font-medium">{formatCurrency(order.amount)}</p>
               </div>
               <div>
-                <p className="text-muted-foreground">Service Tax Price</p>
+                <p className="text-muted-foreground">Buyer's Premium</p>
                 <p className="font-medium">{formatCurrency(serviceTax)}</p>
               </div>
               <div>
-                <p className="text-muted-foreground">Total Price</p>
+                <p className="text-muted-foreground">Total Amount Paid</p>
                 <p className="font-medium">
                   {formatCurrency(order.totalAmount)}
                 </p>
@@ -141,10 +172,14 @@ export function OrderStatusSheet({ order, disabled }: OrderStatusSheetProps) {
                 <p className="text-muted-foreground">Payment Status</p>
                 <p className="font-medium capitalize">{order.paymentStatus}</p>
               </div>
-              <div>
-                <p className="text-muted-foreground">Shipping Status</p>
-                <p className="font-medium capitalize">{order.shippingStatus}</p>
-              </div>
+              {order.item.dealingMethodType === "SHIPPING" && (
+                <div>
+                  <p className="text-muted-foreground">Shipping Status</p>
+                  <p className="font-medium capitalize">
+                    {order.shippingStatus}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -209,6 +244,21 @@ export function OrderStatusSheet({ order, disabled }: OrderStatusSheetProps) {
                         >
                           {step.title}
                         </p>
+                        {step.status === "paid" && order.updatedAt && (
+                          <div className="mt-2 text-sm text-muted-foreground">
+                            <p>
+                              Paid on: {formatDateWithTime(order.updatedAt)}
+                            </p>
+                          </div>
+                        )}
+                        {step.status === "delivered" && order.deliveredAt && (
+                          <div className="mt-2 text-sm text-muted-foreground">
+                            <p>
+                              Delivered on:{" "}
+                              {formatDateWithTime(order.deliveredAt)}
+                            </p>
+                          </div>
+                        )}
                         {isCurrent &&
                           step.status === "shipped" &&
                           order.courierService &&

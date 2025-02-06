@@ -146,16 +146,16 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
       description: "View and track your orders",
     },
     {
-      name: "Help",
-      icon: HelpCircle,
-      id: "help",
-      description: "Get support and find answers to common questions",
-    },
-    {
       name: "Items",
       icon: Package,
       id: "items",
       description: "Manage your items",
+    },
+    {
+      name: "Help",
+      icon: HelpCircle,
+      id: "help",
+      description: "Get support and find answers to common questions",
     },
   ];
 
@@ -367,7 +367,7 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
         </div>
       </ScrollArea>
 
-      <div className="mt-auto p-4 border-t">
+      {/* <div className="mt-auto p-4 border-t">
         <Button
           variant="ghost"
           className={cn(
@@ -388,7 +388,7 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
             </motion.span>
           )}
         </Button>
-      </div>
+      </div> */}
     </div>
   );
 

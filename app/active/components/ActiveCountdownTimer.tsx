@@ -27,8 +27,7 @@ export function ActiveCountdownTimer({
 
   useEffect(() => {
     const calculateTimeLeft = () => {
-      const difference =
-        new Date(endDate + "Z").getTime() - new Date().getTime();
+      const difference = new Date(endDate).getTime() - new Date().getTime();
 
       if (difference <= 0) {
         if (!isExpired) {

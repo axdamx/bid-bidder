@@ -5,7 +5,11 @@ import { useAtom, useSetAtom } from "jotai";
 import { RealtimeChannel } from "@supabase/supabase-js";
 import { userAtom } from "../atom/userAtom";
 // import { supabase } from "@/lib/utils";
-import { notificationsAtom, unreadCountAtom, Notification } from "../atom/notificationAtom";
+import {
+  notificationsAtom,
+  unreadCountAtom,
+  Notification,
+} from "../atom/notificationAtom";
 import { createClientSupabase } from "@/lib/supabase/client";
 
 interface NotificationContextType {
@@ -25,8 +29,8 @@ export function NotificationProvider({
   const [isConnected, setIsConnected] = useState(false);
   const channelRef = useRef<RealtimeChannel | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
-  const setNotifications = useSetAtom(notificationsAtom); 
-  // const setUnreadCount = useSetAtom(unreadCountAtom); 
+  const setNotifications = useSetAtom(notificationsAtom);
+  // const setUnreadCount = useSetAtom(unreadCountAtom);
   const [user] = useAtom(userAtom);
   const supabase = createClientSupabase(); // IF QUERY AT CLIENT, USE THIS
 
@@ -71,10 +75,10 @@ export function NotificationProvider({
           table: "notifications",
           filter: `userId=eq.${user.id}`,
         },
-        (payload) => {
+        (payload: any) => {
           const newNotification = {
             ...payload.new,
-            itemTitle: payload.new.itemTitle || ""
+            itemTitle: payload.new.itemTitle || "",
           } as Notification;
           setNotifications((prev) => [newNotification, ...prev]);
           // setUnreadCount((prev) => prev + 1);
@@ -90,6 +94,7 @@ export function NotificationProvider({
         setIsConnected(false);
       });
 
+    // @ts-ignore
     await channelRef.current.subscribe(async (status) => {
       if (status === "SUBSCRIBED") {
         setIsConnected(true);

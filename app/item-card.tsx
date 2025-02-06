@@ -46,7 +46,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item }) => {
   const isItemEnded = isBidOver(item.endDate);
 
   function isBidOver(endDate: Date) {
-    return new Date(endDate + "Z") < new Date() || item.isBoughtOut;
+    return new Date(endDate) < new Date() || item.isBoughtOut;
   }
 
   return (

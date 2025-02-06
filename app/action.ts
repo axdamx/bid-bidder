@@ -73,7 +73,7 @@ export const getLiveAuctions = cache(async () => {
         // Auction is live if:
         // 1. It hasn't reached end date AND
         // 2. It hasn't been bought out
-        new Date(item.endDate + "Z") > new Date() && !item.isBoughtOut
+        new Date(item.endDate) > new Date() && !item.isBoughtOut
     )
     .sort(
       (a, b) =>
@@ -90,15 +90,15 @@ export const getEndedAuctions = cache(async () => {
         // Auction is ended if:
         // 1. It has reached end date OR
         // 2. It has been bought out
-        new Date(item.endDate + "Z") < new Date() || item.isBoughtOut
+        new Date(item.endDate) < new Date() || item.isBoughtOut
     )
     .sort((a, b) => {
       const aEndTime = a.isBoughtOut
-        ? new Date(a.boughtOutDate + "Z")
-        : new Date(a.endDate + "Z");
+        ? new Date(a.boughtOutDate)
+        : new Date(a.endDate);
       const bEndTime = b.isBoughtOut
-        ? new Date(b.boughtOutDate + "Z")
-        : new Date(b.endDate + "Z");
+        ? new Date(b.boughtOutDate)
+        : new Date(b.endDate);
       return bEndTime.getTime() - aEndTime.getTime();
     });
 });

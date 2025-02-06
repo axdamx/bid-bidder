@@ -11,10 +11,14 @@ export type PaymentStatus = "unpaid" | "paid" | "refunded";
 
 export type ShippingStatus = "pending" | "processing" | "shipped" | "delivered";
 
+export type DealingMethodType = "SHIPPING" | "COD";
+
 export interface OrderItem {
   name: string;
   imageId?: string;
   status: OrderStatus;
+  dealingMethodType?: DealingMethodType;
+  dealingMethodLocation?: string;
 }
 
 export interface Order {
@@ -31,4 +35,6 @@ export interface Order {
   totalAmount: number;
   courierService?: string;
   trackingNumber?: string;
+  updatedAt?: string;
+  deliveredAt?: string;
 }

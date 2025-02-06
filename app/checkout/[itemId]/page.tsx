@@ -68,7 +68,9 @@ export default function CheckoutPage({
   const [error, setError] = useState<string | null>(null);
   const [showTimerDialog, setShowTimerDialog] = useState(false);
   const [showExpiredDialog, setShowExpiredDialog] = useState(false);
-  const [selectedShippingRegion, setSelectedShippingRegion] = useState<"WEST" | "EAST">("WEST");
+  const [selectedShippingRegion, setSelectedShippingRegion] = useState<
+    "WEST" | "EAST"
+  >("WEST");
 
   const handleGoToDashboard = () => {
     router.push("/dashboard?tab=orders");
@@ -76,10 +78,18 @@ export default function CheckoutPage({
 
   const calculateTotalAmount = (item: any, shippingRegion: "WEST" | "EAST") => {
     if (!item) return 0;
-    const shippingCost = shippingRegion === "WEST" 
-      ? item.westMalaysiaShippingPrice 
-      : item.eastMalaysiaShippingPrice;
-    return item.currentBid + (shippingCost || 0) + (item.currentBid * 0.06);
+    
+    // For COD, only charge the buyer's premium
+    if (item.dealingMethodType === "COD") {
+      return item.currentBid * 0.06; // 6% buyer's premium only
+    }
+    
+    // For shipping, charge the full amount (bid + shipping + premium)
+    const shippingCost =
+      shippingRegion === "WEST"
+        ? item.westMalaysiaShippingPrice
+        : item.eastMalaysiaShippingPrice;
+    return item.currentBid + (shippingCost || 0) + item.currentBid * 0.06;
   };
 
   const handlePayment = async (formData: CheckoutFormData) => {
@@ -198,7 +208,7 @@ export default function CheckoutPage({
   }
 
   const { order, item } = checkoutItems || {};
-
+  console.log("checkoutItems", checkoutItems);
   console.log("isTimerExpired", isTimerExpired);
 
   return (
@@ -436,13 +446,16 @@ export default function CheckoutPage({
 
                     <div className="space-y-4">
                       <div className="flex justify-between text-sm">
-                        <span>Subtotal</span>
+                        <span>Sold Price</span>
                         <span>{formatCurrency(item?.currentBid)}</span>
                       </div>
-                      {item?.dealingMethodType === "SHIPPING" && (
+                      
+                      {item?.dealingMethodType === "SHIPPING" ? (
                         <>
                           <div className="space-y-2">
-                            <span className="text-sm font-medium">Shipping Region</span>
+                            <span className="text-sm font-medium">
+                              Shipping Region
+                            </span>
                             <div className="flex gap-4">
                               <label className="flex items-center space-x-2">
                                 <input
@@ -457,7 +470,8 @@ export default function CheckoutPage({
                                   className="h-4 w-4"
                                 />
                                 <span className="text-sm">
-                                  West Malaysia (RM {item?.westMalaysiaShippingPrice})
+                                  West Malaysia (RM{" "}
+                                  {item?.westMalaysiaShippingPrice})
                                 </span>
                               </label>
                               <label className="flex items-center space-x-2">
@@ -473,7 +487,8 @@ export default function CheckoutPage({
                                   className="h-4 w-4"
                                 />
                                 <span className="text-sm">
-                                  East Malaysia (RM {item?.eastMalaysiaShippingPrice})
+                                  East Malaysia (RM{" "}
+                                  {item?.eastMalaysiaShippingPrice})
                                 </span>
                               </label>
                             </div>
@@ -488,20 +503,54 @@ export default function CheckoutPage({
                               )}
                             </span>
                           </div>
+                          <div className="flex justify-between text-sm">
+                            <span>Buyer's Premium (6%)</span>
+                            <span>{formatCurrency(item?.currentBid! * 0.06)}</span>
+                          </div>
+                          <div className="flex justify-between font-medium">
+                            <span>Total Amount</span>
+                            <span>
+                              {formatCurrency(
+                                calculateTotalAmount(item, selectedShippingRegion)
+                              )}
+                            </span>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="flex justify-between text-sm">
+                            <span>Buyer's Premium (6%)</span>
+                            <span>{formatCurrency(item?.currentBid! * 0.06)}</span>
+                          </div>
+                          <div className="flex justify-between font-medium">
+                            <span>Payable Amount</span>
+                            <span>{formatCurrency(item?.currentBid! * 0.06)}</span>
+                          </div>
+                          <div className="mt-4 rounded-md bg-yellow-50 p-4">
+                            <div className="flex">
+                              <div className="flex-shrink-0">
+                                <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+                                </svg>
+                              </div>
+                              <div className="ml-3">
+                                <h3 className="text-sm font-medium text-yellow-800">Cash on Delivery Notice</h3>
+                                <div className="mt-2 text-sm text-yellow-700">
+                                  <p>
+                                    Please note that for Cash on Delivery (COD) transactions:
+                                  </p>
+                                  <ul className="list-disc pl-5 mt-1">
+                                    <li>The sold price is to be paid directly to the seller upon delivery</li>
+                                    <li>Only the buyer's premium is payable through our platform</li>
+                                    <li>We do not cover or mediate any disputes that may arise during the COD transaction</li>
+                                    <li>Proceed with COD at your own risk</li>
+                                  </ul>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         </>
                       )}
-                      <div className="flex justify-between text-sm">
-                        <span>Service Fee (6%)</span>
-                        <span>{formatCurrency(item?.currentBid! * 0.06)}</span>
-                      </div>
-                      <div className="flex justify-between font-medium">
-                        <span>Total</span>
-                        <span>
-                          {formatCurrency(
-                            calculateTotalAmount(item, selectedShippingRegion)
-                          )}
-                        </span>
-                      </div>
                     </div>
 
                     {error && (

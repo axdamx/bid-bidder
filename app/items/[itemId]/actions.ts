@@ -207,6 +207,22 @@ export async function checkExistingOrder(itemId: number, buyerId: string) {
   return !!data;
 }
 
+export async function getOrder(itemId: number, buyerId: string) {
+  const { data: order, error } = await supabase
+    .from("orders")
+    .select("*")
+    .eq("itemId", itemId)
+    .eq("buyerId", buyerId)
+    .single();
+
+  if (error) {
+    console.error("Error fetching order:", error);
+    return null;
+  }
+
+  return order;
+}
+
 export async function createOrderAction(
   itemId: number,
   userId: string,

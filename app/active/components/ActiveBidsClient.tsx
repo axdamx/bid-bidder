@@ -12,14 +12,6 @@ import { useAtom } from "jotai";
 import { userAtom } from "@/app/atom/userAtom";
 import { OptimizedImage } from "@/app/components/OptimizedImage";
 import { formatCurrency } from "@/lib/utils";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { useRouter } from "next/navigation";
 import { ActiveCountdownTimer } from "./ActiveCountdownTimer";
 
 function GridView({
@@ -27,7 +19,7 @@ function GridView({
   onTimerExpire,
 }: {
   items: any[];
-  onTimerExpire: (item: any) => void;
+  onTimerExpire: () => void;
 }) {
   const [user] = useAtom(userAtom);
 
@@ -73,10 +65,10 @@ function GridView({
               <div className="flex items-center justify-between">
                 <ActiveCountdownTimer
                   endDate={item.endDate}
-                  onExpire={() => onTimerExpire(item)}
+                  onExpire={onTimerExpire}
                 />
                 <div className="text-sm opacity-90">
-                  Ends {format(new Date(item.endDate + "Z"), "MMM d, h:mma")}
+                  Ends {format(new Date(item.endDate), "MMM d, h:mma")}
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2 text-sm">
@@ -139,49 +131,11 @@ function EmptyState() {
 
 export function ActiveBidsClient() {
   const [user] = useAtom(userAtom);
-  const [showModal, setShowModal] = useState<{
-    itemId: string;
-    isWinning: boolean;
-    title: string;
-  } | null>(null);
   const queryClient = useQueryClient();
-  const router = useRouter();
 
-  const handleCloseModal = useCallback(() => {
-    setShowModal(null);
+  const handleTimerExpire = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ["activeBids"] });
   }, [queryClient]);
-
-  const handleCheckout = useCallback(
-    (itemId: string) => {
-      handleCloseModal();
-      router.push(`/checkout/${itemId}`);
-    },
-    [handleCloseModal, router]
-  );
-
-  const handleTimerExpire = useCallback(
-    (item: any) => {
-      let yourBid = 0;
-      if (item.bids && item.bids.length > 0) {
-        const yourBids = item.bids.filter(
-          (bid: any) => bid.userId === user?.id
-        );
-        yourBid =
-          yourBids.length > 0
-            ? Math.max(...yourBids.map((bid: any) => bid.amount))
-            : 0;
-      }
-      const isWinning = yourBid >= (item.currentBid || 0);
-
-      setShowModal({
-        itemId: item.id,
-        isWinning,
-        title: item.name,
-      });
-    },
-    [user?.id]
-  );
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["activeBids"],
@@ -220,41 +174,6 @@ export function ActiveBidsClient() {
         <EmptyState />
       ) : (
         <GridView items={items} onTimerExpire={handleTimerExpire} />
-      )}
-
-      {showModal && (
-        <Dialog open={true} onOpenChange={handleCloseModal}>
-          <DialogContent
-            aria-describedby="success-message"
-            aria-labelledby="success-title"
-            className="[&>button]:hidden"
-          >
-            <DialogHeader>
-              <DialogTitle>
-                {showModal.isWinning ? `Congratulations!` : `Auction Ended!`}
-              </DialogTitle>
-              <DialogDescription>
-                {showModal.isWinning
-                  ? `You've won this auction! ${showModal.title}! Click below to proceed to checkout.`
-                  : `Unfortunately, you were outbid on this item. ${showModal.title}! Better luck next time!`}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="flex justify-end space-x-2">
-              {showModal.isWinning ? (
-                <>
-                  <Button variant="outline" onClick={handleCloseModal}>
-                    Later
-                  </Button>
-                  <Button onClick={() => handleCheckout(showModal.itemId)}>
-                    Proceed to Checkout
-                  </Button>
-                </>
-              ) : (
-                <Button onClick={handleCloseModal}>Close</Button>
-              )}
-            </div>
-          </DialogContent>
-        </Dialog>
       )}
     </div>
   );

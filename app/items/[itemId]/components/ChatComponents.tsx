@@ -65,13 +65,26 @@ export default function ChatComponent({
   // console.log("itemOwnerId", itemOwnerId);
   const isOwner = userId === itemOwnerId; // Add this check
 
+  // Add useEffect for auto-scrolling whenever messages change
   React.useEffect(() => {
-    setMessages(existingMessages);
-  }, [existingMessages]);
+    const scrollToBottom = () => {
+      if (messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+      }
+    };
+
+    // Scroll when messages change
+    scrollToBottom();
+
+    // Also scroll after a short delay to handle dynamic content loading
+    const timeoutId = setTimeout(scrollToBottom, 100);
+    return () => clearTimeout(timeoutId);
+  }, [messages]);
 
   React.useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    console.log("Messages updated:", existingMessages?.length);
+    setMessages(existingMessages || []);
+  }, [existingMessages]);
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -131,15 +144,30 @@ export default function ChatComponent({
         content: newMessage.trim(),
         userId: session.user.id,
         userName,
-        itemId: Number(itemId),
+        itemId: itemId,
         createdAt: new Date().toISOString(),
         imageUrl,
       };
 
-      const { error } = await supabase.from("chatMessages").insert(messageData);
+      // Update local state immediately for better UX
+      // @ts-ignore
+      setMessages((current) => [...current, messageData]);
 
-      if (error) throw error;
+      // Insert the message
+      const { error: insertError } = await supabase
+        .from("chatMessages")
+        .insert([messageData]);
 
+      if (insertError) {
+        console.error("Error inserting message:", insertError);
+        // If there was an error, remove the message from local state
+        setMessages((current) =>
+          current.filter((msg) => msg.id !== messageData.id)
+        );
+        throw insertError;
+      }
+
+      // Clear form
       setNewMessage("");
       setSelectedImage(null);
       setImagePreviewUrl(null);

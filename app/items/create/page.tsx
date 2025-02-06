@@ -101,7 +101,7 @@ const formSchema = z
     startingPrice: z.number().min(1, "Starting price must be greater than 0"),
     bidInterval: z.number().min(1, "Bid interval must be greater than 0"),
     binPrice: z.number().min(0, "Buy it now price must be positive").optional(),
-    description: z.string().optional(),
+    description: z.string().min(1, "Description is required"),
     endDate: z.string().min(1, "End date is required"),
     images: z.array(z.string()).min(1, "At least one image is required"),
     category: z.string().min(1, "Category is required"),
@@ -606,7 +606,7 @@ export default function CreatePage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <Label htmlFor="name">Item Name</Label>
+                      <Label htmlFor="name">Item Name *</Label>
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger
@@ -639,7 +639,7 @@ export default function CreatePage() {
 
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <Label htmlFor="category">Category</Label>
+                      <Label htmlFor="category">Category *</Label>
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger
@@ -689,7 +689,9 @@ export default function CreatePage() {
 
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <Label htmlFor="startingPrice">Starting Price (RM)</Label>
+                      <Label htmlFor="startingPrice">
+                        Starting Price (RM) *
+                      </Label>
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger
@@ -721,7 +723,7 @@ export default function CreatePage() {
 
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <Label htmlFor="bidInterval">Bid Interval (RM)</Label>
+                      <Label htmlFor="bidInterval">Bid Interval (RM) *</Label>
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger
@@ -735,7 +737,8 @@ export default function CreatePage() {
                           <TooltipContent>
                             <p>
                               Minimum amount that must be added to the current
-                              bid
+                              bid (Bid Interval should not be greater than the
+                              starting price)
                             </p>
                           </TooltipContent>
                         </Tooltip>
@@ -793,7 +796,7 @@ export default function CreatePage() {
 
                   <div className="space-y-2 md:col-span-2">
                     <div className="flex items-center gap-2">
-                      <Label htmlFor="description">Description</Label>
+                      <Label htmlFor="description">Description *</Label>
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger
@@ -805,10 +808,7 @@ export default function CreatePage() {
                             </button>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>
-                              Enter a detailed description of your item
-                              (optional)
-                            </p>
+                            <p>Enter a detailed description of your item</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
@@ -816,7 +816,7 @@ export default function CreatePage() {
                     <Textarea
                       id="description"
                       {...register("description")}
-                      placeholder="Enter item description (optional)"
+                      placeholder="Enter item description"
                       className="min-h-[100px]"
                     />
                     {errors.description && (

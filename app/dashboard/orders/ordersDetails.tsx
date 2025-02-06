@@ -19,6 +19,7 @@ import {
   CheckCircle2,
   ShoppingBag,
   XCircle,
+  Loader2,
 } from "lucide-react";
 import {
   Select,
@@ -128,6 +129,20 @@ const StatusBadge = ({
       {config.label}
     </Badge>
   );
+};
+
+// Helper function to determine available status options
+const getAvailableStatusOptions = (currentStatus: string) => {
+  switch (currentStatus) {
+    case "pending":
+      return ["pending", "shipped"];
+    case "shipped":
+      return ["shipped", "delivered"];
+    case "delivered":
+      return ["delivered"];
+    default:
+      return [currentStatus];
+  }
 };
 
 export default function OrderDetails() {
@@ -280,15 +295,21 @@ export default function OrderDetails() {
         <div className="hidden md:block">
           <div className="flex justify-end p-2">
             <Button
-              onClick={() => refetch()}
+              onClick={async () => {
+                await new Promise((resolve) => setTimeout(resolve, 2000));
+                await refetch();
+              }}
               variant="outline"
               size="sm"
               disabled={isLoading}
             >
               {isLoading ? (
-                <span>Refreshing...</span>
+                <span className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Refreshing...
+                </span>
               ) : (
-                <span>Refresh Orders</span>
+                <span>Refresh</span>
               )}
             </Button>
           </div>
@@ -301,7 +322,10 @@ export default function OrderDetails() {
                 <TableHead>Order Status</TableHead>
                 <TableHead>Final Amount</TableHead>
                 {type === "selling" ? (
-                  <TableHead>Update Status</TableHead>
+                  <>
+                    <TableHead>Update Status</TableHead>
+                    <TableHead>View Order</TableHead>
+                  </>
                 ) : (
                   <TableHead>Action</TableHead>
                 )}
@@ -335,22 +359,35 @@ export default function OrderDetails() {
                           onValueChange={(value) =>
                             handleOrderShippingStatusUpdate(order.id, value)
                           }
-                          disabled={
-                            order.orderStatus === "cancelled" ||
-                            order.shippingStatus === "shipped"
-                          }
+                          disabled={order.orderStatus === "cancelled"}
                         >
                           <SelectTrigger className="w-[180px]">
                             <SelectValue placeholder="Update shipping status" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="pending">Pending</SelectItem>
-                            {/* <SelectItem value="processing">
-                              Processing
-                            </SelectItem> */}
-                            <SelectItem value="shipped">Shipped</SelectItem>
-                            <SelectItem value="delivered">Delivered</SelectItem>
-                            {/* <SelectItem value="cancelled">Cancelled</SelectItem> */}
+                            {["pending", "shipped", "delivered"].map(
+                              (status) => {
+                                const isAvailable = getAvailableStatusOptions(
+                                  order.shippingStatus
+                                ).includes(status);
+
+                                return (
+                                  <SelectItem
+                                    key={status}
+                                    value={status}
+                                    disabled={!isAvailable}
+                                    className={
+                                      !isAvailable
+                                        ? "opacity-50 cursor-not-allowed"
+                                        : ""
+                                    }
+                                  >
+                                    {status.charAt(0).toUpperCase() +
+                                      status.slice(1)}
+                                  </SelectItem>
+                                );
+                              }
+                            )}
                           </SelectContent>
                         </Select>
                       </div>
@@ -372,6 +409,11 @@ export default function OrderDetails() {
                       </Button>
                     )}
                   </TableCell>
+                  {type === "selling" && (
+                    <TableCell>
+                      <OrderStatusSheet order={order} disabled={false} />
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
@@ -433,13 +475,19 @@ export default function OrderDetails() {
           <div className="sticky top-0 z-10 bg-background border-b">
             <div className="flex justify-end p-2">
               <Button
-                onClick={() => refetch()}
+                onClick={async () => {
+                  await new Promise((resolve) => setTimeout(resolve, 2000));
+                  await refetch();
+                }}
                 variant="outline"
                 size="sm"
                 disabled={isLoading}
               >
                 {isLoading ? (
-                  <span>Refreshing...</span>
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Refreshing...
+                  </span>
                 ) : (
                   <span>Refresh Orders</span>
                 )}
@@ -493,12 +541,12 @@ export default function OrderDetails() {
                     </span>
                     <div className="text-right">
                       <StatusBadge status={order.shippingStatus || "pending"} />
-                      {order.courierService && order.trackingNumber && (
+                      {/* {order.courierService && order.trackingNumber && (
                         <div className="mt-2 text-xs text-muted-foreground">
                           <p>Courier: {order.courierService}</p>
                           <p>Tracking: {order.trackingNumber}</p>
                         </div>
-                      )}
+                      )} */}
                     </div>
                   </div>
                 </div>
@@ -510,20 +558,32 @@ export default function OrderDetails() {
                       onValueChange={(value) =>
                         handleOrderShippingStatusUpdate(order.id, value)
                       }
-                      disabled={
-                        order.orderStatus === "cancelled" ||
-                        order.shippingStatus === "shipped"
-                      }
+                      disabled={order.orderStatus === "cancelled"}
                     >
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Update shipping status" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="processing">Processing</SelectItem>
-                        <SelectItem value="shipped">Shipped</SelectItem>
-                        <SelectItem value="delivered">Delivered</SelectItem>
-                        <SelectItem value="cancelled">Cancelled</SelectItem>
+                        {["pending", "shipped", "delivered"].map((status) => (
+                          <SelectItem
+                            key={status}
+                            value={status}
+                            disabled={
+                              !getAvailableStatusOptions(
+                                order.shippingStatus
+                              ).includes(status)
+                            }
+                            className={
+                              !getAvailableStatusOptions(
+                                order.shippingStatus
+                              ).includes(status)
+                                ? "opacity-50 cursor-not-allowed"
+                                : ""
+                            }
+                          >
+                            {status.charAt(0).toUpperCase() + status.slice(1)}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   ) : order.orderStatus === "paid" ||

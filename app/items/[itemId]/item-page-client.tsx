@@ -70,8 +70,7 @@ export default function AuctionItem({
   const pathname = usePathname();
 
   console.log("item", item);
-  const isBidOver =
-    new Date(item.endDate + "Z") < new Date() || item.isBoughtOut;
+  const isBidOver = new Date(item.endDate) < new Date() || item.isBoughtOut;
 
   // Check BIN winner first, then auction winner if not bought out
   const isWinner = item.isBoughtOut
@@ -81,12 +80,6 @@ export default function AuctionItem({
   const isOwner = item.users.id === userId;
 
   console.log("item fuh", item);
-  const { orderExists } = useAuctionQueries(
-    item.id,
-    userId,
-    isBidOver,
-    isWinner
-  );
   const {
     updateBidAcknowledgment,
     submitBid,
@@ -138,7 +131,7 @@ export default function AuctionItem({
 
     fetchMessages();
 
-    // Setup real-time subscription for chat and bids/item updates
+    // Setup real-time subscription
     const channel = supabase
       .channel(`room:${item.id}`)
       .on(
@@ -149,7 +142,7 @@ export default function AuctionItem({
           table: "chatMessages",
           filter: `itemId=eq.${Number(item.id)}`,
         },
-        (payload) => {
+        (payload: any) => {
           const newMessage = payload.new as any;
           setMessages((current) => {
             const isDuplicate = current.some((msg) => msg.id === newMessage.id);
@@ -162,32 +155,21 @@ export default function AuctionItem({
           }
         }
       )
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "items",
-          filter: `id=eq.${Number(item.id)}`,
-        },
-        (payload) => {
-          const updatedItem = payload.new as any;
-          // Show BIN dialog when item is bought out
-          if (
-            updatedItem.isBoughtOut &&
-            updatedItem.winnerId !== userId &&
-            !isOwner
-          ) {
-            setShowBinWinnerModal(true);
-          }
-        }
-      )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [item.id, userId, currentTab, isOwner]);
+  }, [item.id, userId, currentTab]);
+
+  // Handle tab changes
+  const handleTabChange = (value: string) => {
+    setCurrentTab(value);
+    if (value === "chat") {
+      setHasNewMessage(false);
+      setUnreadMessageCount(0);
+    }
+  };
 
   const handleLinkClick = async (e: React.MouseEvent, path: string) => {
     e.preventDefault();
@@ -229,8 +211,6 @@ export default function AuctionItem({
   };
 
   const handleAuctionEnd = useCallback(() => {
-    if (orderExists) return;
-
     if (bids.length === 0) {
       updateItemStatusToEndedAction(item.id);
       setShowWinnerModal(true);
@@ -243,7 +223,7 @@ export default function AuctionItem({
     } else {
       setShowWinnerModal(true);
     }
-  }, [orderExists, isWinner, item.isBoughtOut, createOrder, bids.length, item.id]);
+  }, [isWinner, item.isBoughtOut, createOrder, bids.length, item.id]);
 
   const handleCheckout = () => {
     navigateToCheckout();
@@ -339,14 +319,9 @@ export default function AuctionItem({
         <CardHeader>
           <Tabs
             defaultValue="history"
+            value={currentTab}
+            onValueChange={handleTabChange}
             className="w-full"
-            onValueChange={(value) => {
-              setCurrentTab(value);
-              if (value === "chat") {
-                setHasNewMessage(false);
-                setUnreadMessageCount(0);
-              }
-            }}
           >
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="history">Bid History</TabsTrigger>
@@ -384,9 +359,9 @@ export default function AuctionItem({
                 <ChatComponent
                   itemId={item.id}
                   userId={userId}
-                  userName={user?.name || ""}
+                  userName={user?.name || "Anonymous"}
+                  isActive={!isBidOver}
                   itemOwnerId={item.users.id}
-                  onNewMessage={setHasNewMessage}
                   existingMessages={messages}
                   isLoadingMessages={isLoadingMessages}
                 />
@@ -617,40 +592,28 @@ export default function AuctionItem({
                   </Badge>
                 </div>
                 <p className="text-sm text-green-600">
-                  {orderExists!
-                    ? "You can view your order in your dashboard"
-                    : "You can proceed to checkout to complete your purchase"}
+                  Please proceed to checkout to complete your purchase
                 </p>
               </CardContent>
             </Card>
           )}
           {isWinner && (
             <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
-              {orderExists! ? (
-                <Button
-                  variant="default"
-                  className="bg-primary hover:bg-primary/90"
-                  onClick={() => router.push("/dashboard?tab=orders")}
-                >
-                  View Order
-                </Button>
-              ) : (
-                <Button
-                  variant="default"
-                  className="bg-primary hover:bg-primary/90"
-                  onClick={handleCheckout}
-                  disabled={isCreatingOrder}
-                >
-                  {isCreatingOrder ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Creating order...
-                    </>
-                  ) : (
-                    "Proceed to Checkout"
-                  )}
-                </Button>
-              )}
+              <Button
+                variant="default"
+                className="bg-primary hover:bg-primary/90"
+                onClick={handleCheckout}
+                disabled={isCreatingOrder}
+              >
+                {isCreatingOrder ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating order...
+                  </>
+                ) : (
+                  "Proceed to Checkout"
+                )}
+              </Button>
               {/* <Button
                 variant="outline"
                 onClick={() => setShowWinnerModal(false)}

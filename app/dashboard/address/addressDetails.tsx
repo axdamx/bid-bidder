@@ -16,7 +16,6 @@ import { Card } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -189,129 +188,107 @@ export default function AddressDetails() {
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto p-4">
-      <Tabs defaultValue="primary" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="primary">Primary Address</TabsTrigger>
-          <TabsTrigger value="billing" disabled>
-            Billing Address (Coming Soon)
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="primary" className="mt-6 space-y-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="space-y-1">
-              <h4 className="text-sm font-medium">
-                Your addresses is listed here
-              </h4>
-              <p className="text-xs text-muted-foreground">
-                {`${addresses.length}/${MAX_ADDRESSES} addresses added`}
-              </p>
-            </div>
-            <Button
-              variant="outline"
-              onClick={() => openAddressDialog()}
-              disabled={!canAddAddress}
-            >
-              {canAddAddress ? "Add New Address" : "Maximum addresses reached"}
-            </Button>
-          </div>
-
-          {isLoading ? (
-            <div className="space-y-4">
-              {[1, 2].map((n) => (
-                <Card key={n} className="p-4">
-                  <div className="flex items-start gap-4">
-                    <div className="h-4 w-4 mt-1 rounded-full bg-muted animate-enhanced-pulse" />
-                    <div className="flex-1 min-w-0 space-y-3">
-                      <div className="h-4 w-3/4 bg-muted rounded animate-enhanced-pulse" />
-                      <div className="h-4 w-1/2 bg-muted rounded animate-enhanced-pulse" />
-                      <div className="h-4 w-2/3 bg-muted rounded animate-enhanced-pulse" />
-                      <div className="h-4 w-1/4 bg-muted rounded animate-enhanced-pulse" />
-                    </div>
-                    <div className="h-8 w-16 bg-muted rounded animate-enhanced-pulse" />
-                  </div>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <RadioGroup
-              value={defaultAddressId}
-              onValueChange={handleDefaultChange}
-              className="space-y-4"
-            >
-              {addresses.map((address) => (
-                <Card key={address.id} className="p-4">
-                  <div className="flex items-start gap-4">
-                    <RadioGroupItem
-                      value={address.id}
-                      id={`address-${address.id}`}
-                      className="mt-1"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <Label
-                        htmlFor={`address-${address.id}`}
-                        className="flex flex-col gap-1"
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium truncate">
-                            {address.addressLine1}
-                          </span>
-                          {address.isDefault && (
-                            <Badge
-                              variant="secondary"
-                              className="text-xs font-normal"
-                            >
-                              Default
-                            </Badge>
-                          )}
-                        </div>
-                        {address.addressLine2 && (
-                          <span className="text-sm text-muted-foreground truncate">
-                            {address.addressLine2}
-                          </span>
-                        )}
-                        <span className="text-sm truncate">
-                          {`${address.city}, ${address.state} ${address.postcode}`}
-                        </span>
-                        <span className="text-sm">{address.country}</span>
-                      </Label>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => openAddressDialog(address)}
-                      className="shrink-0"
-                    >
-                      Edit
-                    </Button>
-                  </div>
-                </Card>
-              ))}
-
-              {addresses.length === 0 && (
-                <div className="text-center py-8 px-4">
-                  <p className="text-muted-foreground">
-                    No addresses found. Add a new address to get started.
-                  </p>
-                </div>
-              )}
-            </RadioGroup>
-          )}
-        </TabsContent>
-
-        <TabsContent value="billing" className="mt-6">
-          <div className="flex flex-col items-center justify-center p-8 text-center">
-            <CreditCard className="h-10 w-10 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium mb-2">
-              Billing Address Coming Soon
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              The ability to add a separate billing address will be available
-              soon.
+      <div className="mt-6 space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="space-y-1">
+            <h4 className="text-sm font-medium">
+              Your addresses is listed here
+            </h4>
+            <p className="text-xs text-muted-foreground">
+              {`${addresses.length}/${MAX_ADDRESSES} addresses added`}
             </p>
           </div>
-        </TabsContent>
-      </Tabs>
+          <Button
+            variant="outline"
+            onClick={() => openAddressDialog()}
+            disabled={!canAddAddress}
+          >
+            {canAddAddress ? "Add New Address" : "Maximum addresses reached"}
+          </Button>
+        </div>
+
+        {isLoading ? (
+          <div className="space-y-4">
+            {[1, 2].map((n) => (
+              <Card key={n} className="p-4">
+                <div className="flex items-start gap-4">
+                  <div className="h-4 w-4 mt-1 rounded-full bg-muted animate-enhanced-pulse" />
+                  <div className="flex-1 min-w-0 space-y-3">
+                    <div className="h-4 w-3/4 bg-muted rounded animate-enhanced-pulse" />
+                    <div className="h-4 w-1/2 bg-muted rounded animate-enhanced-pulse" />
+                    <div className="h-4 w-2/3 bg-muted rounded animate-enhanced-pulse" />
+                    <div className="h-4 w-1/4 bg-muted rounded animate-enhanced-pulse" />
+                  </div>
+                  <div className="h-8 w-16 bg-muted rounded animate-enhanced-pulse" />
+                </div>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <RadioGroup
+            value={defaultAddressId}
+            onValueChange={handleDefaultChange}
+            className="space-y-4"
+          >
+            {addresses.map((address) => (
+              <Card key={address.id} className="p-4">
+                <div className="flex items-start gap-4">
+                  <RadioGroupItem
+                    value={address.id}
+                    id={`address-${address.id}`}
+                    className="mt-1"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <Label
+                      htmlFor={`address-${address.id}`}
+                      className="flex flex-col gap-1"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium truncate">
+                          {address.addressLine1}
+                        </span>
+                        {address.isDefault && (
+                          <Badge
+                            variant="secondary"
+                            className="text-xs font-normal"
+                          >
+                            Default
+                          </Badge>
+                        )}
+                      </div>
+                      {address.addressLine2 && (
+                        <span className="text-sm text-muted-foreground truncate">
+                          {address.addressLine2}
+                        </span>
+                      )}
+                      <span className="text-sm truncate">
+                        {`${address.city}, ${address.state} ${address.postcode}`}
+                      </span>
+                      <span className="text-sm">{address.country}</span>
+                    </Label>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => openAddressDialog(address)}
+                    className="shrink-0"
+                  >
+                    Edit
+                  </Button>
+                </div>
+              </Card>
+            ))}
+
+            {addresses.length === 0 && (
+              <div className="text-center py-8 px-4">
+                <p className="text-muted-foreground">
+                  No addresses found. Add a new address to get started.
+                </p>
+              </div>
+            )}
+          </RadioGroup>
+        )}
+      </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">

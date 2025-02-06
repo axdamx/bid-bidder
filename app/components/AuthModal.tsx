@@ -81,6 +81,7 @@ export default function AuthModals({
 
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange(
+      // @ts-ignore
       (event, session) => {
         if (session?.user) {
           console.log("User signed in:", session.user);
