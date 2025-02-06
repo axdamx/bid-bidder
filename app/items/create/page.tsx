@@ -865,13 +865,9 @@ export default function CreatePage() {
                             }`}
                             onClick={() => {
                               const endDate = addDays(new Date(), option.days);
-                              // Convert to UTC by subtracting 8 hours
-                              const utcDate = new Date(
-                                endDate.getTime() - 8 * 60 * 60 * 1000
-                              );
                               setValue(
                                 "endDate",
-                                format(utcDate, "yyyy-MM-dd'T'HH:mm")
+                                format(endDate, "yyyy-MM-dd'T'HH:mm")
                               );
                             }}
                           >
@@ -885,15 +881,6 @@ export default function CreatePage() {
                           type="datetime-local"
                           {...register("endDate", {
                             required: "End date is required",
-                            setValueAs: (value) => {
-                              if (!value) return value;
-                              // Convert local time to UTC by subtracting 8 hours
-                              const date = new Date(value);
-                              const utcDate = new Date(
-                                date.getTime() - 8 * 60 * 60 * 1000
-                              );
-                              return format(utcDate, "yyyy-MM-dd'T'HH:mm");
-                            },
                           })}
                           min={format(new Date(), "yyyy-MM-dd'T'HH:mm")}
                         />
