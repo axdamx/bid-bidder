@@ -252,7 +252,8 @@ export default function ItemsDetails() {
   const canReopen = (item: Item) => {
     return (
       (item.status === "ENDED" || item.status === "CANCELLED") &&
-      item.orderStatus !== "delivered"
+      item.orderStatus !== "delivered" &&
+      item.orderStatus !== "paid"
     );
   };
 
