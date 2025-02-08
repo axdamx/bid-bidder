@@ -65,16 +65,24 @@ export const getItemsWithUsers = cache(async () => {
 
 // export const
 export const getLiveAuctions = cache(async () => {
-  const supabase = createServerSupabase(); // Create client inside function
   const { items } = await getItemsWithUsers();
+  const now = new Date();
+
   return items
-    .filter(
-      (item) =>
-        // Auction is live if:
-        // 1. It hasn't reached end date AND
-        // 2. It hasn't been bought out
-        new Date(item.endDate) > new Date() && !item.isBoughtOut
-    )
+    .filter((item) => {
+      const endDate = new Date(item.endDate);
+
+      // Auction is live if:
+      // 1. It hasn't reached end date (using UTC for consistent comparison)
+      // 2. It hasn't been bought out
+      // 3. Status is not 'ended' or 'completed'
+      return (
+        endDate.getTime() > now.getTime() &&
+        !item.isBoughtOut &&
+        item.status !== "ended" &&
+        item.status !== "completed"
+      );
+    })
     .sort(
       (a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -82,7 +90,6 @@ export const getLiveAuctions = cache(async () => {
 });
 
 export const getEndedAuctions = cache(async () => {
-  const supabase = createServerSupabase(); // Create client inside function
   const { items } = await getItemsWithUsers();
   return items
     .filter(
@@ -104,7 +111,6 @@ export const getEndedAuctions = cache(async () => {
 });
 
 export const getUpcomingAuctions = cache(async (limit: number = 2) => {
-  const supabase = createServerSupabase(); // Create client inside function
   const { items } = await getItemsWithUsers();
   // For upcoming auctions, we should only show items that:
   // 1. Haven't started yet

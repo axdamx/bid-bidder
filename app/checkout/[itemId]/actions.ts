@@ -1,6 +1,7 @@
 "use server";
 
 import { createServerSupabase } from "@/lib/supabase/server";
+import { logInfo, logError } from "@/lib/logging";
 
 // Function to get items for checkout
 export async function getCheckoutItems(userId: string, itemId: string) {
@@ -222,72 +223,73 @@ export async function createToyyibPayment(params: CreatePaymentParams) {
 // Handle Toyyib Pay callback
 export async function handleToyyibCallback(data: any) {
   const supabase = createServerSupabase();
-  console.log("[HANDLE CALLBACK] Starting to process callback data:", data);
 
-  try {
-    const {
-      refno: billCode, // from redirect
-      billcode, // from callback
-      status,
-      reason,
-      order_id,
-      transaction_id,
-    } = data;
+  const {
+    billcode,
+    billCode,
+    status,
+    reason,
+    order_id,
+    transaction_id,
+  } = data;
 
-    const finalBillCode = billCode || billcode;
+  const finalBillCode = billCode || billcode;
 
-    if (!finalBillCode) {
-      throw new Error("Bill code not found in callback data");
-    }
-
-    console.log("[HANDLE CALLBACK] Processing bill code:", finalBillCode);
-
-    // Verify the transaction exists
-    const { data: transaction, error: transactionError } = await supabase
-      .from("transactions")
-      .select("*")
-      .eq("billCode", finalBillCode)
-      .single();
-
-    if (transactionError) {
-      console.error(
-        "[HANDLE CALLBACK] Transaction not found:",
-        transactionError
-      );
-      throw new Error("Transaction not found");
-    }
-
-    console.log("[HANDLE CALLBACK] Found transaction:", transaction);
-
-    // Determine payment status first
-    const paymentStatus = status === "1" ? "COMPLETED" : "FAILED";
-    console.log(
-      "[HANDLE CALLBACK] Payment status determined as:",
-      paymentStatus
-    );
-
-    // If payment failed, we can return early
-    if (paymentStatus === "FAILED") {
-      return { success: false, error: "Payment failed", status: paymentStatus };
-    }
-
-    // For successful payments, trigger background updates and return success immediately
-    // We'll handle any update errors in the background
-    updatePaymentRecords(
-      supabase,
-      transaction,
-      transaction_id,
-      paymentStatus
-    ).catch((error) => {
-      console.error("[BACKGROUND UPDATE ERROR]", error);
-      // Here you might want to implement some retry logic or notification system
-    });
-
-    return { success: true, status: paymentStatus };
-  } catch (error) {
-    console.error("[PAYMENT CALLBACK ERROR]", error);
-    return { success: false, error: "Failed to process payment callback" };
+  if (!finalBillCode) {
+    await logError("TOYYIB_CALLBACK_NO_BILLCODE", { data });
+    throw new Error("Bill code not found in callback data");
   }
+
+  await logInfo("TOYYIB_CALLBACK_RECEIVED", {
+    billCode: finalBillCode,
+    status,
+    reason,
+    orderId: order_id,
+    transactionId: transaction_id,
+  });
+
+  // Verify the transaction exists
+  const { data: transaction, error: transactionError } = await supabase
+    .from("transactions")
+    .select("*")
+    .eq("billCode", finalBillCode)
+    .single();
+
+  if (transactionError || !transaction) {
+    await logError("TOYYIB_CALLBACK_TRANSACTION_NOT_FOUND", {
+      billCode: finalBillCode,
+      error: transactionError,
+    });
+    throw new Error("Transaction not found");
+  }
+
+  console.log("[HANDLE CALLBACK] Found transaction:", transaction);
+
+  // Determine payment status first
+  const paymentStatus = status === "1" ? "COMPLETED" : "FAILED";
+  console.log(
+    "[HANDLE CALLBACK] Payment status determined as:",
+    paymentStatus
+  );
+
+  // If payment failed, we can return early
+  if (paymentStatus === "FAILED") {
+    return { success: false, error: "Payment failed", status: paymentStatus };
+  }
+
+  // For successful payments, trigger background updates and return success immediately
+  // We'll handle any update errors in the background
+  updatePaymentRecords(
+    supabase,
+    transaction,
+    transaction_id,
+    paymentStatus
+  ).catch((error) => {
+    console.error("[BACKGROUND UPDATE ERROR]", error);
+    // Here you might want to implement some retry logic or notification system
+  });
+
+  return { success: true, status: paymentStatus };
 }
 
 // Separate function to handle all database updates
