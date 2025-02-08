@@ -132,14 +132,26 @@ const StatusBadge = ({
 };
 
 // Helper function to determine available status options
-const getAvailableStatusOptions = (currentStatus: string) => {
+const getAvailableStatusOptions = (
+  currentStatus: string,
+  dealingMethodType?: string
+) => {
+  // If status is delivered, disable all options
+  if (currentStatus === "delivered") {
+    return [];
+  }
+
+  if (dealingMethodType === "COD") {
+    // For COD orders, only allow pending status
+    return ["pending"];
+  }
+
+  // Original logic for non-COD orders
   switch (currentStatus) {
     case "pending":
       return ["pending", "shipped"];
     case "shipped":
-      return ["shipped", "delivered"];
-    case "delivered":
-      return ["delivered"];
+      return [currentStatus]; // Once shipped, no further updates allowed
     default:
       return [currentStatus];
   }
@@ -368,7 +380,8 @@ export default function OrderDetails() {
                             {["pending", "shipped", "delivered"].map(
                               (status) => {
                                 const isAvailable = getAvailableStatusOptions(
-                                  order.shippingStatus
+                                  order.shippingStatus,
+                                  order.item.dealingMethodType
                                 ).includes(status);
 
                                 return (
@@ -570,12 +583,14 @@ export default function OrderDetails() {
                             value={status}
                             disabled={
                               !getAvailableStatusOptions(
-                                order.shippingStatus
+                                order.shippingStatus,
+                                order.item.dealingMethodType
                               ).includes(status)
                             }
                             className={
                               !getAvailableStatusOptions(
-                                order.shippingStatus
+                                order.shippingStatus,
+                                order.item.dealingMethodType
                               ).includes(status)
                                 ? "opacity-50 cursor-not-allowed"
                                 : ""

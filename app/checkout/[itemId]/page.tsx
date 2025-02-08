@@ -51,7 +51,9 @@ const checkoutFormSchema = z.object({
   city: z.string().optional(),
   state: z.string().optional(),
   zipCode: z.string().optional(),
-  shippingRegion: z.enum(["WEST", "EAST"]).optional(),
+  shippingRegion: z.enum(["WEST", "EAST"]),
+  addressLine1: z.string().min(1, "Address Line 1 is required"),
+  addressLine2: z.string().optional(),
 });
 
 type CheckoutFormData = z.infer<typeof checkoutFormSchema>;
@@ -78,12 +80,12 @@ export default function CheckoutPage({
 
   const calculateTotalAmount = (item: any, shippingRegion: "WEST" | "EAST") => {
     if (!item) return 0;
-    
+
     // For COD, only charge the buyer's premium
     if (item.dealingMethodType === "COD") {
       return item.currentBid * 0.06; // 6% buyer's premium only
     }
-    
+
     // For shipping, charge the full amount (bid + shipping + premium)
     const shippingCost =
       shippingRegion === "WEST"
@@ -117,11 +119,18 @@ export default function CheckoutPage({
       const paymentResult = await createToyyibPayment({
         itemId,
         amount: totalAmount,
+        // itemName:
         customerDetails: {
           email: formData.email,
           phone: formData.phone,
           firstName: firstName || "",
           lastName: lastName || firstName || "",
+          country: formData.country,
+          city: formData.city,
+          state: formData.state,
+          zipCode: formData.zipCode,
+          addressLine1: formData.addressLine1,
+          addressLine2: formData.addressLine2,
         },
       });
 
@@ -392,9 +401,12 @@ export default function CheckoutPage({
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="my">Malaysia</SelectItem>
-                              <SelectItem value="gb">United Kingdom</SelectItem>
-                              <SelectItem value="ca">Canada</SelectItem>
+                              <SelectItem value="malaysia">Malaysia</SelectItem>
+                              <SelectItem value="indonesia">
+                                Indonesia
+                              </SelectItem>
+                              <SelectItem value="thailand">Thailand</SelectItem>
+                              <SelectItem value="brunei">Brunei</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -403,6 +415,32 @@ export default function CheckoutPage({
                     />
 
                     <div className="grid grid-cols-3 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="addressLine1"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Address Line 1</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Address Line 1" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="addressLine2"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Address Line 2</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Address Line 2" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                       <FormField
                         control={form.control}
                         name="city"
@@ -449,7 +487,7 @@ export default function CheckoutPage({
                         <span>Sold Price</span>
                         <span>{formatCurrency(item?.currentBid)}</span>
                       </div>
-                      
+
                       {item?.dealingMethodType === "SHIPPING" ? (
                         <>
                           <div className="space-y-2">
@@ -505,13 +543,18 @@ export default function CheckoutPage({
                           </div>
                           <div className="flex justify-between text-sm">
                             <span>Buyer's Premium (6%)</span>
-                            <span>{formatCurrency(item?.currentBid! * 0.06)}</span>
+                            <span>
+                              {formatCurrency(item?.currentBid! * 0.06)}
+                            </span>
                           </div>
                           <div className="flex justify-between font-medium">
                             <span>Total Amount</span>
                             <span>
                               {formatCurrency(
-                                calculateTotalAmount(item, selectedShippingRegion)
+                                calculateTotalAmount(
+                                  item,
+                                  selectedShippingRegion
+                                )
                               )}
                             </span>
                           </div>
@@ -520,29 +563,53 @@ export default function CheckoutPage({
                         <>
                           <div className="flex justify-between text-sm">
                             <span>Buyer's Premium (6%)</span>
-                            <span>{formatCurrency(item?.currentBid! * 0.06)}</span>
+                            <span>
+                              {formatCurrency(item?.currentBid! * 0.06)}
+                            </span>
                           </div>
                           <div className="flex justify-between font-medium">
                             <span>Payable Amount</span>
-                            <span>{formatCurrency(item?.currentBid! * 0.06)}</span>
+                            <span>
+                              {formatCurrency(item?.currentBid! * 0.06)}
+                            </span>
                           </div>
                           <div className="mt-4 rounded-md bg-yellow-50 p-4">
                             <div className="flex">
                               <div className="flex-shrink-0">
-                                <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                                  <path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+                                <svg
+                                  className="h-5 w-5 text-yellow-400"
+                                  viewBox="0 0 20 20"
+                                  fill="currentColor"
+                                >
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z"
+                                    clipRule="evenodd"
+                                  />
                                 </svg>
                               </div>
                               <div className="ml-3">
-                                <h3 className="text-sm font-medium text-yellow-800">Cash on Delivery Notice</h3>
+                                <h3 className="text-sm font-medium text-yellow-800">
+                                  Cash on Delivery Notice
+                                </h3>
                                 <div className="mt-2 text-sm text-yellow-700">
                                   <p>
-                                    Please note that for Cash on Delivery (COD) transactions:
+                                    Please note that for Cash on Delivery (COD)
+                                    transactions:
                                   </p>
                                   <ul className="list-disc pl-5 mt-1">
-                                    <li>The sold price is to be paid directly to the seller upon delivery</li>
-                                    <li>Only the buyer's premium is payable through our platform</li>
-                                    <li>We do not cover or mediate any disputes that may arise during the COD transaction</li>
+                                    <li>
+                                      The sold price is to be paid directly to
+                                      the seller upon delivery
+                                    </li>
+                                    <li>
+                                      Only the buyer's premium is payable
+                                      through our platform
+                                    </li>
+                                    <li>
+                                      We do not cover or mediate any disputes
+                                      that may arise during the COD transaction
+                                    </li>
                                     <li>Proceed with COD at your own risk</li>
                                   </ul>
                                 </div>

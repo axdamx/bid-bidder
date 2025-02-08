@@ -38,6 +38,12 @@ interface CreatePaymentParams {
     phone: string;
     firstName: string;
     lastName: string;
+    country: string;
+    city?: string;
+    state?: string;
+    zipCode?: string;
+    addressLine1?: string;
+    addressLine2?: string;
   };
 }
 
@@ -103,7 +109,7 @@ export async function createToyyibPayment(params: CreatePaymentParams) {
     // Get the order to get the buyer_id
     const { data: order, error: orderError } = await supabase
       .from("orders")
-      .select("buyerId")
+      .select("buyerId, id")
       .eq("itemId", parseInt(params.itemId))
       .eq("orderStatus", "pending")
       .single();
@@ -117,8 +123,8 @@ export async function createToyyibPayment(params: CreatePaymentParams) {
     const billDetails = {
       userSecretKey: process.env.TOYYIB_SECRET_KEY,
       categoryCode: process.env.TOYYIB_CATEGORY_ID,
-      billName: `Payment for Item #${params.itemId}`,
-      billDescription: `Bid Bidder Payment`,
+      billName: `Payment for Item #${params.itemId})`,
+      billDescription: `Renown Payment`,
       billPriceSetting: 1,
       billPayorInfo: 0,
       billAmount: Math.round(params.amount * 100).toString(), // Convert to cents
@@ -162,17 +168,26 @@ export async function createToyyibPayment(params: CreatePaymentParams) {
       throw new Error("Invalid response from Toyyib Pay");
     }
 
+    console.log("Data after bill creation:", order);
+
     // Create transaction with all details including bill code
     const { data: transaction, error: transactionError } = await supabase
       .from("transactions")
       .insert({
         itemId: parseInt(params.itemId),
+        orderId: order.id.toString(), // Convert order ID to string
         buyerId: order.buyerId,
         amount: params.amount,
         status: "completed",
         customerEmail: params.customerDetails.email,
         customerPhone: params.customerDetails.phone,
         customerName: `${params.customerDetails.firstName} ${params.customerDetails.lastName}`,
+        customerCountry: params.customerDetails.country,
+        customerCity: params.customerDetails.city,
+        customerState: params.customerDetails.state,
+        customerZipCode: params.customerDetails.zipCode,
+        customerAddressLine1: params.customerDetails.addressLine1,
+        customerAddressLine2: params.customerDetails.addressLine2,
         paymentProvider: "toyyibpay",
         billCode: bill[0].BillCode,
         paymentUrl: `${process.env.TOYYIB_URL}/${bill[0].BillCode}`,
@@ -297,6 +312,8 @@ async function updatePaymentRecords(
       throw updateTransactionError;
     }
 
+    console.log("Updated transaction:", transaction);
+
     // Update order status
     const paymentStatusUpdate =
       paymentStatus === "COMPLETED" ? "paid" : "pending";
@@ -308,7 +325,11 @@ async function updatePaymentRecords(
         orderStatus: orderStatusUpdate,
         paymentStatus: paymentStatusUpdate,
         updatedAt: new Date().toISOString(),
-        totalAmount: Math.round(transaction.amount),
+        totalAmount: transaction.amount,
+        customerName: transaction.customerName,
+        customerEmail: transaction.customerEmail,
+        customerPhone: transaction.customerPhone,
+        shippingAddress: `${transaction.customerAddressLine1}, ${transaction.customerAddressLine2}, ${transaction.customerCity}, ${transaction.customerState}, ${transaction.customerZipCode}, ${transaction.customerCountry}`,
       })
       .eq("itemId", transaction.itemId);
 

@@ -37,4 +37,9 @@ export interface Order {
   trackingNumber?: string;
   updatedAt?: string;
   deliveredAt?: string;
+  customerName?: string;
+  customerPhone?: string;
+  customerEmail?: string;
+  shippedAt?: string;
+  shippingAddress?: string;
 }

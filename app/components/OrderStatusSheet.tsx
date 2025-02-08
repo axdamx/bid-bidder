@@ -75,6 +75,8 @@ export function OrderStatusSheet({ order, disabled }: OrderStatusSheetProps) {
     confirmDeliveryMutation();
   };
 
+  console.log("order AHHHHHH", order);
+
   const steps = [
     {
       status: "paid",
@@ -215,69 +217,110 @@ export function OrderStatusSheet({ order, disabled }: OrderStatusSheetProps) {
             <div className="space-y-2">
               <h3 className="font-semibold text-lg">Order Status</h3>
               <div className="relative space-y-4">
-                {steps.map((step, index) => {
-                  const Icon = step.icon;
-                  const isCompleted = index <= currentStepIndex;
-                  const isCurrent = index === currentStepIndex;
+                {steps
+                  .filter(
+                    (step) =>
+                      !(
+                        order.item.dealingMethodType === "COD" &&
+                        step.status === "shipped"
+                      )
+                  )
+                  .map((step, index) => {
+                    const Icon = step.icon;
+                    const isCompleted = index <= currentStepIndex;
 
-                  return (
-                    <div key={step.status} className="flex items-center gap-4">
+                    return (
                       <div
-                        className={cn(
-                          "h-8 w-8 rounded-full border flex items-center justify-center",
-                          isCompleted
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-background",
-                          isCurrent && "ring-2 ring-primary ring-offset-2"
-                        )}
+                        key={step.status}
+                        className="flex items-center gap-4"
                       >
-                        <Icon className="h-4 w-4" />
-                      </div>
-                      <div className="flex-1">
-                        <p
+                        <div
                           className={cn(
-                            "font-medium",
+                            "h-8 w-8 rounded-full border flex items-center justify-center",
                             isCompleted
-                              ? "text-foreground"
-                              : "text-muted-foreground"
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-background"
                           )}
                         >
-                          {step.title}
-                        </p>
-                        {step.status === "paid" && order.updatedAt && (
-                          <div className="mt-2 text-sm text-muted-foreground">
-                            <p>
-                              Paid on: {formatDateWithTime(order.updatedAt)}
-                            </p>
-                          </div>
-                        )}
-                        {step.status === "delivered" && order.deliveredAt && (
-                          <div className="mt-2 text-sm text-muted-foreground">
-                            <p>
-                              Delivered on:{" "}
-                              {formatDateWithTime(order.deliveredAt)}
-                            </p>
-                          </div>
-                        )}
-                        {isCurrent &&
-                          step.status === "shipped" &&
-                          order.courierService &&
-                          order.trackingNumber && (
+                          <Icon className="h-4 w-4" />
+                        </div>
+                        <div className="flex-1">
+                          <p
+                            className={cn(
+                              "font-medium",
+                              isCompleted
+                                ? "text-foreground"
+                                : "text-muted-foreground"
+                            )}
+                          >
+                            {step.title}
+                          </p>
+                          {step.status === "paid" && order.updatedAt && (
                             <div className="mt-2 text-sm text-muted-foreground">
-                              <p>Courier: {order.courierService}</p>
-                              <p>Tracking: {order.trackingNumber}</p>
+                              <p>
+                                Paid on: {formatDateWithTime(order.updatedAt)}
+                              </p>
                             </div>
                           )}
+                          {step.status === "pending" &&
+                            order.item.dealingMethodType === "COD" && (
+                              <div className="mt-2 text-sm text-muted-foreground">
+                                <p>Payment Method: Cash on Delivery</p>
+                                {/* {order.customerName && ( */}
+                                <>
+                                  <p>Customer: {order.customerName}</p>
+                                  <p>Phone: {order.customerPhone}</p>
+                                  <p>Email: {order.customerEmail}</p>
+                                </>
+                                {/* )} */}
+                              </div>
+                            )}
+                          {step.status === "pending" &&
+                            order.item.dealingMethodType === "SHIPPING" && (
+                              <div className="mt-2 text-sm text-muted-foreground">
+                                <>
+                                  <p>Customer Name: {order.customerName}</p>
+                                  <p>Phone: {order.customerPhone}</p>
+                                  <p>Email: {order.customerEmail}</p>
+                                  <p>Address: {order.shippingAddress}</p>
+                                </>
+                              </div>
+                            )}
+                          {step.status === "delivered" && order.deliveredAt && (
+                            <div className="mt-2 text-sm text-muted-foreground">
+                              <p>
+                                Delivered on:{" "}
+                                {formatDateWithTime(order.deliveredAt)}
+                              </p>
+                            </div>
+                          )}
+                          {step.status === "shipped" &&
+                            order.shippedAt &&
+                            order.courierService &&
+                            order.trackingNumber && (
+                              <div className="mt-2 text-sm text-muted-foreground">
+                                <p>Courier: {order.courierService}</p>
+                                <p>Tracking: {order.trackingNumber}</p>
+                                <p>
+                                  Shipped on:{" "}
+                                  {formatDateWithTime(order.shippedAt)}
+                                </p>
+                              </div>
+                            )}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
               </div>
             </div>
           }
 
           {/* Delivery Confirmation Section */}
-          {order.shippingStatus === "shipped" && order.buyerId === user?.id && (
+          {((order.shippingStatus === "shipped" &&
+            order.buyerId === user?.id) ||
+            (order.item.dealingMethodType === "COD" &&
+              order.shippingStatus.toLowerCase() === "pending" &&
+              order.buyerId === user?.id)) && (
             <div className="space-y-2 pt-4 border-t">
               <h3 className="font-semibold text-lg">Delivery Confirmation</h3>
               <p className="text-sm text-muted-foreground">

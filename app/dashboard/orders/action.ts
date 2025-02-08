@@ -76,6 +76,7 @@ export async function updateOrderShippingStatus(
       ...(shippingDetails && {
         courierService: shippingDetails.courier,
         trackingNumber: shippingDetails.trackingNumber,
+        shippedAt: new Date().toISOString(),
       }),
     };
 
@@ -94,10 +95,7 @@ export async function updateOrderShippingStatus(
   }
 }
 
-export async function confirmDelivery(
-  orderId: number,
-  userId: string
-) {
+export async function confirmDelivery(orderId: number, userId: string) {
   try {
     const { data: order, error: fetchError } = await supabase
       .from("orders")
@@ -114,7 +112,8 @@ export async function confirmDelivery(
       .from("orders")
       .update({
         shippingStatus: "delivered",
-        orderStatus: "delivered"
+        orderStatus: "delivered",
+        deliveredAt: new Date().toISOString(),
       })
       .eq("id", orderId)
       .select()

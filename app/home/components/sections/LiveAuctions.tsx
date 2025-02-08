@@ -198,6 +198,8 @@ export function LiveAuctions() {
     queryKey: ["liveAuctions"],
     queryFn: () => getLiveAuctions(),
     // staleTime: 0,
+    staleTime: 0, // Don't cache the data
+    gcTime: 0, // Remove data from cache immediately
     refetchOnMount: true,
   });
 
