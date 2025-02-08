@@ -66,23 +66,13 @@ export const getItemsWithUsers = cache(async () => {
 // export const
 export const getLiveAuctions = cache(async () => {
   const { items } = await getItemsWithUsers();
-  const now = new Date();
 
   return items
-    .filter((item) => {
-      const endDate = new Date(item.endDate);
-
-      // Auction is live if:
-      // 1. It hasn't reached end date (using UTC for consistent comparison)
-      // 2. It hasn't been bought out
-      // 3. Status is not 'ended' or 'completed'
-      return (
-        endDate.getTime() > now.getTime() &&
-        !item.isBoughtOut &&
-        item.status !== "ended" &&
-        item.status !== "completed"
-      );
-    })
+    .filter(
+      (item) =>
+        // Only show items with LIVE status and not bought out
+        item.status === "LIVE" && !item.isBoughtOut
+    )
     .sort(
       (a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -91,31 +81,31 @@ export const getLiveAuctions = cache(async () => {
 
 export const getEndedAuctions = cache(async () => {
   const { items } = await getItemsWithUsers();
+
   return items
     .filter(
       (item) =>
-        // Auction is ended if:
-        // 1. It has reached end date OR
-        // 2. It has been bought out
-        new Date(item.endDate) < new Date() || item.isBoughtOut
+        // Show items that are either ENDED or bought out
+        item.status === "ENDED" || item.isBoughtOut
     )
-    .sort((a, b) => {
-      const aEndTime = a.isBoughtOut
-        ? new Date(a.boughtOutDate)
-        : new Date(a.endDate);
-      const bEndTime = b.isBoughtOut
-        ? new Date(b.boughtOutDate)
-        : new Date(b.endDate);
-      return bEndTime.getTime() - aEndTime.getTime();
-    });
+    .sort(
+      (a, b) => new Date(b.endDate).getTime() - new Date(a.endDate).getTime()
+    );
 });
 
 export const getUpcomingAuctions = cache(async (limit: number = 2) => {
   const { items } = await getItemsWithUsers();
-  // For upcoming auctions, we should only show items that:
-  // 1. Haven't started yet
-  // 2. Haven't been bought out
-  return items.filter((item) => !item.isBoughtOut).slice(0, limit);
+
+  return items
+    .filter(
+      (item) =>
+        // Only show items with UPCOMING status
+        item.status === "UPCOMING"
+    )
+    .sort(
+      (a, b) => new Date(a.endDate).getTime() - new Date(b.endDate).getTime()
+    )
+    .slice(0, limit);
 });
 
 export async function searchItems(query: string) {
@@ -161,3 +151,27 @@ export const handleSignOut = async () => {
     window.location.href = "/";
   }
 };
+
+export async function updateItemStatus(itemId: number, status: string) {
+  "use server";
+
+  const supabase = createServerSupabase();
+
+  try {
+    const { error } = await supabase
+      .from("items")
+      .update({ status: status })
+      .eq("id", itemId);
+
+    if (error) throw error;
+
+    // Revalidate the auctions pages
+    revalidatePath("/");
+    revalidatePath("/auctions");
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating item status:", error);
+    return { success: false, error };
+  }
+}

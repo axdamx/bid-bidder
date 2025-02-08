@@ -19,6 +19,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import Image from "next/image";
+import { updateItemStatus } from "./action";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface ItemCardProps {
   item: ItemWithUser;
@@ -28,6 +30,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item }) => {
   const [isNavigating, setIsNavigating] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   // Add this effect to reset navigation state when pathname changes
   useEffect(() => {
@@ -43,6 +46,15 @@ const ItemCard: React.FC<ItemCardProps> = ({ item }) => {
     setIsNavigating(true);
     router.push(path);
   };
+
+  const handleAuctionEnd = async () => {
+    // Update item status in the database
+    await updateItemStatus(item.id, "ENDED");
+
+    // Invalidate live auctions query to force a refresh
+    queryClient.invalidateQueries({ queryKey: ["liveAuctions"] });
+  };
+
   const isItemEnded = isBidOver(item.endDate);
 
   function isBidOver(endDate: Date) {
@@ -101,40 +113,39 @@ const ItemCard: React.FC<ItemCardProps> = ({ item }) => {
               ) : (
                 <User className="w-4 h-4 mr-1" />
               )}
-              {item.user.name}
+              {item.user?.name}
             </div>
           </div>
-          <div className="flex items-center justify-between mt-3">
-            <div>
-              <p className="text-sm text-muted-foreground">
-                {isItemEnded ? "Final Bid" : "Current Bid"}
-              </p>
-              <p className="text-lg font-bold">
-                {formatCurrency(item.currentBid)}
-              </p>
+          <div className="mt-4">
+            <div className="text-sm text-muted-foreground">Current Bid</div>
+            <div className="text-xl font-bold">
+              {formatCurrency(item.currentBid)}
             </div>
           </div>
+          {!isItemEnded && (
+            <div className="mt-4">
+              <CountdownTimer
+                endDate={item.endDate}
+                onExpire={handleAuctionEnd}
+                isOver={isItemEnded}
+              />
+            </div>
+          )}
         </CardContent>
-        <div className="mt-auto p-4 pt-0">
-          <div className="text-center mb-4">
-            {!isItemEnded && (
-              <p className="text-sm text-muted-foreground mb-1">Ends in</p>
-            )}
-            <CountdownTimer endDate={item.endDate} isOver={isItemEnded} />
-          </div>
+        <CardFooter className="p-4 pt-0">
           <Button
-            asChild
             className="w-full"
-            variant={isItemEnded ? "secondary" : "default"}
+            variant={isItemEnded ? "outline" : "default"}
+            asChild
           >
             <Link
               href={`/items/${item.id}`}
               onClick={(e) => handleLinkClick(e, `/items/${item.id}`)}
             >
-              {isItemEnded ? "View Details" : "Enter Listing"}
+              {isItemEnded ? "View Details" : "Place Bid"}
             </Link>
           </Button>
-        </div>
+        </CardFooter>
       </Card>
     </>
   );
