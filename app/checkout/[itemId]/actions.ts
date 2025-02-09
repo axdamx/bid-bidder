@@ -224,14 +224,7 @@ export async function createToyyibPayment(params: CreatePaymentParams) {
 export async function handleToyyibCallback(data: any) {
   const supabase = createServerSupabase();
 
-  const {
-    billcode,
-    billCode,
-    status,
-    reason,
-    order_id,
-    transaction_id,
-  } = data;
+  const { billcode, billCode, status, reason, order_id, transaction_id } = data;
 
   const finalBillCode = billCode || billcode;
 
@@ -267,10 +260,7 @@ export async function handleToyyibCallback(data: any) {
 
   // Determine payment status first
   const paymentStatus = status === "1" ? "COMPLETED" : "FAILED";
-  console.log(
-    "[HANDLE CALLBACK] Payment status determined as:",
-    paymentStatus
-  );
+  console.log("[HANDLE CALLBACK] Payment status determined as:", paymentStatus);
 
   // If payment failed, we can return early
   if (paymentStatus === "FAILED") {
@@ -332,6 +322,7 @@ async function updatePaymentRecords(
         customerEmail: transaction.customerEmail,
         customerPhone: transaction.customerPhone,
         shippingAddress: `${transaction.customerAddressLine1}, ${transaction.customerAddressLine2}, ${transaction.customerCity}, ${transaction.customerState}, ${transaction.customerZipCode}, ${transaction.customerCountry}`,
+        paidAt: paymentStatus === "COMPLETED" ? new Date().toISOString() : null,
       })
       .eq("itemId", transaction.itemId);
 

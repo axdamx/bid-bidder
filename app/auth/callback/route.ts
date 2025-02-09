@@ -5,6 +5,19 @@ import { NextResponse } from "next/server";
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
+  const provider = requestUrl.searchParams.get("provider");
+  const error = requestUrl.searchParams.get("error");
+  const error_code = requestUrl.searchParams.get("error_code");
+
+  // Handle error cases first
+  if (error || error_code) {
+    return NextResponse.redirect(
+      new URL(
+        `/?auth-error=true&error=${error || ''}&error_code=${error_code || ''}`,
+        requestUrl.origin
+      )
+    );
+  }
 
   if (code) {
     const cookieStore = cookies();
@@ -30,39 +43,44 @@ export async function GET(request: Request) {
         if (userError) {
           console.error("Error checking existing user:", userError);
           return NextResponse.redirect(
-            new URL("/?auth-error=true", requestUrl.origin)
+            new URL("/?auth-error=true&error=database_error", requestUrl.origin)
           );
         }
 
+        // Build the success URL with all necessary parameters
+        const successUrl = new URL("/", requestUrl.origin);
+        successUrl.searchParams.set("auth-success", "true");
+        
+        // Add provider info if available
+        if (provider) {
+          successUrl.searchParams.set("provider", provider);
+        }
+
+        // Add account exists flag if needed
         if (existingUsers?.length > 0) {
-          // We found an existing account with the same email
-          // Here we could either:
-          // 1. Merge the accounts (requires additional logic to handle data migration)
-          // 2. Link the accounts (requires additional database structure)
-          // 3. Or simply notify the user
-
-          // For now, we'll just redirect with a special parameter
-          return NextResponse.redirect(
-            new URL(
-              "/?auth-success=true&account-exists=true",
-              requestUrl.origin
-            )
-          );
+          successUrl.searchParams.set("account-exists", "true");
         }
+
+        // Add session info
+        successUrl.searchParams.set("user_id", session.user.id);
+        
+        return NextResponse.redirect(successUrl);
       }
 
-      // No existing account found, proceed normally
+      // If we get here, something went wrong
       return NextResponse.redirect(
-        new URL("/?auth-success=true", requestUrl.origin)
+        new URL("/?auth-error=true&error=no_session", requestUrl.origin)
       );
     } catch (error) {
       console.error("Error in auth callback:", error);
       return NextResponse.redirect(
-        new URL("/?auth-error=true", requestUrl.origin)
+        new URL("/?auth-error=true&error=server_error", requestUrl.origin)
       );
     }
   }
 
   // If no code, redirect to home page with an error parameter
-  return NextResponse.redirect(new URL("/?auth-error=true", requestUrl.origin));
+  return NextResponse.redirect(
+    new URL("/?auth-error=true&error=no_code", requestUrl.origin)
+  );
 }

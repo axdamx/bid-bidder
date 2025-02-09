@@ -143,7 +143,9 @@ export function AuctionDetails({
         <div className="space-y-6">
           <div className="flex flex-col md:flex-row justify-between gap-4 p-4 bg-muted/50 rounded-lg">
             <div className="flex-1">
-              <p className="text-sm text-muted-foreground mb-1">Current Bid</p>
+              <p className="text-sm text-muted-foreground mb-1">
+                {item.status !== "LIVE" ? "Final Bid" : "Current Bid"}
+              </p>
               <p className="text-3xl font-bold">
                 <AnimatePresence mode="wait">
                   <motion.span
@@ -281,13 +283,14 @@ export function AuctionDetails({
         </div>
 
         <div className="border-t pt-6" />
-
-        <CountdownTimer
-          endDate={item.endDate}
-          onExpire={handleAuctionEnd}
-          className="text-sm"
-          isOver={isBidOver}
-        />
+        {item.status === "LIVE" && (
+          <CountdownTimer
+            endDate={item.endDate}
+            onExpire={handleAuctionEnd}
+            className="text-sm"
+            isOver={isBidOver}
+          />
+        )}
         {!isBidOver && !isOwner && (
           <>
             <Button

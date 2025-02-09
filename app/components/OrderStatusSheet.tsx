@@ -20,7 +20,7 @@ import {
 import { cn, formatCurrency } from "@/lib/utils";
 import { OptimizedImage } from "./OptimizedImage";
 import { Order } from "@/app/types/order";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { confirmDelivery } from "../dashboard/orders/action";
 import { userAtom } from "../atom/userAtom";
 import { useAtom } from "jotai";
@@ -39,6 +39,7 @@ export function OrderStatusSheet({ order, disabled }: OrderStatusSheetProps) {
   const [user] = useAtom(userAtom);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
 
   console.log("inside order status sheet", order);
 
@@ -53,6 +54,7 @@ export function OrderStatusSheet({ order, disabled }: OrderStatusSheetProps) {
         title: "Status Updated",
         description: "Delivery confirmed successfully",
       });
+      setOpen(false); // Close the sheet after successful confirmation
     },
     onError: (error) => {
       console.error("Error confirming delivery:", error);
@@ -77,10 +79,25 @@ export function OrderStatusSheet({ order, disabled }: OrderStatusSheetProps) {
 
   console.log("order AHHHHHH", order);
 
+  const currentStepIndex = useMemo(() => {
+    if (order.orderStatus === "delivered" && order.shippingStatus === "delivered") {
+      return 3; // Show all steps as completed for delivered orders
+    }
+    if (order.paymentStatus === "unpaid" && order.shippingStatus === "pending") {
+      return 0; // Show first step as active for pending unpaid orders
+    }
+    if (order.shippedAt) return 2;
+    if (order.paymentStatus === "paid") return 1;
+    return 0;
+  }, [order.paymentStatus, order.shippedAt, order.shippingStatus, order.orderStatus]);
+
   const steps = [
     {
       status: "paid",
-      title: "Payment Completed",
+      title:
+        order.paymentStatus === "unpaid"
+          ? "Pending Payment"
+          : "Payment Completed",
       icon: DollarSign,
     },
     {
@@ -88,11 +105,6 @@ export function OrderStatusSheet({ order, disabled }: OrderStatusSheetProps) {
       title: "Pending",
       icon: Clock,
     },
-    // {
-    //   status: "processing",
-    //   title: "Processing",
-    //   icon: Package,
-    // },
     {
       status: "shipped",
       title: "Shipped",
@@ -105,14 +117,10 @@ export function OrderStatusSheet({ order, disabled }: OrderStatusSheetProps) {
     },
   ];
 
-  const currentStepIndex = steps.findIndex(
-    (step) => step.status === order.shippingStatus
-  );
-
   const serviceTax = order.amount * 0.06;
 
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button
           variant="outline"
@@ -258,7 +266,12 @@ export function OrderStatusSheet({ order, disabled }: OrderStatusSheetProps) {
                           {step.status === "paid" && order.updatedAt && (
                             <div className="mt-2 text-sm text-muted-foreground">
                               <p>
-                                Paid on: {formatDateWithTime(order.updatedAt)}
+                                {order.paidAt && (
+                                  <>
+                                    Paid on:{" "}
+                                    {formatDateWithTime(order.updatedAt)}
+                                  </>
+                                )}
                               </p>
                             </div>
                           )}

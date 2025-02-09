@@ -42,4 +42,5 @@ export interface Order {
   customerEmail?: string;
   shippedAt?: string;
   shippingAddress?: string;
+  paidAt?: string;
 }

@@ -260,36 +260,68 @@ export default function AuctionItem({
 
       {/* <Toaster position="bottom-right" reverseOrder={false} /> */}
 
-      <div className="mb-6 bg-amber-50 border-l-4 border-amber-400 p-4 rounded-md">
-        <div className="flex">
-          <div className="flex-shrink-0">
-            <svg
-              className="h-5 w-5 text-amber-400"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fillRule="evenodd"
-                d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 6a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 6zm0 9a1 1 0 100-2 1 1 0 000 2z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </div>
-          <div className="ml-3">
-            <h3 className="text-sm font-medium text-amber-800">
-              For the Best Bidding Experience
-            </h3>
-            <div className="mt-2 text-sm text-amber-700">
-              <p>
-                To ensure you don't miss any crucial updates about your bid
-                status, we recommend staying on this page until the auction
-                ends. Real-time bid information is only available while viewing
-                this auction page.
-              </p>
+      {item.status !== "LIVE" ? (
+        <div className="mb-6 bg-gray-50 border-l-4 border-gray-400 p-4 rounded-md">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg
+                className="h-5 w-5 text-gray-400"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-gray-800">
+                Auction Ended
+              </h3>
+              <div className="mt-2 text-sm text-gray-700">
+                <p>
+                  This auction has ended. You can view the final results but new
+                  bids can no longer be placed. Check out other active auctions
+                  to continue bidding.
+                </p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="mb-6 bg-amber-50 border-l-4 border-amber-400 p-4 rounded-md">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg
+                className="h-5 w-5 text-amber-400"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 6a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 6zm0 9a1 1 0 100-2 1 1 0 000 2z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-amber-800">
+                For the Best Bidding Experience
+              </h3>
+              <div className="mt-2 text-sm text-amber-700">
+                <p>
+                  To ensure you don't miss any crucial updates about your bid
+                  status, we recommend staying on this page until the auction
+                  ends. Real-time bid information is only available while
+                  viewing this auction page.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
         <ImageGallery

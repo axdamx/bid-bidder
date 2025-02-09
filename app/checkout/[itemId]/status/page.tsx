@@ -63,7 +63,8 @@ export default function PaymentStatusPage() {
             <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto" />
             <h1 className="text-2xl font-bold mt-4">Payment Successful!</h1>
             <p className="text-gray-600 mt-2">
-              Your payment has been processed successfully.
+              Your payment has been processed successfully. You can now view
+              your order details below.
             </p>
             <button
               onClick={() => router.push("/dashboard?tab=orders")}

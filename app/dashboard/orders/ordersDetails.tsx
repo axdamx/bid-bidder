@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Package,
   Truck,
@@ -20,6 +21,14 @@ import {
   ShoppingBag,
   XCircle,
   Loader2,
+  Banknote,
+  CheckCircle,
+  CreditCard,
+  PackageCheck,
+  AlertCircle,
+  RefreshCw,
+  MessageCircle,
+  ShieldCheck,
 } from "lucide-react";
 import {
   Select,
@@ -57,77 +66,103 @@ import {
 import { Order } from "@/app/types/order";
 import { ShippingDetailsModal } from "@/app/components/ShippingDetailsModal";
 import { OrderStatusSheet } from "@/app/components/OrderStatusSheet";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { ChevronDown } from "lucide-react";
 
-const StatusBadge = ({
-  status,
-}: {
-  status:
-    | "pending"
-    | "processing"
-    | "shipped"
-    | "delivered"
-    | "cancelled"
-    | "paid"
-    | "failed"
-    | "unpaid"
-    | "refunded";
-}) => {
-  const statusConfig = {
-    pending: {
-      label: "Pending",
-      variant: "default" as const,
-      icon: Clock,
-    },
-    processing: {
-      label: "Processing",
-      variant: "secondary" as const,
-      icon: Package,
-    },
-    shipped: {
-      label: "Shipped",
-      variant: "default" as const,
-      icon: Truck,
-    },
-    delivered: {
-      label: "Delivered",
-      variant: "default" as const,
-      icon: CheckCircle2,
-    },
-    cancelled: {
-      label: "Cancelled",
-      variant: "destructive" as const,
-      icon: XCircle,
-    },
-    paid: {
-      label: "Paid",
-      variant: "default" as const,
-      icon: ShoppingBag,
-    },
-    failed: {
-      label: "Failed",
-      variant: "destructive" as const,
-      icon: XCircle,
-    },
-    unpaid: {
-      label: "Unpaid",
-      variant: "default" as const,
-      icon: Clock,
-    },
-    refunded: {
-      label: "Refunded",
-      variant: "default" as const,
-      icon: ShoppingBag,
-    },
+const DealingMethodBadge = ({ type }: { type: string }) => {
+  const getMethodColor = (type: string) => {
+    switch (type.toLowerCase()) {
+      case "cod":
+        return "bg-orange-100 text-orange-800 border-orange-200";
+      case "shipping":
+        return "bg-blue-100 text-blue-800 border-blue-200";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200";
+    }
   };
 
-  const config = statusConfig[status] || statusConfig.pending;
-  const Icon = config.icon;
+  const getMethodIcon = (type: string) => {
+    switch (type.toLowerCase()) {
+      case "cod":
+        return <Banknote className="h-3 w-3 mr-1" />;
+      case "shipping":
+        return <Truck className="h-3 w-3 mr-1" />;
+      default:
+        return null;
+    }
+  };
 
   return (
-    <Badge variant={config.variant} className="flex items-center gap-1">
-      <Icon className="h-3 w-3" />
-      {config.label}
-    </Badge>
+    <span
+      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getMethodColor(
+        type
+      )}`}
+    >
+      {getMethodIcon(type)}
+      {type.toUpperCase()}
+    </span>
+  );
+};
+
+const StatusBadge = ({ status }: { status: string }) => {
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "paid":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "unpaid":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "pending":
+        return "bg-blue-100 text-blue-800 border-blue-200";
+      case "shipped":
+        return "bg-indigo-100 text-indigo-800 border-indigo-200";
+      case "delivered":
+        return "bg-emerald-100 text-emerald-800 border-emerald-200";
+      case "cancelled":
+        return "bg-red-100 text-red-800 border-red-200";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200";
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "paid":
+        return <CreditCard className="h-3 w-3 mr-1" />;
+      case "unpaid":
+        return <Clock className="h-3 w-3 mr-1" />;
+      case "pending":
+        return <AlertCircle className="h-3 w-3 mr-1" />;
+      case "shipped":
+        return <Truck className="h-3 w-3 mr-1" />;
+      case "delivered":
+        return <PackageCheck className="h-3 w-3 mr-1" />;
+      case "cancelled":
+        return <XCircle className="h-3 w-3 mr-1" />;
+      default:
+        return <CheckCircle className="h-3 w-3 mr-1" />;
+    }
+  };
+
+  return (
+    <span
+      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(
+        status
+      )}`}
+    >
+      {getStatusIcon(status)}
+      {status.charAt(0).toUpperCase() + status.slice(1)}
+    </span>
   );
 };
 
@@ -157,15 +192,432 @@ const getAvailableStatusOptions = (
   }
 };
 
+const OrdersTable = ({
+  orders,
+  type,
+  isLoading,
+  onRefresh,
+  onOrderShippingStatusUpdate,
+}: {
+  orders: Order[] | undefined;
+  type: "buying" | "selling";
+  isLoading: boolean;
+  onRefresh: () => Promise<void>;
+  onOrderShippingStatusUpdate: (orderId: number, status: string) => void;
+}) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 7;
+  const totalPages = Math.ceil((orders?.length || 0) / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentOrders = orders?.slice(startIndex, endIndex);
+
+  const RefreshButton = () => (
+    <Button
+      onClick={onRefresh}
+      variant="outline"
+      size="sm"
+      disabled={isLoading}
+    >
+      {isLoading ? (
+        <span className="flex items-center gap-2">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          <span>Refreshing...</span>
+        </span>
+      ) : (
+        <span className="flex items-center gap-2">
+          <RefreshCw className="h-4 w-4" />
+          <span>Refresh Orders</span>
+        </span>
+      )}
+    </Button>
+  );
+
+  const TableSkeleton = () => (
+    <div className="space-y-3">
+      {Array.from({ length: 5 }).map((_, i) => (
+        <div key={i} className="flex items-center space-x-4">
+          <Skeleton className="h-4 w-[100px]" />
+          <Skeleton className="h-4 w-[80px]" />
+          <Skeleton className="h-4 w-[150px]" />
+          <Skeleton className="h-4 w-[100px]" />
+          <Skeleton className="h-4 w-[100px]" />
+          <Skeleton className="h-4 w-[100px]" />
+          {type === "selling" && (
+            <>
+              <Skeleton className="h-4 w-[150px]" />
+              <Skeleton className="h-4 w-[100px]" />
+            </>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+
+  const MobileOrderSkeleton = () => (
+    <div className="space-y-4">
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div
+          key={i}
+          className="bg-card rounded-lg shadow-sm border p-4 space-y-3"
+        >
+          <div className="flex justify-between items-start">
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-[120px]" />
+              <Skeleton className="h-4 w-[100px]" />
+            </div>
+            <Skeleton className="h-4 w-[80px]" />
+          </div>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <Skeleton className="h-4 w-[60px]" />
+              <Skeleton className="h-4 w-[120px]" />
+            </div>
+            <div className="flex justify-between items-center">
+              <Skeleton className="h-4 w-[80px]" />
+              <Skeleton className="h-4 w-[100px]" />
+            </div>
+          </div>
+          <div className="pt-3 border-t">
+            <Skeleton className="h-8 w-full" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  const Pagination = () => (
+    <div className="flex justify-center items-center gap-2 py-4">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+        disabled={currentPage === 1}
+      >
+        Previous
+      </Button>
+      <span className="text-sm text-muted-foreground">
+        Page {currentPage} of {totalPages}
+      </span>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+        disabled={currentPage === totalPages}
+      >
+        Next
+      </Button>
+    </div>
+  );
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-end mb-4">
+        <RefreshButton />
+      </div>
+
+      {/* Desktop view */}
+      <div className="hidden md:block">
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Order ID</TableHead>
+                <TableHead>Method</TableHead>
+                <TableHead>Item</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Order Status</TableHead>
+                <TableHead>Final Amount</TableHead>
+                {type === "selling" ? (
+                  <>
+                    <TableHead>Update Status</TableHead>
+                    <TableHead>View Order</TableHead>
+                  </>
+                ) : (
+                  <TableHead>Action</TableHead>
+                )}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={type === "selling" ? 8 : 7}>
+                    <TableSkeleton />
+                  </TableCell>
+                </TableRow>
+              ) : currentOrders?.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={type === "selling" ? 8 : 7}
+                    className="text-center h-24"
+                  >
+                    No orders found
+                  </TableCell>
+                </TableRow>
+              ) : (
+                currentOrders?.map((order: Order) => (
+                  <TableRow key={order.id}>
+                    <TableCell className="font-medium">{order.id}</TableCell>
+                    <TableCell>
+                      <DealingMethodBadge
+                        type={order.item.dealingMethodType!}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      {" "}
+                      <Link
+                        href={`/items/${order.itemId}`}
+                        className="hover:underline text-primary"
+                      >
+                        {order.item.name}
+                      </Link>
+                    </TableCell>
+                    <TableCell>
+                      {new Date(order.orderDate).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      <StatusBadge status={order.orderStatus} />
+                    </TableCell>
+                    <TableCell>{formatCurrency(order.amount)}</TableCell>
+                    <TableCell>
+                      {type === "selling" ? (
+                        <div className="space-y-2">
+                          <Select
+                            defaultValue={order.shippingStatus}
+                            onValueChange={(value) =>
+                              onOrderShippingStatusUpdate(order.id, value)
+                            }
+                            disabled={order.orderStatus === "cancelled"}
+                          >
+                            <SelectTrigger className="w-[180px]">
+                              <SelectValue placeholder="Update shipping status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {["pending", "shipped", "delivered"].map(
+                                (status) => {
+                                  const isAvailable = getAvailableStatusOptions(
+                                    order.shippingStatus,
+                                    order.item.dealingMethodType
+                                  ).includes(status);
+
+                                  return (
+                                    <SelectItem
+                                      key={status}
+                                      value={status}
+                                      disabled={!isAvailable}
+                                      className={
+                                        !isAvailable
+                                          ? "opacity-50 cursor-not-allowed"
+                                          : ""
+                                      }
+                                    >
+                                      {status.charAt(0).toUpperCase() +
+                                        status.slice(1)}
+                                    </SelectItem>
+                                  );
+                                }
+                              )}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      ) : order.orderStatus === "paid" ||
+                        order.orderStatus === "delivered" ? (
+                        <OrderStatusSheet order={order} disabled={false} />
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-[180px]"
+                          disabled={order.orderStatus === "cancelled"}
+                        >
+                          <Link href={`/checkout/${order.itemId}`}>
+                            {order.orderStatus === "cancelled"
+                              ? "Order Cancelled"
+                              : "Proceed to checkout"}
+                          </Link>
+                        </Button>
+                      )}
+                    </TableCell>
+                    {type === "selling" && (
+                      <TableCell>
+                        <OrderStatusSheet order={order} disabled={false} />
+                      </TableCell>
+                    )}
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+        {!isLoading && orders && orders.length > 0 && <Pagination />}
+      </div>
+
+      {/* Mobile view */}
+      <div className="md:hidden h-full flex flex-col">
+        <div className="sticky top-0 z-10 bg-background border-b">
+          <div className="flex justify-between items-center p-2">
+            <h2 className="font-semibold">
+              {type === "selling" ? "Items Sold" : "Items Won"}
+            </h2>
+            <RefreshButton />
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto">
+          <div className="px-2 pb-4 space-y-4">
+            {isLoading ? (
+              <MobileOrderSkeleton />
+            ) : currentOrders?.length === 0 ? (
+              <div className="flex items-center justify-center h-32 text-muted-foreground">
+                No orders found
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {currentOrders?.map((order: Order) => (
+                  <div
+                    key={order.id}
+                    className="bg-card rounded-lg shadow-sm border p-4 space-y-3"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                          <h3 className="text-sm font-medium text-card-foreground">
+                            Order #{order.id}
+                          </h3>
+                          <DealingMethodBadge
+                            type={order.item.dealingMethodType!}
+                          />
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {new Date(order.orderDate).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="text-right shrink-0 ml-3">
+                        <p className="text-sm font-medium text-card-foreground">
+                          {formatCurrency(order.amount)}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">
+                          Item
+                        </span>
+                        <Link
+                          href={`/items/${order.itemId}`}
+                          className="text-sm font-medium text-primary hover:underline"
+                        >
+                          {order.item.name}
+                        </Link>
+                      </div>
+
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">
+                          Order Status
+                        </span>
+                        <StatusBadge status={order.orderStatus} />
+                      </div>
+
+                      <div className="flex justify-between items-start">
+                        <span className="text-sm text-muted-foreground">
+                          Shipping Status
+                        </span>
+                        <div className="text-right">
+                          <StatusBadge
+                            status={order.shippingStatus || "pending"}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-3 border-t">
+                      {type === "selling" ? (
+                        <Select
+                          defaultValue={order.shippingStatus}
+                          onValueChange={(value) =>
+                            onOrderShippingStatusUpdate(order.id, value)
+                          }
+                          disabled={order.orderStatus === "cancelled"}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Update shipping status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {["pending", "shipped", "delivered"].map(
+                              (status) => {
+                                const isAvailable = getAvailableStatusOptions(
+                                  order.shippingStatus,
+                                  order.item.dealingMethodType
+                                ).includes(status);
+
+                                return (
+                                  <SelectItem
+                                    key={status}
+                                    value={status}
+                                    disabled={!isAvailable}
+                                    className={
+                                      !isAvailable
+                                        ? "opacity-50 cursor-not-allowed"
+                                        : ""
+                                    }
+                                  >
+                                    {status.charAt(0).toUpperCase() +
+                                      status.slice(1)}
+                                  </SelectItem>
+                                );
+                              }
+                            )}
+                          </SelectContent>
+                        </Select>
+                      ) : order.orderStatus === "paid" ||
+                        order.orderStatus === "delivered" ? (
+                        <OrderStatusSheet order={order} disabled={false} />
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full"
+                          disabled={order.orderStatus === "cancelled"}
+                        >
+                          <Link
+                            href={`/checkout/${order.itemId}`}
+                            className="w-full"
+                          >
+                            {order.orderStatus === "cancelled"
+                              ? "Order Cancelled"
+                              : "Proceed to checkout"}
+                          </Link>
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {!isLoading && orders && orders.length > 0 && (
+          <div className="sticky bottom-0 bg-background border-t">
+            <Pagination />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 export default function OrderDetails() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [activeTab, setActiveTab] = useState("winning");
-  const { toast } = useToast();
-  const [user] = useAtom(userAtom);
-  const queryClient = useQueryClient();
   const [isUpdating, setIsUpdating] = useState(false);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
   const [isShippingModalOpen, setIsShippingModalOpen] = useState(false);
+
+  const { toast } = useToast();
+  const [user] = useAtom(userAtom);
+  const queryClient = useQueryClient();
 
   const {
     data: orders,
@@ -175,9 +627,10 @@ export default function OrderDetails() {
     queryKey: ["orders", user?.id],
     queryFn: () => getOrders(user?.id!),
     enabled: !!user?.id,
+    // initialData: { winningOrders: [], sellingOrders: [] },
     refetchOnWindowFocus: true, // Enable refetch on window focus
     refetchOnMount: true, // Enable refetch on component mount
-    refetchInterval: 30000, // Refresh every 30 seconds
+    // refetchInterval: 30000, // Refresh every 30 seconds
     // staleTime: 10000, // Consider data stale after 10 seconds
     staleTime: 0, // Don't cache the data
     gcTime: 0, // Remove data from cache immediately
@@ -279,456 +732,207 @@ export default function OrderDetails() {
     }
   };
 
-  const OrdersTable = ({
-    orders,
-    showStatusUpdate = false,
-    type,
-  }: {
-    orders?: Order[];
-    showStatusUpdate?: boolean;
-    type?: string;
-  }) => {
-    const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 5;
-
-    console.log("orders", orders);
-    console.log("showStatusUpdate", showStatusUpdate);
-    // if (isError) {
-
-    // Calculate pagination
-    const totalPages = Math.ceil((orders?.length || 0) / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const currentOrders = orders?.slice(startIndex, endIndex);
-
-    return (
-      <div className="rounded-md border h-full flex flex-col">
-        {/* Desktop view */}
-        <div className="hidden md:block">
-          <div className="flex justify-end p-2">
-            <Button
-              onClick={async () => {
-                await new Promise((resolve) => setTimeout(resolve, 2000));
-                await refetch();
-              }}
-              variant="outline"
-              size="sm"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <span className="flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Refreshing...
-                </span>
-              ) : (
-                <span>Refresh</span>
-              )}
-            </Button>
-          </div>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Order ID</TableHead>
-                <TableHead>Item</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Order Status</TableHead>
-                <TableHead>Final Amount</TableHead>
-                {type === "selling" ? (
-                  <>
-                    <TableHead>Update Status</TableHead>
-                    <TableHead>View Order</TableHead>
-                  </>
-                ) : (
-                  <TableHead>Action</TableHead>
-                )}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {currentOrders?.map((order: Order) => (
-                <TableRow key={order.id}>
-                  <TableCell className="font-medium">{order.id}</TableCell>
-                  <TableCell>
-                    {" "}
-                    <Link
-                      href={`/items/${order.itemId}`}
-                      className="hover:underline text-primary"
-                    >
-                      {order.item.name}
-                    </Link>
-                  </TableCell>
-                  <TableCell>
-                    {new Date(order.orderDate).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
-                    <StatusBadge status={order.orderStatus} />
-                  </TableCell>
-                  <TableCell>{formatCurrency(order.amount)}</TableCell>
-                  <TableCell>
-                    {type === "selling" ? (
-                      <div className="space-y-2">
-                        <Select
-                          defaultValue={order.shippingStatus}
-                          onValueChange={(value) =>
-                            handleOrderShippingStatusUpdate(order.id, value)
-                          }
-                          disabled={order.orderStatus === "cancelled"}
-                        >
-                          <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Update shipping status" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {["pending", "shipped", "delivered"].map(
-                              (status) => {
-                                const isAvailable = getAvailableStatusOptions(
-                                  order.shippingStatus,
-                                  order.item.dealingMethodType
-                                ).includes(status);
-
-                                return (
-                                  <SelectItem
-                                    key={status}
-                                    value={status}
-                                    disabled={!isAvailable}
-                                    className={
-                                      !isAvailable
-                                        ? "opacity-50 cursor-not-allowed"
-                                        : ""
-                                    }
-                                  >
-                                    {status.charAt(0).toUpperCase() +
-                                      status.slice(1)}
-                                  </SelectItem>
-                                );
-                              }
-                            )}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    ) : order.orderStatus === "paid" ||
-                      order.orderStatus === "delivered" ? (
-                      <OrderStatusSheet order={order} disabled={false} />
-                    ) : (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-[180px]"
-                        disabled={order.orderStatus === "cancelled"}
-                      >
-                        <Link href={`/checkout/${order.itemId}`}>
-                          {order.orderStatus === "cancelled"
-                            ? "Order Cancelled"
-                            : "Proceed to checkout"}
-                        </Link>
-                      </Button>
-                    )}
-                  </TableCell>
-                  {type === "selling" && (
-                    <TableCell>
-                      <OrderStatusSheet order={order} disabled={false} />
-                    </TableCell>
-                  )}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          {totalPages > 1 && (
-            <div className="">
-              {/* Add this wrapper */}
-              <Pagination className="p-4">
-                {" "}
-                {/* Added padding to the pagination */}
-                <PaginationContent className="justify-center">
-                  {" "}
-                  {/* Add justify-center here */}
-                  <PaginationItem>
-                    <PaginationPrevious
-                      onClick={() =>
-                        setCurrentPage((prev) => Math.max(prev - 1, 1))
-                      }
-                      className={
-                        currentPage === 1
-                          ? "pointer-events-none opacity-50"
-                          : "cursor-pointer"
-                      }
-                    />
-                  </PaginationItem>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                    (page) => (
-                      <PaginationItem key={page}>
-                        <PaginationLink
-                          onClick={() => setCurrentPage(page)}
-                          isActive={currentPage === page}
-                          className="cursor-pointer"
-                        >
-                          {page}
-                        </PaginationLink>
-                      </PaginationItem>
-                    )
-                  )}
-                  <PaginationItem>
-                    <PaginationNext
-                      onClick={() =>
-                        setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                      }
-                      className={
-                        currentPage === totalPages
-                          ? "pointer-events-none opacity-50"
-                          : "cursor-pointer"
-                      }
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            </div>
-          )}
-        </div>
-
-        {/* Mobile view */}
-        <div className="md:hidden h-full flex flex-col">
-          <div className="sticky top-0 z-10 bg-background border-b">
-            <div className="flex justify-end p-2">
-              <Button
-                onClick={async () => {
-                  await new Promise((resolve) => setTimeout(resolve, 2000));
-                  await refetch();
-                }}
-                variant="outline"
-                size="sm"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <span className="flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Refreshing...
-                  </span>
-                ) : (
-                  <span>Refresh Orders</span>
-                )}
-              </Button>
-            </div>
-          </div>
-
-          <div className="px-4 pb-4 space-y-4 overflow-y-auto flex-1">
-            {currentOrders?.map((order: Order) => (
-              <div
-                key={order.id}
-                className="bg-card rounded-lg shadow-sm border p-4 space-y-3"
-              >
-                <div className="flex justify-between items-start">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-medium text-card-foreground break-words">
-                      Order #{order.id}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      {new Date(order.orderDate).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <div className="text-right shrink-0 ml-3">
-                    <p className="text-sm font-medium text-card-foreground">
-                      {formatCurrency(order.amount)}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Item</span>
-                    <Link
-                      href={`/items/${order.itemId}`}
-                      className="text-sm font-medium text-primary hover:underline"
-                    >
-                      {order.item.name}
-                    </Link>
-                  </div>
-
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">
-                      Order Status
-                    </span>
-                    <StatusBadge status={order.orderStatus} />
-                  </div>
-
-                  <div className="flex justify-between items-start">
-                    <span className="text-sm text-muted-foreground">
-                      Shipping Status
-                    </span>
-                    <div className="text-right">
-                      <StatusBadge status={order.shippingStatus || "pending"} />
-                      {/* {order.courierService && order.trackingNumber && (
-                        <div className="mt-2 text-xs text-muted-foreground">
-                          <p>Courier: {order.courierService}</p>
-                          <p>Tracking: {order.trackingNumber}</p>
-                        </div>
-                      )} */}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-3 border-t">
-                  {type === "selling" ? (
-                    <Select
-                      defaultValue={order.shippingStatus}
-                      onValueChange={(value) =>
-                        handleOrderShippingStatusUpdate(order.id, value)
-                      }
-                      disabled={order.orderStatus === "cancelled"}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Update shipping status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {["pending", "shipped", "delivered"].map((status) => (
-                          <SelectItem
-                            key={status}
-                            value={status}
-                            disabled={
-                              !getAvailableStatusOptions(
-                                order.shippingStatus,
-                                order.item.dealingMethodType
-                              ).includes(status)
-                            }
-                            className={
-                              !getAvailableStatusOptions(
-                                order.shippingStatus,
-                                order.item.dealingMethodType
-                              ).includes(status)
-                                ? "opacity-50 cursor-not-allowed"
-                                : ""
-                            }
-                          >
-                            {status.charAt(0).toUpperCase() + status.slice(1)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ) : order.orderStatus === "paid" ||
-                    order.orderStatus === "delivered" ? (
-                    <OrderStatusSheet order={order} disabled={false} />
-                  ) : (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full"
-                      disabled={order.orderStatus === "cancelled"}
-                    >
-                      <Link
-                        href={`/checkout/${order.itemId}`}
-                        className="w-full"
-                      >
-                        {order.orderStatus === "cancelled"
-                          ? "Order Cancelled"
-                          : "Proceed to checkout"}
-                      </Link>
-                    </Button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="sticky bottom-0 bg-background border-t p-2">
-            <div className="flex justify-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-              >
-                Previous
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                }
-                disabled={currentPage === totalPages}
-              >
-                Next
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   return (
-    <>
-      <LoadingModal isOpen={isUpdating} message="Updating order status..." />
-
-      <AlertDialog open={showErrorDialog} onOpenChange={setShowErrorDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Connection Error</AlertDialogTitle>
-            <AlertDialogDescription>
-              There was a problem fetching your orders. Please check your
-              connection and try again.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setShowErrorDialog(false)}>
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                refetch();
-                setShowErrorDialog(false);
-              }}
-            >
-              Try Again
-            </AlertDialogAction>
-            <AlertDialogAction
-              onClick={() => {
-                window.location.reload();
-              }}
-            >
-              Refresh Page
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
+    <div className="h-full flex flex-col">
       <ShippingDetailsModal
         isOpen={isShippingModalOpen}
         onClose={() => setIsShippingModalOpen(false)}
         onSubmit={handleShippingDetailsSubmit}
       />
 
-      <div className="max-w-7xl mx-auto p-4 space-y-8">
+      <div className="max-w-7xl mx-auto w-full p-4 space-y-8 flex-1 overflow-hidden">
+        {/* Information Section */}
+        <Card className="mb-8">
+          <CardHeader className="md:text-center">
+            <CardTitle>How It Works</CardTitle>
+            <CardDescription>
+              Learn about the order process based on your dealing method
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue="buyer" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="buyer">For Buyers</TabsTrigger>
+                <TabsTrigger value="seller">For Sellers</TabsTrigger>
+              </TabsList>
+              <TabsContent value="buyer" className="space-y-4">
+                <div className="rounded-lg border p-4">
+                  <Collapsible>
+                    <CollapsibleTrigger className="flex w-full items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <CreditCard className="h-5 w-5 text-purple-500" />
+                        <span className="font-semibold">Shipping Payment</span>
+                      </div>
+                      <ChevronDown className="h-4 w-4" />
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="mt-2">
+                      <ul className="space-y-3 pl-7">
+                        <li className="flex items-start gap-3">
+                          <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5 shrink-0" />
+                          <span className="text-sm text-gray-600">
+                            Complete online payment to confirm your order
+                          </span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <Truck className="h-5 w-5 text-blue-500 mt-0.5 shrink-0" />
+                          <span className="text-sm text-gray-600">
+                            Track shipping status and delivery progress
+                          </span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5 shrink-0" />
+                          <span className="text-sm text-gray-600">
+                            Confirm delivery when you receive the item
+                          </span>
+                        </li>
+                      </ul>
+                    </CollapsibleContent>
+                  </Collapsible>
+                </div>
+
+                <div className="rounded-lg border p-4">
+                  <Collapsible>
+                    <CollapsibleTrigger className="flex w-full items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Banknote className="h-5 w-5 text-yellow-500" />
+                        <span className="font-semibold">
+                          Cash on Delivery (COD)
+                        </span>
+                      </div>
+                      <ChevronDown className="h-4 w-4" />
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="mt-2">
+                      <ul className="space-y-3 pl-7">
+                        <li className="flex items-start gap-3">
+                          <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5 shrink-0" />
+                          <span className="text-sm text-gray-600">
+                            Complete payment to get seller's contact information
+                          </span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <MessageCircle className="h-5 w-5 text-blue-500 mt-0.5 shrink-0" />
+                          <span className="text-sm text-gray-600">
+                            Contact seller to arrange meetup details
+                          </span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <AlertCircle className="h-5 w-5 text-orange-500 mt-0.5 shrink-0" />
+                          <span className="text-sm text-gray-600">
+                            Meet safely and inspect item before payment
+                          </span>
+                        </li>
+                      </ul>
+                    </CollapsibleContent>
+                  </Collapsible>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="seller" className="space-y-4">
+                <div className="rounded-lg border p-4">
+                  <Collapsible>
+                    <CollapsibleTrigger className="flex w-full items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <CreditCard className="h-5 w-5 text-purple-500" />
+                        <span className="font-semibold">Shipping Orders</span>
+                      </div>
+                      <ChevronDown className="h-4 w-4" />
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="mt-2">
+                      <ul className="space-y-3 pl-7">
+                        <li className="flex items-start gap-3">
+                          <Package className="h-5 w-5 text-orange-500 mt-0.5 shrink-0" />
+                          <span className="text-sm text-gray-600">
+                            Prepare and ship the item promptly
+                          </span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <Truck className="h-5 w-5 text-blue-500 mt-0.5 shrink-0" />
+                          <span className="text-sm text-gray-600">
+                            Update shipping status with tracking details
+                          </span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5 shrink-0" />
+                          <span className="text-sm text-gray-600">
+                            Monitor order completion and payment status
+                          </span>
+                        </li>
+                      </ul>
+                    </CollapsibleContent>
+                  </Collapsible>
+                </div>
+
+                <div className="rounded-lg border p-4">
+                  <Collapsible>
+                    <CollapsibleTrigger className="flex w-full items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Banknote className="h-5 w-5 text-yellow-500" />
+                        <span className="font-semibold">
+                          Cash on Delivery (COD)
+                        </span>
+                      </div>
+                      <ChevronDown className="h-4 w-4" />
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="mt-2">
+                      <ul className="space-y-3 pl-7">
+                        <li className="flex items-start gap-3">
+                          <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5 shrink-0" />
+                          <span className="text-sm text-gray-600">
+                            Your contact info will be shared after buyer's
+                            payment
+                          </span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <MessageCircle className="h-5 w-5 text-blue-500 mt-0.5 shrink-0" />
+                          <span className="text-sm text-gray-600">
+                            Coordinate with buyer for meetup arrangement
+                          </span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <ShieldCheck className="h-5 w-5 text-green-500 mt-0.5 shrink-0" />
+                          <span className="text-sm text-gray-600">
+                            Complete the transaction safely in person
+                          </span>
+                        </li>
+                      </ul>
+                    </CollapsibleContent>
+                  </Collapsible>
+                </div>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-4">
-            <TabsTrigger
-              value="winning"
-              className="px-2 py-1.5 text-sm sm:text-base sm:px-4 sm:py-2"
-            >
-              Winning
-            </TabsTrigger>
-            <TabsTrigger
-              value="selling"
-              className="px-2 py-1.5 text-sm sm:text-base sm:px-4 sm:py-2"
-            >
-              Selling
-            </TabsTrigger>
+            <TabsTrigger value="winning">Items Won</TabsTrigger>
+            <TabsTrigger value="selling">Items Sold</TabsTrigger>
           </TabsList>
-          <div className="w-full">
-            <TabsContent value="winning" className="w-full">
-              <div className="md:h-auto h-[calc(100vh-12rem)] w-full overflow-hidden">
-                <OrdersTable orders={orders?.winningOrders} type="winning" />
-              </div>
-            </TabsContent>
-            <TabsContent value="selling" className="w-full">
-              <div className="md:h-auto h-[calc(100vh-12rem)] w-full overflow-hidden">
-                <OrdersTable
-                  orders={orders?.sellingOrders}
-                  showStatusUpdate={true}
-                  type="selling"
-                />
-              </div>
-            </TabsContent>
-          </div>
+
+          <TabsContent value="winning" className="mt-0">
+            <OrdersTable
+              orders={orders?.winningOrders}
+              type="buying"
+              isLoading={isLoading}
+              onRefresh={async () => {
+                await refetch();
+              }}
+              onOrderShippingStatusUpdate={handleOrderShippingStatusUpdate}
+            />
+          </TabsContent>
+          <TabsContent value="selling" className="mt-0">
+            <OrdersTable
+              orders={orders?.sellingOrders}
+              type="selling"
+              isLoading={isLoading}
+              onRefresh={async () => {
+                await refetch();
+              }}
+              onOrderShippingStatusUpdate={handleOrderShippingStatusUpdate}
+            />
+          </TabsContent>
         </Tabs>
       </div>
-    </>
+    </div>
   );
 }

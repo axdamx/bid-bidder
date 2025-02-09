@@ -42,52 +42,62 @@ export default function Home() {
   const searchParams = useSearchParams();
   const hasSeenOnboarding = user?.hasSeenOnboarding;
   const [hasTriggeredSuccess, setHasTriggeredSuccess] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
-    if (
-      searchParams.get("auth-error") === "true" ||
-      (searchParams.get("error") === "access_denied" &&
-        searchParams.get("error_code") === "otp_expired")
-    ) {
+    // Handle error cases
+    const error = searchParams.get("error");
+    const error_code = searchParams.get("error_code");
+    const auth_error = searchParams.get("auth-error");
+
+    if (auth_error === "true") {
+      let errorMessage = "An error occurred during login. Please try again.";
+      
+      // Handle specific error cases
+      if (error === "access_denied" && error_code === "otp_expired") {
+        errorMessage = "Email link is invalid or has expired. Please try logging in again.";
+      } else if (error === "database_error") {
+        errorMessage = "There was an error accessing your account. Please try again.";
+      } else if (error === "no_session") {
+        errorMessage = "Unable to establish a session. Please try logging in again.";
+      }
+
       setShowErrorDialog(true);
-    }
-  }, [searchParams]);
+      setErrorMessage(errorMessage);
 
-  useEffect(() => {
-    if (
-      searchParams.get("auth-success") === "true" &&
-      hasSeenOnboarding &&
-      user &&
-      !hasTriggeredSuccess
-    ) {
-      setShowSuccessDialog(true);
-      setHasTriggeredSuccess(true);
-    }
-  }, [hasSeenOnboarding, searchParams, user, hasTriggeredSuccess]);
-
-  useEffect(() => {
-    if (showErrorDialog) {
+      // Clean up error params
       const newUrl = new URL(window.location.href);
       newUrl.searchParams.delete("auth-error");
       newUrl.searchParams.delete("error");
       newUrl.searchParams.delete("error_code");
-      newUrl.searchParams.delete("error_description");
       window.history.replaceState({}, "", newUrl.toString());
     }
-  }, [showErrorDialog]);
+  }, [searchParams]);
 
   useEffect(() => {
-    if (showSuccessDialog) {
-      // Add a small delay before cleaning up the URL to ensure the dialog is shown
+    // Handle success cases
+    const auth_success = searchParams.get("auth-success");
+    const provider = searchParams.get("provider");
+    const account_exists = searchParams.get("account-exists");
+    const user_id = searchParams.get("user_id");
+
+    if (auth_success === "true" && user && !hasTriggeredSuccess) {
+      setShowSuccessDialog(true);
+      setHasTriggeredSuccess(true);
+
+      // Clean up success params after a delay
       const timer = setTimeout(() => {
         const newUrl = new URL(window.location.href);
         newUrl.searchParams.delete("auth-success");
+        newUrl.searchParams.delete("provider");
         newUrl.searchParams.delete("account-exists");
+        newUrl.searchParams.delete("user_id");
         window.history.replaceState({}, "", newUrl.toString());
       }, 500);
+
       return () => clearTimeout(timer);
     }
-  }, [showSuccessDialog]);
+  }, [searchParams, user, hasTriggeredSuccess]);
 
   return (
     <>
@@ -101,8 +111,7 @@ export default function Home() {
             <DialogHeader>
               <DialogTitle>Error</DialogTitle>
               <DialogDescription>
-                Email link is invalid or has expired. Please try logging in
-                again.
+                {errorMessage}
               </DialogDescription>
             </DialogHeader>
             <div className="flex justify-end space-x-2">
