@@ -27,6 +27,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { createClientSupabase } from "@/lib/supabase/client";
 import { useAtom } from "jotai";
 import { userAtom } from "../atom/userAtom";
+import Link from "next/link";
 
 const authSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
@@ -401,6 +402,24 @@ export default function AuthModalV2({
                 )}
                 Google
               </Button>
+              <p className="text-xs text-muted-foreground text-center mt-4">
+                By signing in, you agree to our{" "}
+                <Link
+                  href="/terms-of-service"
+                  target="_blank"
+                  className="text-primary hover:underline"
+                >
+                  Terms of Service
+                </Link>{" "}
+                and{" "}
+                <Link
+                  href="/privacy-policy"
+                  target="_blank"
+                  className="text-primary hover:underline"
+                >
+                  Privacy Policy
+                </Link>
+              </p>
             </>
           ) : (
             <div className="text-center space-y-4">

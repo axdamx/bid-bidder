@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { LoadingModal } from "../components/LoadingModal";
 import { updateUserAndAddress, updateHasSeenOnboarding } from "./actions";
+import { addPayoutMethod } from "../dashboard/payment/actions";
 
 const userDetailsSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters" }),
@@ -61,6 +62,22 @@ const userDetailsSchema = z.object({
 
 const userRoleSchema = z.object({
   role: z.enum(["seller", "bidder", "both", "none"]),
+  bankName: z
+    .string()
+    .min(2, { message: "Bank name must be at least 2 characters" })
+    .optional(),
+  accountNumber: z
+    .string()
+    .min(5, { message: "Account number must be at least 5 characters" })
+    .optional(),
+  accountHolder: z
+    .string()
+    .min(2, { message: "Account holder name must be at least 2 characters" })
+    .optional(),
+  country: z
+    .string()
+    .min(2, { message: "Country must be at least 2 characters" })
+    .optional(),
 });
 
 const userProfileSchema = z.object({
@@ -89,7 +106,7 @@ export default function OnboardingFlow({
   //   return null;
   // }
 
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(2);
   const [isLoading, setIsLoading] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [alertState, setAlertState] = useState<{
@@ -170,6 +187,10 @@ export default function OnboardingFlow({
     resolver: zodResolver(userRoleSchema),
     defaultValues: {
       role: "none",
+      bankName: "",
+      accountNumber: "",
+      accountHolder: "",
+      country: "",
     },
   });
 
@@ -210,17 +231,45 @@ export default function OnboardingFlow({
   const onSubmitRole = async (data: any) => {
     setIsLoading(true);
     try {
-      const { error } = await supabase
+      // Update the user's role
+      const { data: updatedUser, error: roleError } = await supabase
         .from("users")
-        .update({
-          role: data.role,
-        })
-        .eq("id", user.id);
+        .update({ role: data.role })
+        .eq("id", user.id)
+        .select()
+        .single();
 
-      if (error) throw error;
-      setStep(3);
+      if (roleError) throw roleError;
+
+      // Add payout method if provided
+      if (
+        data.bankName &&
+        data.accountNumber &&
+        data.accountHolder &&
+        data.country
+      ) {
+        const payoutMethodResult = await addPayoutMethod(user.id, {
+          bankName: data.bankName,
+          accountNumber: data.accountNumber,
+          accountHolder: data.accountHolder,
+          country: data.country,
+        });
+
+        if (payoutMethodResult.error) {
+          throw new Error(payoutMethodResult.error);
+        }
+      }
+
+      setUser({ ...user, ...updatedUser });
+      setStep(step + 1);
     } catch (error) {
-      console.error("Error updating user role:", error);
+      console.error("Error updating role:", error);
+      setAlertState({
+        isOpen: true,
+        title: "Error",
+        description: "Failed to update role. Please try again.",
+        type: "error",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -538,62 +587,145 @@ export default function OnboardingFlow({
               )}
 
               {step === 2 && (
-                <div className="space-y-8">
-                  <h3 className="text-lg font-medium">
-                    Tell us about your preferable role in Renown
-                  </h3>
-                  <Form {...userRoleForm}>
-                    <form
-                      onSubmit={userRoleForm.handleSubmit(onSubmitRole)}
-                      className="space-y-4"
-                    >
+                <Form {...userRoleForm}>
+                  <form
+                    onSubmit={userRoleForm.handleSubmit(onSubmitRole)}
+                    className="space-y-8"
+                  >
+                    <div className="space-y-4">
+                      <h2 className="text-2xl font-bold text-center">
+                        Choose Your Role
+                      </h2>
                       <FormField
                         control={userRoleForm.control}
                         name="role"
                         render={({ field }) => (
                           <FormItem>
+                            <FormLabel>
+                              What would you like to do on our platform?
+                            </FormLabel>
                             <Select
                               onValueChange={field.onChange}
                               defaultValue={field.value}
                             >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select your role" />
-                              </SelectTrigger>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select a role" />
+                                </SelectTrigger>
+                              </FormControl>
                               <SelectContent>
-                                <SelectItem value="seller">Seller</SelectItem>
-                                <SelectItem value="bidder">Bidder</SelectItem>
-                                <SelectItem value="both">Both</SelectItem>
-                                <SelectItem value="none">
-                                  Just Browsing
+                                <SelectItem value="seller">
+                                  I want to sell
+                                </SelectItem>
+                                <SelectItem value="bidder">
+                                  I want to bid
+                                </SelectItem>
+                                <SelectItem value="both">
+                                  I want to do both
                                 </SelectItem>
                               </SelectContent>
                             </Select>
+                            <FormMessage />
                           </FormItem>
                         )}
                       />
-                      <div className="flex gap-4">
-                        <Button variant="outline" onClick={() => setStep(1)}>
-                          Back
-                        </Button>
-                        <Button
-                          type="submit"
-                          disabled={
-                            isLoading ||
-                            ((!userRoleForm.formState.isValid ||
-                              Object.keys(userRoleForm.formState.dirtyFields)
-                                .length === 0) &&
-                              userRoleForm.getValues("role") !== "none")
-                          }
-                        >
-                          {isLoading ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          ) : null}
-                          Continue
-                        </Button>
+
+                      <div className="space-y-4 mt-8">
+                        <h2 className="text-2xl font-bold text-center">
+                          Enter your default payout method
+                        </h2>
+                        <p className="text-center text-sm text-muted-foreground">
+                          To ease the disbursement method later. You may add
+                          more or update later in your dashboard page.
+                        </p>
+
+                        <FormField
+                          control={userRoleForm.control}
+                          name="bankName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Bank Name*</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="Enter your bank name"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={userRoleForm.control}
+                          name="accountNumber"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Account Number*</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="Enter your account number"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={userRoleForm.control}
+                          name="accountHolder"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Account Holder Name*</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="Enter account holder name"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={userRoleForm.control}
+                          name="country"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Country*</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="Enter your country"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
                       </div>
-                    </form>
-                  </Form>
-                </div>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setStep(step - 1)}
+                      >
+                        Previous
+                      </Button>
+                      <Button type="submit" disabled={isLoading}>
+                        {isLoading && (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        )}
+                        Next
+                      </Button>
+                    </div>
+                  </form>
+                </Form>
               )}
 
               {step === 3 && (

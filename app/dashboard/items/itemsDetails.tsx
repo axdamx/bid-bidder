@@ -542,85 +542,96 @@ export default function ItemsDetails() {
         </div>
 
         <div className="space-y-4">
-          {paginatedItems.map((item) => (
-            <div key={item.id} className="p-4 border-b">
-              <div className="flex gap-4">
-                {/* Left side - Image */}
-                <div className="relative h-20 w-20 shrink-0 rounded-md overflow-hidden">
-                  <CldImage
-                    src={item.imageId}
-                    alt={item.name}
-                    className="object-cover"
-                    width={80}
-                    height={80}
-                  />
-                </div>
-
-                {/* Right side - Content */}
-                <div className="flex-1 min-w-0 space-y-2">
-                  {/* Top row - Name and Status */}
-                  <div className="flex items-center justify-between gap-2">
-                    <h3 className="font-small">
-                      <Link
-                        href={`/items/${item.id}`}
-                        onClick={(e) => handleLinkClick(e, `/items/${item.id}`)}
-                        className="hover:underline"
-                      >
-                        {item.name}
-                      </Link>
-                    </h3>
-                    {getStatusBadge(item)}
+          {isLoading ? (
+            <div className="text-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin mx-auto" />
+              <p className="text-sm text-muted-foreground mt-2">Loading...</p>
+            </div>
+          ) : paginatedItems.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-sm text-muted-foreground">No Items Found</p>
+            </div>
+          ) : (
+            paginatedItems.map((item) => (
+              <div key={item.id} className="p-4 border-b">
+                <div className="flex gap-4">
+                  {/* Left side - Image */}
+                  <div className="relative h-20 w-20 shrink-0 rounded-md overflow-hidden">
+                    <CldImage
+                      src={item.imageId}
+                      alt={item.name}
+                      className="object-cover"
+                      width={80}
+                      height={80}
+                    />
                   </div>
 
-                  {/* Price and Created At */}
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-muted-foreground">
-                      RM {item.startingPrice.toFixed(2)}
-                    </span>
-                    {/* <span className="text-muted-foreground">
-                      {formatTimestamp(item.createdAt)}
-                    </span> */}
-                  </div>
+                  {/* Right side - Content */}
+                  <div className="flex-1 min-w-0 space-y-2">
+                    {/* Top row - Name and Status */}
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="font-small">
+                        <Link
+                          href={`/items/${item.id}`}
+                          onClick={(e) => handleLinkClick(e, `/items/${item.id}`)}
+                          className="hover:underline"
+                        >
+                          {item.name}
+                        </Link>
+                      </h3>
+                      {getStatusBadge(item)}
+                    </div>
 
-                  {/* Winner and Action Button */}
-                  <div className="flex justify-between items-center">
-                    <div className="text-sm">
-                      {item.winner ? (
-                        <div className="flex items-center gap-1">
-                          <span className="text-muted-foreground">Winner:</span>
-                          <Link
-                            href={`/profile/${item.winner.id}`}
-                            onClick={(e) =>
-                              handleLinkClick(e, `/profile/${item.winner.id}`)
-                            }
-                            className="text-primary hover:underline"
-                          >
-                            {item.winner.name}
-                          </Link>
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground">
-                          No winner yet
-                        </span>
+                    {/* Price and Created At */}
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-muted-foreground">
+                        RM {item.startingPrice.toFixed(2)}
+                      </span>
+                      {/* <span className="text-muted-foreground">
+                        {formatTimestamp(item.createdAt)}
+                      </span> */}
+                    </div>
+
+                    {/* Winner and Action Button */}
+                    <div className="flex justify-between items-center">
+                      <div className="text-sm">
+                        {item.winner ? (
+                          <div className="flex items-center gap-1">
+                            <span className="text-muted-foreground">Winner:</span>
+                            <Link
+                              href={`/profile/${item.winner.id}`}
+                              onClick={(e) =>
+                                handleLinkClick(e, `/profile/${item.winner.id}`)
+                              }
+                              className="text-primary hover:underline"
+                            >
+                              {item.winner.name}
+                            </Link>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">
+                            No winner yet
+                          </span>
+                        )}
+                      </div>
+                      {canReopen(item) && (
+                        <Button
+                          onClick={() => {
+                            setSelectedItem(item);
+                            setIsUpdateDialogOpen(true);
+                          }}
+                          size="sm"
+                          variant="outline"
+                        >
+                          Reopen
+                        </Button>
                       )}
                     </div>
-                    {canReopen(item) && (
-                      <Button
-                        onClick={() => {
-                          setSelectedItem(item);
-                          setIsUpdateDialogOpen(true);
-                        }}
-                        size="sm"
-                        variant="outline"
-                      >
-                        Reopen
-                      </Button>
-                    )}
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
           {totalPages > 1 && (
             <div className="flex justify-center py-4">
               <div className="flex items-center gap-2">

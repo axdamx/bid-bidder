@@ -23,7 +23,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { CreditCard, Home } from "lucide-react";
+import { CreditCard, Home, PlusCircle } from "lucide-react";
 import toast from "react-hot-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -188,7 +188,7 @@ export default function AddressDetails() {
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto p-4">
-      <div className="mt-6 space-y-6">
+      <div className="space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="space-y-1">
             <h4 className="text-sm font-medium">
@@ -199,12 +199,25 @@ export default function AddressDetails() {
             </p>
           </div>
           <Button
-            variant="outline"
+            // variant="outline"
             onClick={() => openAddressDialog()}
             disabled={!canAddAddress}
           >
-            {canAddAddress ? "Add New Address" : "Maximum addresses reached"}
+            <PlusCircle className="mr-2 h-4 w-4" />
+            {canAddAddress ? "Add Address" : "Maximum addresses reached"}
           </Button>
+          {/* <Button
+          onClick={() => setIsAddDialogOpen(true)}
+          disabled={
+            isLoading ||
+            payoutMethods.length >= MAX_PAYOUT_METHODS ||
+            addPayoutMethodMutation.isPending
+          }
+        >
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Add Payout Method
+          {payoutMethods.length >= MAX_PAYOUT_METHODS && " (Max Reached)"}
+        </Button> */}
         </div>
 
         {isLoading ? (
@@ -231,19 +244,20 @@ export default function AddressDetails() {
             className="space-y-4"
           >
             {addresses.map((address) => (
-              <Card key={address.id} className="p-4">
-                <div className="flex items-start gap-4">
-                  <RadioGroupItem
-                    value={address.id}
-                    id={`address-${address.id}`}
-                    className="mt-1"
-                  />
-                  <div className="flex-1 min-w-0">
+              <Card key={address.id} className="p-3 sm:p-4 relative">
+                <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-4">
+                  <div className="absolute left-4 top-4">
+                    <RadioGroupItem
+                      value={address.id}
+                      id={`address-${address.id}`}
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0 pl-10 sm:pl-8">
                     <Label
                       htmlFor={`address-${address.id}`}
                       className="flex flex-col gap-1"
                     >
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-medium truncate">
                           {address.addressLine1}
                         </span>
@@ -268,10 +282,10 @@ export default function AddressDetails() {
                     </Label>
                   </div>
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
                     onClick={() => openAddressDialog(address)}
-                    className="shrink-0"
+                    className="shrink-0 w-full sm:w-auto justify-center sm:justify-start"
                   >
                     Edit
                   </Button>

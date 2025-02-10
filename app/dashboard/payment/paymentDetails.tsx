@@ -3,7 +3,13 @@
 import { useEffect, useState } from "react";
 import { useAtom } from "jotai";
 import { userAtom } from "@/app/atom/userAtom";
-import { getUserPayoutMethods, addPayoutMethod, setDefaultPayoutMethod, deletePayoutMethod, PayoutMethodFormData } from "./actions";
+import {
+  getUserPayoutMethods,
+  addPayoutMethod,
+  setDefaultPayoutMethod,
+  deletePayoutMethod,
+  PayoutMethodFormData,
+} from "./actions";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -46,8 +52,12 @@ interface PayoutMethod {
 
 const payoutMethodSchema = z.object({
   bankName: z.string().min(2, "Bank name must be at least 2 characters"),
-  accountNumber: z.string().min(5, "Account number must be at least 5 characters"),
-  accountHolder: z.string().min(2, "Account holder name must be at least 2 characters"),
+  accountNumber: z
+    .string()
+    .min(5, "Account number must be at least 5 characters"),
+  accountHolder: z
+    .string()
+    .min(2, "Account holder name must be at least 2 characters"),
   country: z.string().min(2, "Country must be at least 2 characters"),
 });
 
@@ -57,8 +67,10 @@ export default function PaymentsAndPayouts() {
   const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false);
   const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [deletePayoutMethodId, setDeletePayoutMethodId] = useState<string | null>(null);
-  
+  const [deletePayoutMethodId, setDeletePayoutMethodId] = useState<
+    string | null
+  >(null);
+
   const queryClient = useQueryClient();
   const MAX_PAYOUT_METHODS = 3;
 
@@ -74,7 +86,7 @@ export default function PaymentsAndPayouts() {
 
   // Query for fetching payout methods
   const { data: payoutMethods = [], isLoading } = useQuery({
-    queryKey: ['payoutMethods', user?.id],
+    queryKey: ["payoutMethods", user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
       const result = await getUserPayoutMethods(user.id);
@@ -98,7 +110,7 @@ export default function PaymentsAndPayouts() {
       form.reset();
       setIsAddDialogOpen(false);
       setIsSuccessDialogOpen(true);
-      queryClient.invalidateQueries({ queryKey: ['payoutMethods'] });
+      queryClient.invalidateQueries({ queryKey: ["payoutMethods"] });
     },
     onError: (error) => {
       showError("Failed to add payout method");
@@ -107,7 +119,13 @@ export default function PaymentsAndPayouts() {
 
   // Mutation for setting default payout method
   const setDefaultPayoutMethodMutation = useMutation({
-    mutationFn: async ({ payoutMethodId, userId }: { payoutMethodId: string; userId: string }) => {
+    mutationFn: async ({
+      payoutMethodId,
+      userId,
+    }: {
+      payoutMethodId: string;
+      userId: string;
+    }) => {
       return setDefaultPayoutMethod(payoutMethodId, userId);
     },
     onSuccess: (result) => {
@@ -115,7 +133,7 @@ export default function PaymentsAndPayouts() {
         showError(result.error);
         return;
       }
-      queryClient.invalidateQueries({ queryKey: ['payoutMethods'] });
+      queryClient.invalidateQueries({ queryKey: ["payoutMethods"] });
     },
     onError: (error) => {
       showError("Failed to update default payout method");
@@ -134,7 +152,7 @@ export default function PaymentsAndPayouts() {
         return;
       }
       setDeletePayoutMethodId(null);
-      queryClient.invalidateQueries({ queryKey: ['payoutMethods'] });
+      queryClient.invalidateQueries({ queryKey: ["payoutMethods"] });
     },
     onError: (error) => {
       showError("Failed to delete payout method");
@@ -169,14 +187,26 @@ export default function PaymentsAndPayouts() {
     <div className="space-y-6 max-w-4xl mx-auto p-4">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-semibold">Payout Methods</h2>
-          <p className="text-sm text-muted-foreground">
-            Add your payout methods for receiving payments ({payoutMethods.length}/3)
-          </p>
+          {/* <h2 className="text-2xl font-semibold">Payout Methods</h2> */}
+          {/* <p className="text-sm text-muted-foreground">
+            Payout methods for receiving payments ({payoutMethods.length}/3)
+          </p> */}
+          <div className="space-y-1">
+            <h4 className="text-sm font-medium">
+              Your payout methods is listed here
+            </h4>
+            <p className="text-xs text-muted-foreground">
+              {`${payoutMethods.length}/${MAX_PAYOUT_METHODS} payout methods added`}
+            </p>
+          </div>
         </div>
         <Button
           onClick={() => setIsAddDialogOpen(true)}
-          disabled={isLoading || payoutMethods.length >= MAX_PAYOUT_METHODS || addPayoutMethodMutation.isPending}
+          disabled={
+            isLoading ||
+            payoutMethods.length >= MAX_PAYOUT_METHODS ||
+            addPayoutMethodMutation.isPending
+          }
         >
           <PlusCircle className="mr-2 h-4 w-4" />
           Add Payout Method
@@ -186,7 +216,7 @@ export default function PaymentsAndPayouts() {
 
       {payoutMethods.length > 0 ? (
         <RadioGroup
-          value={payoutMethods.find(m => m.isDefault)?.id}
+          value={payoutMethods.find((m) => m.isDefault)?.id}
           onValueChange={handleDefaultChange}
           className="grid gap-4"
         >
@@ -214,7 +244,8 @@ export default function PaymentsAndPayouts() {
                       )}
                     </div>
                     <div className="text-sm text-muted-foreground">
-                      {method.accountHolder} • •••• {method.accountNumber.slice(-4)}
+                      {method.accountHolder} • ••••{" "}
+                      {method.accountNumber.slice(-4)}
                     </div>
                   </div>
                 </div>
@@ -254,7 +285,10 @@ export default function PaymentsAndPayouts() {
               Enter your bank account details for receiving payouts
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={form.handleSubmit(handlePayoutMethodSubmit)} className="space-y-4">
+          <form
+            onSubmit={form.handleSubmit(handlePayoutMethodSubmit)}
+            className="space-y-4"
+          >
             <div className="space-y-2">
               <Label htmlFor="bankName">Bank Name</Label>
               <Input
@@ -319,8 +353,8 @@ export default function PaymentsAndPayouts() {
               >
                 Cancel
               </Button>
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 disabled={addPayoutMethodMutation.isPending}
               >
                 Add Payout Method
@@ -340,9 +374,7 @@ export default function PaymentsAndPayouts() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button onClick={() => setIsSuccessDialogOpen(false)}>
-              Close
-            </Button>
+            <Button onClick={() => setIsSuccessDialogOpen(false)}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -352,25 +384,25 @@ export default function PaymentsAndPayouts() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Error</DialogTitle>
-            <DialogDescription>
-              {errorMessage}
-            </DialogDescription>
+            <DialogDescription>{errorMessage}</DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button onClick={() => setIsErrorDialogOpen(false)}>
-              Close
-            </Button>
+            <Button onClick={() => setIsErrorDialogOpen(false)}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!deletePayoutMethodId} onOpenChange={(open) => !open && setDeletePayoutMethodId(null)}>
+      <AlertDialog
+        open={!!deletePayoutMethodId}
+        onOpenChange={(open) => !open && setDeletePayoutMethodId(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Payout Method</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this payout method? This action cannot be undone.
+              Are you sure you want to delete this payout method? This action
+              cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

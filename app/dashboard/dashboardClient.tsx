@@ -134,7 +134,7 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
       description: "Manage your shipping and billing addresses",
     },
     {
-      name: "Payment Method",
+      name: "Payout Method",
       icon: CreditCard,
       id: "payment",
       description: "Handle your payment methods and transactions",
@@ -151,12 +151,12 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
       id: "items",
       description: "Manage your items",
     },
-    {
-      name: "Help",
-      icon: HelpCircle,
-      id: "help",
-      description: "Get support and find answers to common questions",
-    },
+    // {
+    //   name: "Help",
+    //   icon: HelpCircle,
+    //   id: "help",
+    //   description: "Get support and find answers to common questions",
+    // },
   ];
 
   const renderContent = () => {
@@ -224,9 +224,9 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
             <div className="p-2 sm:p-6">
               <Card>
                 <CardHeader className="p-4">
-                  <CardTitle className="text-lg">Payment Details</CardTitle>
+                  <CardTitle className="text-lg">Payout Methods</CardTitle>
                   <CardDescription className="text-sm">
-                    Manage your payment methods
+                    Manage your payout methods
                   </CardDescription>
                 </CardHeader>
                 <PaymentsAndPayouts />
@@ -250,22 +250,22 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
             </div>
           </MotionGrid>
         );
-      case "help":
-        return (
-          <MotionGrid>
-            <div className="p-2 sm:p-6">
-              <Card>
-                <CardHeader className="p-4">
-                  <CardTitle className="text-lg">Help</CardTitle>
-                  <CardDescription className="text-sm">
-                    Get support and find answers to common questions
-                  </CardDescription>
-                </CardHeader>
-                <HelpDetails />
-              </Card>
-            </div>
-          </MotionGrid>
-        );
+      // case "help":
+      //   return (
+      //     <MotionGrid>
+      //       <div className="p-2 sm:p-6">
+      //         <Card>
+      //           <CardHeader className="p-4">
+      //             <CardTitle className="text-lg">Help</CardTitle>
+      //             <CardDescription className="text-sm">
+      //               Get support and find answers to common questions
+      //             </CardDescription>
+      //           </CardHeader>
+      //           <HelpDetails />
+      //         </Card>
+      //       </div>
+      //     </MotionGrid>
+      //   );
       case "items":
         return (
           <MotionGrid>

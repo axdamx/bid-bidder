@@ -21,13 +21,13 @@ export default function HelpDetails() {
     <div className="max-w-4xl mx-auto p-4 space-y-8 min-h-[calc(100vh-4rem)] overflow-y-auto">
       <Card>
         <CardHeader>
-          <CardTitle>Help Center</CardTitle>
-          <CardDescription>
+          {/* <CardTitle>Help Center</CardTitle> */}
+          {/* <CardDescription>
             Find answers to common questions and get support
-          </CardDescription>
+          </CardDescription> */}
         </CardHeader>
         <CardContent>
-          <div className="mb-6">
+          {/* <div className="mb-6">
             <Label htmlFor="search" className="sr-only">
               Search for help
             </Label>
@@ -39,7 +39,7 @@ export default function HelpDetails() {
                 className="pl-8"
               />
             </div>
-          </div>
+          </div> */}
 
           <Accordion type="single" collapsible className="w-full">
             <AccordionItem value="track-order">
@@ -48,17 +48,19 @@ export default function HelpDetails() {
                 <p>To track your order:</p>
                 <ol className="list-decimal list-inside space-y-2 mt-2">
                   <li>Log in to your account</li>
-                  <li>Go to the "Order History" section</li>
+                  <li>
+                    Go to the "Dashboard", and choose the "Orders" section
+                  </li>
                   <li>Find your order and click on "View Details"</li>
                   <li>
                     You'll see the current status and tracking information if
                     available
                   </li>
                 </ol>
-                <p className="mt-2">
+                {/* <p className="mt-2">
                   Once your order is shipped, you'll receive an email with a
                   tracking number and link.
-                </p>
+                </p> */}
               </AccordionContent>
             </AccordionItem>
 

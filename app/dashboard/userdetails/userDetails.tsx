@@ -466,7 +466,7 @@ const UserDetailsPage = ({ initialUser }: { initialUser: User }) => {
 
   return (
     <div className="max-w-2xl mx-auto p-6">
-      <div className="bg-white rounded-lg shadow-sm p-8">
+      <div className="bg-white rounded-lg border shadow-sm p-8">
         {/* Profile Picture Section */}
         <div className="flex flex-col items-center mb-8">
           <div className="relative mb-4">
@@ -535,7 +535,7 @@ const UserDetailsPage = ({ initialUser }: { initialUser: User }) => {
             {({ open }) => (
               <Button
                 type="button"
-                variant="outline"
+                // variant="outline"
                 onClick={() => open()}
                 disabled={isLoading}
                 className="flex items-center gap-2"
@@ -615,9 +615,9 @@ const UserDetailsPage = ({ initialUser }: { initialUser: User }) => {
             <div className="text-gray-700 p-3 bg-gray-50 rounded-lg">
               {userData.birthday || "Not set"}
             </div>
-            <p className="text-sm text-gray-500 mt-1">
+            {/* <span className="text-sm text-gray-500 mt-1">
               Your date of birth is used to calculate your age.
-            </p>
+            </span> */}
           </div>
         </div>
 

@@ -52,14 +52,17 @@ export default function Home() {
 
     if (auth_error === "true") {
       let errorMessage = "An error occurred during login. Please try again.";
-      
+
       // Handle specific error cases
       if (error === "access_denied" && error_code === "otp_expired") {
-        errorMessage = "Email link is invalid or has expired. Please try logging in again.";
+        errorMessage =
+          "Email link is invalid or has expired. Please try logging in again.";
       } else if (error === "database_error") {
-        errorMessage = "There was an error accessing your account. Please try again.";
+        errorMessage =
+          "There was an error accessing your account. Please try again.";
       } else if (error === "no_session") {
-        errorMessage = "Unable to establish a session. Please try logging in again.";
+        errorMessage =
+          "Unable to establish a session. Please try logging in again.";
       }
 
       setShowErrorDialog(true);
@@ -110,9 +113,7 @@ export default function Home() {
           >
             <DialogHeader>
               <DialogTitle>Error</DialogTitle>
-              <DialogDescription>
-                {errorMessage}
-              </DialogDescription>
+              <DialogDescription>{errorMessage}</DialogDescription>
             </DialogHeader>
             <div className="flex justify-end space-x-2">
               <Button
@@ -205,7 +206,7 @@ export default function Home() {
             <h2 className="text-3xl font-bold tracking-tighter md:text-4xl">
               Join our Community.
             </h2>
-            <p className="text-muted-foreground text-lg">
+            <p className="text-muted-foreground text-md">
               Meet the Renown Community, artists and collectors for platform
               updates, announcements, and more...
             </p>

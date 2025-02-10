@@ -9,7 +9,7 @@ export const config = {
   matcher: [
     // Match all paths except:
     // - Static files (_next/static, images, favicon)
-    // - Public routes (items, auth)
-    "/((?!_next/static|_next/image|favicon.ico|items|auth|auctions|profile|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    // - Public routes (items, auth, etc)
+    "/((?!_next/static|_next/image|favicon.ico|items|auth|auctions|profile|terms-of-service|privacy-policy|how-auction-work|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

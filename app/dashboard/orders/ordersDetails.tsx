@@ -312,7 +312,7 @@ const OrdersTable = ({
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end mb-4">
+      <div className="hidden md:flex justify-end mb-4">
         <RefreshButton />
       </div>
 
