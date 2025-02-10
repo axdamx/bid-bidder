@@ -99,7 +99,7 @@ export async function confirmDelivery(orderId: number, userId: string) {
   try {
     const { data: order, error: fetchError } = await supabase
       .from("orders")
-      .select("buyerId")
+      .select("*, items(*)")
       .eq("id", orderId)
       .single();
 
@@ -120,6 +120,28 @@ export async function confirmDelivery(orderId: number, userId: string) {
       .single();
 
     if (error) throw error;
+
+    // Create disbursement record
+    const { error: disbursementError } = await supabase
+      .from("disbursements")
+      .insert({
+        orderId: orderId,
+        buyerId: order.buyerId,
+        sellerId: order.sellerId,
+        paidAmount: order.totalAmount,
+        disbursementAmount: order.courierService ? order.amount : 0,
+        status: order.courierService ? "pending" : "completed",
+        createdAt: new Date().toISOString(),
+        buyersPremiumAmount: order.buyersPremium,
+        shippingCostAmount: order.shippingCost,
+        shippingRegion: order.shippingRegion,
+      });
+
+    if (disbursementError) {
+      console.error("Error creating disbursement:", disbursementError);
+      // We don't throw here since the delivery confirmation was successful
+    }
+
     return data;
   } catch (error) {
     console.error("Error confirming delivery:", error);

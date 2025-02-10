@@ -34,6 +34,10 @@ export async function getCheckoutItems(userId: string, itemId: string) {
 interface CreatePaymentParams {
   itemId: string;
   amount: number;
+  buyersPremium: number;
+  shippingCost: number;
+  shippingRegion: "EAST" | "WEST";
+  itemName: string;
   customerDetails: {
     email: string;
     phone: string;
@@ -124,7 +128,7 @@ export async function createToyyibPayment(params: CreatePaymentParams) {
     const billDetails = {
       userSecretKey: process.env.TOYYIB_SECRET_KEY,
       categoryCode: process.env.TOYYIB_CATEGORY_ID,
-      billName: `Payment for Item #${params.itemId})`,
+      billName: `Payment for Item #${params.itemId}`,
       billDescription: `Renown Payment`,
       billPriceSetting: 1,
       billPayorInfo: 0,
@@ -176,10 +180,10 @@ export async function createToyyibPayment(params: CreatePaymentParams) {
       .from("transactions")
       .insert({
         itemId: parseInt(params.itemId),
-        orderId: order.id.toString(), // Convert order ID to string
+        orderId: order.id, // Store as UUID directly, no need for toString()
         buyerId: order.buyerId,
         amount: params.amount,
-        status: "completed",
+        status: "pending",
         customerEmail: params.customerDetails.email,
         customerPhone: params.customerDetails.phone,
         customerName: `${params.customerDetails.firstName} ${params.customerDetails.lastName}`,
@@ -191,6 +195,9 @@ export async function createToyyibPayment(params: CreatePaymentParams) {
         customerAddressLine2: params.customerDetails.addressLine2,
         paymentProvider: "toyyibpay",
         billCode: bill[0].BillCode,
+        buyersPremium: params.buyersPremium,
+        shippingCost: params.shippingCost,
+        shippingRegion: params.shippingRegion,
         paymentUrl: `${process.env.TOYYIB_URL}/${bill[0].BillCode}`,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -259,11 +266,11 @@ export async function handleToyyibCallback(data: any) {
   console.log("[HANDLE CALLBACK] Found transaction:", transaction);
 
   // Determine payment status first
-  const paymentStatus = status === "1" ? "COMPLETED" : "FAILED";
+  const paymentStatus = status === "1" ? "success" : "failed";
   console.log("[HANDLE CALLBACK] Payment status determined as:", paymentStatus);
 
   // If payment failed, we can return early
-  if (paymentStatus === "FAILED") {
+  if (paymentStatus === "failed") {
     return { success: false, error: "Payment failed", status: paymentStatus };
   }
 
@@ -290,27 +297,40 @@ async function updatePaymentRecords(
   paymentStatus: string
 ) {
   try {
+    console.log("transaction object:", transaction);
+    console.log("transaction Id:", transaction_id);
+
     // Update transaction status
-    const { error: updateTransactionError } = await supabase
-      .from("transactions")
-      .update({
-        status: paymentStatus,
-        transactionId: transaction_id,
-        updatedAt: new Date().toISOString(),
-      })
-      .eq("id", transaction.id);
+    console.log("Attempting to update transaction with:", {
+      id: transaction.id,
+      transaction_id,
+      status: paymentStatus,
+    });
+
+    const { data: updatedTransaction, error: updateTransactionError } =
+      await supabase
+        .from("transactions")
+        .update({
+          status: paymentStatus,
+          transactionId: transaction_id,
+          updatedAt: new Date().toISOString(),
+          orderId: transaction.orderId,
+        })
+        .eq("id", transaction.id)
+        .select()
+        .single();
 
     if (updateTransactionError) {
+      console.error("Error updating transaction:", updateTransactionError);
       throw updateTransactionError;
     }
 
-    console.log("Updated transaction:", transaction);
+    console.log("Updated transaction result:", updatedTransaction);
 
     // Update order status
     const paymentStatusUpdate =
-      paymentStatus === "COMPLETED" ? "paid" : "pending";
-    const orderStatusUpdate =
-      paymentStatus === "COMPLETED" ? "paid" : "pending";
+      paymentStatus === "success" ? "paid" : "pending";
+    const orderStatusUpdate = paymentStatus === "success" ? "paid" : "pending";
     const { error: updateOrderError } = await supabase
       .from("orders")
       .update({
@@ -322,7 +342,10 @@ async function updatePaymentRecords(
         customerEmail: transaction.customerEmail,
         customerPhone: transaction.customerPhone,
         shippingAddress: `${transaction.customerAddressLine1}, ${transaction.customerAddressLine2}, ${transaction.customerCity}, ${transaction.customerState}, ${transaction.customerZipCode}, ${transaction.customerCountry}`,
-        paidAt: paymentStatus === "COMPLETED" ? new Date().toISOString() : null,
+        paidAt: paymentStatus === "success" ? new Date().toISOString() : null,
+        buyersPremium: transaction.buyersPremium,
+        shippingCost: transaction.shippingCost,
+        shippingRegion: transaction.shippingRegion,
       })
       .eq("itemId", transaction.itemId);
 

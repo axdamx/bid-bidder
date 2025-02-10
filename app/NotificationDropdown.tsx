@@ -18,6 +18,7 @@ import { useNotifications } from "./context/NotificationContext";
 import { useState } from "react";
 import { createClientSupabase } from "@/lib/supabase/client";
 import { AnimatePresence, motion } from "framer-motion";
+import { useQueryClient } from "@tanstack/react-query";
 
 export function NotificationDropdown() {
   const [notifications, setNotifications] = useAtom(notificationsAtom);
@@ -26,6 +27,7 @@ export function NotificationDropdown() {
   const { isConnected } = useNotifications();
   const [open, setOpen] = useState(false);
   const supabase = createClientSupabase(); // IF QUERY AT CLIENT, USE THIS
+  const queryClient = useQueryClient();
 
   const handleNotificationClick = async (notification: any) => {
     try {
@@ -44,6 +46,19 @@ export function NotificationDropdown() {
 
       if (error) throw error;
 
+      // Invalidate orders query before navigation
+      if (
+        [
+          "order_created",
+          "payment_success",
+          "order_shipped",
+          "delivery_confirmed",
+          "payment_disbursed",
+        ].includes(notification.type)
+      ) {
+        await queryClient.invalidateQueries({ queryKey: ["orders"] });
+      }
+
       // Handle different notification types
       switch (notification.type) {
         case "bid":
@@ -55,6 +70,10 @@ export function NotificationDropdown() {
           router.push(`/profile/${notification.followerId}`);
           break;
         case "order_created":
+        case "payment_success":
+        case "order_shipped":
+        case "delivery_confirmed":
+        case "payment_disbursed":
           router.push(`/dashboard?tab=orders`);
           break;
         default:

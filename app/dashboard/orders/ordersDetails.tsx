@@ -627,13 +627,11 @@ export default function OrderDetails() {
     queryKey: ["orders", user?.id],
     queryFn: () => getOrders(user?.id!),
     enabled: !!user?.id,
-    // initialData: { winningOrders: [], sellingOrders: [] },
-    refetchOnWindowFocus: true, // Enable refetch on window focus
-    refetchOnMount: true, // Enable refetch on component mount
-    // refetchInterval: 30000, // Refresh every 30 seconds
-    // staleTime: 10000, // Consider data stale after 10 seconds
-    staleTime: 0, // Don't cache the data
-    gcTime: 0, // Remove data from cache immediately
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    staleTime: 0,
+    gcTime: 0,
+    // refetchInterval: 5000, // Poll every 5 seconds for updates
   });
 
   // Mutation for updating order shipping status

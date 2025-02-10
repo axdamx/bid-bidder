@@ -94,6 +94,21 @@ export default function CheckoutPage({
     return item.currentBid + (shippingCost || 0) + item.currentBid * 0.06;
   };
 
+  const calculateBuyersPremium = (finalPrice: number) => {
+    return finalPrice * 0.06;
+  };
+
+  const calculateShippingCost = (
+    shippingRegion: "WEST" | "EAST",
+    item: any
+  ) => {
+    if (shippingRegion === "WEST") {
+      return item.westMalaysiaShippingPrice;
+    } else {
+      return item.eastMalaysiaShippingPrice;
+    }
+  };
+
   const handlePayment = async (formData: CheckoutFormData) => {
     try {
       setError(null);
@@ -119,7 +134,10 @@ export default function CheckoutPage({
       const paymentResult = await createToyyibPayment({
         itemId,
         amount: totalAmount,
-        // itemName:
+        buyersPremium: calculateBuyersPremium(item.currentBid),
+        shippingCost: calculateShippingCost(selectedShippingRegion, item),
+        shippingRegion: selectedShippingRegion,
+        itemName: item.name,
         customerDetails: {
           email: formData.email,
           phone: formData.phone,
