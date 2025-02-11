@@ -452,7 +452,7 @@ export default function CreatePage() {
                     {imageIds.map((id, index) => (
                       <div
                         key={id}
-                        className={`group relative aspect-[4/3] w-full bg-muted/10 rounded-xl p-2 ${
+                        className={`group relative  w-full bg-muted/10 rounded-xl p-2 ${
                           imageIds.length === 1
                             ? "cursor-default"
                             : "cursor-pointer"
@@ -466,7 +466,7 @@ export default function CreatePage() {
                           }
                           ${
                             imageIds.length > 2 && index === 0
-                              ? "md:col-span-2 lg:col-span-3"
+                              ? "md:col-span-1 lg:col-span-1"
                               : ""
                           }
                         `}

@@ -12,11 +12,13 @@ interface TimeLeft {
 interface ActiveCountdownTimerProps {
   endDate: string;
   onExpire?: () => void;
+  status?: string;
 }
 
 export function ActiveCountdownTimer({
   endDate,
   onExpire = () => {},
+  status,
 }: ActiveCountdownTimerProps) {
   const [timeLeft, setTimeLeft] = useState<TimeLeft>({
     hours: 0,
@@ -61,7 +63,9 @@ export function ActiveCountdownTimer({
         exit={{ opacity: 0 }}
         className="flex items-center space-x-1 text-sm font-medium"
       >
-        {isExpired ? (
+        {status !== "LIVE" ? (
+          <span className="text-red-500">Auction Ended</span>
+        ) : isExpired ? (
           <span className="text-red-500">Auction Ended</span>
         ) : (
           <>

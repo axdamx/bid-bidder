@@ -4,6 +4,12 @@ import {
   getEndedAuctions,
 } from "@/app/action";
 import ItemsListingClient from "./components/ItemListingClient";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Auctions | Bid Bidder",
+  description: "Browse all available auctions and place your bids",
+};
 
 export default async function AuctionsPage({
   searchParams,

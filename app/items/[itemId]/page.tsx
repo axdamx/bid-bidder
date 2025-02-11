@@ -24,25 +24,28 @@ export default function ItemPage({
   const queryClient = useQueryClient();
   const hasTrackedView = useRef(false);
 
-  // Fetch item data
-  const { data: item } = useQuery({
+  // Main item query with shorter stale time for critical data
+  const { data: item, isLoading: isItemLoading } = useQuery({
     queryKey: ["item", itemId],
     queryFn: () => fetchItem(itemId),
+    staleTime: 1000 * 60, // 1 minute
+    refetchOnMount: true,
   });
 
-  // Fetch item's user data
-  const { data: itemUser } = useQuery({
-    queryKey: ["user", item?.userId],
-    queryFn: async () => {
-      if (!item?.userId) return null;
-      const { data } = await supabase
-        .from("users")
-        .select("*")
-        .eq("id", item.userId)
-        .single();
-      return data;
-    },
-    enabled: !!item?.userId,
+  // Bids query - load after item
+  const { data: bids, isLoading: isBidsLoading } = useQuery({
+    queryKey: ["bids", itemId],
+    queryFn: () => fetchBids(itemId),
+    enabled: !!item, // Only start loading after item is loaded
+    staleTime: 1000 * 30, // 30 seconds
+  });
+
+  // Bid acknowledgment query - non-critical, can load last
+  const { data: hasAcknowledgedBid } = useQuery({
+    queryKey: ["bidAcknowledgment", itemId, user?.id],
+    queryFn: () => checkBidAcknowledgmentAction(itemId, user?.id ?? null),
+    enabled: !!user?.id && !!item,
+    staleTime: Infinity,
   });
 
   useEffect(() => {
@@ -61,13 +64,13 @@ export default function ItemPage({
         viewerName: user.name,
         viewerEmail: user.email,
         // Seller details
-        sellerId: itemUser?.id,
-        sellerName: itemUser?.name,
+        sellerId: item.userId,
+        sellerName: item.name,
         // Metadata
         timestamp: new Date().toISOString(),
       });
     }
-  }, [item, user, itemUser]);
+  }, [item, user]);
 
   useEffect(() => {
     const channel = supabase
@@ -113,79 +116,8 @@ export default function ItemPage({
     };
   }, [itemId, queryClient, supabase]);
 
-  // const [item, setItem] = useState(null);
-  // const [itemUser, setItemUser] = useState(null);
-  // const [bids, setBids] = useState([]);
-  // const [hasAcknowledgedBid, setHasAcknowledgedBid] = useState(false);
-  // const [isLoading, setIsLoading] = useState(true);
-
-  // const fetchData = useCallback(async () => {
-  //   setIsLoading(true);
-
-  //   try {
-  //     const [fetchedItem, fetchedBids, acknowledged] = await Promise.all([
-  //       fetchItem(itemId),
-  //       fetchBids(itemId),
-  //       checkBidAcknowledgmentAction(itemId, user?.id),
-  //     ]);
-
-  //     setItem(fetchedItem);
-  //     setBids(fetchedBids);
-  //     setHasAcknowledgedBid(acknowledged);
-
-  //     if (fetchedItem) {
-  //       const fetchedItemUser = await fetchItemUser(fetchedItem.userId);
-  //       setItemUser(fetchedItemUser);
-  //     }
-  //   } catch (error) {
-  //     console.error("Error fetching data:", error);
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // }, [itemId, user?.id]);
-
-  // useEffect(() => {
-  //   fetchData();
-  // }, [fetchData]);
-
-  // Main item query
-  const itemQuery = useQuery({
-    queryKey: ["item", itemId],
-    queryFn: () => fetchItem(itemId),
-    // staleTime: 0, // Set to 0 to always check for updates
-    refetchOnMount: true, // Refetch when component mounts
-  });
-
-  // console.log("ItemQuery", itemQuery.data);
-
-  // // Item user query - depends on item data
-  // const itemUserQuery = useQuery({
-  //   queryKey: ["itemUser", itemQuery.data?.userId],
-  //   queryFn: () => fetchItemUser(itemQuery.data?.userId),
-  //   enabled: !!itemQuery.data?.userId,
-  //   staleTime: Infinity,
-  // });
-
-  // Bids query
-  const bidsQuery = useQuery({
-    queryKey: ["bids", itemId],
-    queryFn: () => fetchBids(itemId),
-    // staleTime: 0, // Set to 0 to always check for updates
-    refetchOnMount: true, // Refetch when component mounts
-  });
-
-  // Bid acknowledgment query
-  const bidAckQuery = useQuery({
-    queryKey: ["bidAcknowledgment", itemId, user?.id],
-    queryFn: () => checkBidAcknowledgmentAction(itemId, user?.id ?? null),
-    enabled: !!user?.id,
-    staleTime: Infinity,
-  });
-
-  const isLoading =
-    itemQuery.isLoading || bidsQuery.isLoading || bidAckQuery.isLoading;
-
-  if (isLoading) {
+  // Show loading state only for critical item data
+  if (isItemLoading) {
     return (
       <div className="container mx-auto py-12">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -238,18 +170,13 @@ export default function ItemPage({
     );
   }
 
-  if (!itemQuery) {
+  if (!item) {
     return (
       <div className="space-y-4 justify-center flex items-center flex-col mt-8">
         <h1 className="text-2xl font-bold"> Item Not Found! </h1>
       </div>
     );
   }
-
-  // const itemWithOwner = {
-  //   ...(itemQuery.data || {}),
-  //   itemUser: itemUserQuery.data,
-  // };
 
   return (
     <MotionGrid
@@ -263,12 +190,12 @@ export default function ItemPage({
         reverseOrder={false}
       />
       <ItemPageClient
-        item={itemQuery.data}
-        allBids={bidsQuery.data || []}
+        item={item}
+        allBids={bids || []}
         userId={user?.id!}
-        hasAcknowledgedBid={bidAckQuery.data || false}
+        hasAcknowledgedBid={hasAcknowledgedBid || false}
+        isLoadingBids={isBidsLoading}
         onBidAcknowledge={() => {
-          // Invalidate both bids and bid acknowledgment queries
           queryClient.invalidateQueries({
             queryKey: ["bidAcknowledgment", itemId, user?.id],
           });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
@@ -79,6 +79,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
 
 const DealingMethodBadge = ({ type }: { type: string }) => {
   const getMethodColor = (type: string) => {
@@ -169,8 +170,14 @@ const StatusBadge = ({ status }: { status: string }) => {
 // Helper function to determine available status options
 const getAvailableStatusOptions = (
   currentStatus: string,
-  dealingMethodType?: string
+  dealingMethodType?: string,
+  paymentStatus?: string
 ) => {
+  // If payment is unpaid, only allow pending status
+  if (paymentStatus === "unpaid") {
+    return ["pending"];
+  }
+
   // If status is delivered, disable all options
   if (currentStatus === "delivered") {
     return [];
@@ -198,12 +205,14 @@ const OrdersTable = ({
   isLoading,
   onRefresh,
   onOrderShippingStatusUpdate,
+  handleLinkClick,
 }: {
   orders: Order[] | undefined;
   type: "buying" | "selling";
   isLoading: boolean;
   onRefresh: () => Promise<void>;
   onOrderShippingStatusUpdate: (orderId: number, status: string) => void;
+  handleLinkClick: (e: React.MouseEvent, path: string) => void;
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 7;
@@ -323,10 +332,11 @@ const OrdersTable = ({
             <TableHeader>
               <TableRow>
                 <TableHead>Order ID</TableHead>
-                <TableHead>Method</TableHead>
-                <TableHead>Item</TableHead>
+                <TableHead>Name</TableHead>
                 <TableHead>Date</TableHead>
+                <TableHead>Dealing Method</TableHead>
                 <TableHead>Order Status</TableHead>
+                <TableHead>Payment Status</TableHead>
                 <TableHead>Final Amount</TableHead>
                 {type === "selling" ? (
                   <>
@@ -359,11 +369,6 @@ const OrdersTable = ({
                   <TableRow key={order.id}>
                     <TableCell className="font-medium">{order.id}</TableCell>
                     <TableCell>
-                      <DealingMethodBadge
-                        type={order.item.dealingMethodType!}
-                      />
-                    </TableCell>
-                    <TableCell>
                       {" "}
                       <Link
                         href={`/items/${order.itemId}`}
@@ -376,7 +381,15 @@ const OrdersTable = ({
                       {new Date(order.orderDate).toLocaleDateString()}
                     </TableCell>
                     <TableCell>
+                      <DealingMethodBadge
+                        type={order.item.dealingMethodType!}
+                      />
+                    </TableCell>
+                    <TableCell>
                       <StatusBadge status={order.orderStatus} />
+                    </TableCell>
+                    <TableCell>
+                      <StatusBadge status={order.paymentStatus} />
                     </TableCell>
                     <TableCell>{formatCurrency(order.amount)}</TableCell>
                     <TableCell>
@@ -397,7 +410,8 @@ const OrdersTable = ({
                                 (status) => {
                                   const isAvailable = getAvailableStatusOptions(
                                     order.shippingStatus,
-                                    order.item.dealingMethodType
+                                    order.item.dealingMethodType,
+                                    order.paymentStatus
                                   ).includes(status);
 
                                   return (
@@ -430,7 +444,12 @@ const OrdersTable = ({
                           className="w-[180px]"
                           disabled={order.orderStatus === "cancelled"}
                         >
-                          <Link href={`/checkout/${order.itemId}`}>
+                          <Link
+                            href={`/checkout/${order.itemId}`}
+                            onClick={(e) =>
+                              handleLinkClick(e, `/checkout/${order.itemId}`)
+                            }
+                          >
                             {order.orderStatus === "cancelled"
                               ? "Order Cancelled"
                               : "Proceed to checkout"}
@@ -548,7 +567,8 @@ const OrdersTable = ({
                               (status) => {
                                 const isAvailable = getAvailableStatusOptions(
                                   order.shippingStatus,
-                                  order.item.dealingMethodType
+                                  order.item.dealingMethodType,
+                                  order.paymentStatus
                                 ).includes(status);
 
                                 return (
@@ -614,10 +634,24 @@ export default function OrderDetails() {
   const [isUpdating, setIsUpdating] = useState(false);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
   const [isShippingModalOpen, setIsShippingModalOpen] = useState(false);
+  const pathname = usePathname();
+  const [isNavigating, setIsNavigating] = useState(false);
 
   const { toast } = useToast();
+  const router = useRouter();
   const [user] = useAtom(userAtom);
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    setIsNavigating(false);
+  }, [pathname]);
+
+  const handleLinkClick = async (e: React.MouseEvent, path: string) => {
+    e.preventDefault();
+    if (path === pathname) return;
+    setIsNavigating(true);
+    router.push(path);
+  };
 
   const {
     data: orders,
@@ -916,6 +950,7 @@ export default function OrderDetails() {
                 await refetch();
               }}
               onOrderShippingStatusUpdate={handleOrderShippingStatusUpdate}
+              handleLinkClick={handleLinkClick}
             />
           </TabsContent>
           <TabsContent value="selling" className="mt-0">
@@ -927,6 +962,7 @@ export default function OrderDetails() {
                 await refetch();
               }}
               onOrderShippingStatusUpdate={handleOrderShippingStatusUpdate}
+              handleLinkClick={handleLinkClick}
             />
           </TabsContent>
         </Tabs>

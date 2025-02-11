@@ -27,7 +27,11 @@ export async function getLatestBidWithUser(itemId: number) {
   return latestBid;
 }
 
-export async function createBidAction(itemId: number, userId: string, isBuyItNow: boolean = false) {
+export async function createBidAction(
+  itemId: number,
+  userId: string,
+  isBuyItNow: boolean = false
+) {
   // Get item
   const { data: item, error: itemError } = await supabase
     .from("items")
@@ -39,7 +43,11 @@ export async function createBidAction(itemId: number, userId: string, isBuyItNow
     throw new Error("Item not found!");
   }
 
-  const bidAmount = isBuyItNow ? item.binPrice : (item.currentBid ? item.currentBid + item.bidInterval : item.startingPrice + item.bidInterval);
+  const bidAmount = isBuyItNow
+    ? item.binPrice
+    : item.currentBid
+    ? item.currentBid + item.bidInterval
+    : item.startingPrice + item.bidInterval;
 
   // Insert new bid
   const { error: bidError } = await supabase.from("bids").insert({
@@ -66,15 +74,17 @@ export async function createBidAction(itemId: number, userId: string, isBuyItNow
   // Update item's current bid and bought out status if it's BIN
   const { error: updateError } = await supabase
     .from("items")
-    .update({ 
+    .update({
       currentBid: bidAmount,
-      ...(isBuyItNow ? { isBoughtOut: true, status: "CHECKOUT", winnerId: userId } : {})
+      ...(isBuyItNow
+        ? { isBoughtOut: true, status: "CHECKOUT", winnerId: userId }
+        : {}),
     })
     .eq("id", itemId);
 
   if (updateError) throw new Error("Failed to update item");
 
-  revalidatePath(`/items/${itemId}`);
+  // revalidatePath(`/items/${itemId}`);
 }
 
 export async function updateItemStatus(itemId: number, userId: string) {
@@ -241,6 +251,7 @@ export async function createOrderAction(
     const { data: order, error } = await supabase
       .from("orders")
       .insert({
+        id: `RN-${new Date().toLocaleDateString('en-GB').split('/').join('')}-${Math.floor(10000 + Math.random() * 90000)}`,
         itemId,
         buyerId: userId,
         sellerId,

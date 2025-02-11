@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { User, Loader2 } from "lucide-react";
+import { User, Loader2, Facebook, Share2 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import CountdownTimer from "@/app/countdown-timer";
 import { Button as MovingBorderButton } from "@/components/ui/moving-border";
@@ -117,7 +117,7 @@ export function AuctionDetails({
           </CardTitle>
         </div>
         <CardDescription className="text-base md:text-lg">
-          Created by:{" "}
+          Seller:
           <Link
             href={`/profile/${item.users.id}`}
             className="hover:underline flex items-center gap-1"
@@ -126,10 +126,10 @@ export function AuctionDetails({
             {item.users?.image ? (
               <Image
                 src={item.users.image}
-                width={16}
-                height={16}
+                width={32}
+                height={32}
                 alt={`${item.users.name}'s profile picture`}
-                className="w-8 h-8 mr-1 rounded-full object-cover"
+                className="w-8 h-8 rounded-full"
               />
             ) : (
               <User className="w-4 h-4 mr-1" />
@@ -270,15 +270,52 @@ export function AuctionDetails({
 
         {/* Buyer's Premium Section */}
         <div className="border-t pt-6">
-          <h3 className="text-xl font-semibold mb-3">Buyer's Premium</h3>
+          <h3 className="text-xl font-semibold mb-3">Buyer's Premium (6%)</h3>
           <div className="text-muted-foreground">
             <p className="text-base leading-relaxed">
               The Buyer's Premium is charged in addition to the sale price and
               is payable directly to Renown.
             </p>
-            <p className="text-base leading-relaxed mt-2 font-medium">
-              Buyer's premium rate: 6.0%
-            </p>
+          </div>
+        </div>
+
+        {/* Social Sharing Section */}
+        <div className="border-t pt-6">
+          <h3 className="text-xl font-semibold mb-3">Share This Listing</h3>
+          <div className="flex gap-4">
+            <Button
+              variant="outline"
+              size="icon"
+              className="rounded-full"
+              onClick={() => {
+                const url = encodeURIComponent(window.location.href);
+                window.open(
+                  `https://www.facebook.com/sharer/sharer.php?u=${url}`,
+                  "_blank"
+                );
+              }}
+            >
+              <Facebook className="h-5 w-5" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="rounded-full"
+              onClick={() => {
+                const url = encodeURIComponent(window.location.href);
+                const text = encodeURIComponent(
+                  `Check out this auction: ${item.name}`
+                );
+                window.open(`https://wa.me/?text=${text}%20${url}`, "_blank");
+              }}
+            >
+              <Image
+                src="/whatsapp-icon.svg"
+                alt="WhatsApp"
+                width={20}
+                height={20}
+              />
+            </Button>
           </div>
         </div>
 

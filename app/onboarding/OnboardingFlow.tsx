@@ -106,7 +106,7 @@ export default function OnboardingFlow({
   //   return null;
   // }
 
-  const [step, setStep] = useState(2);
+  const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [alertState, setAlertState] = useState<{

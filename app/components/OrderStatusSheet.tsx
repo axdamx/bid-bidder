@@ -29,6 +29,15 @@ import {
   formatDateWithTime,
   getDateInfo,
 } from "../items/[itemId]/utils/formatters";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 interface OrderStatusSheetProps {
   order: Order;
@@ -40,6 +49,7 @@ export function OrderStatusSheet({ order, disabled }: OrderStatusSheetProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
 
   console.log("inside order status sheet", order);
 
@@ -75,21 +85,33 @@ export function OrderStatusSheet({ order, disabled }: OrderStatusSheetProps) {
   const handleConfirmDelivery = () => {
     if (!user?.id) return;
     confirmDeliveryMutation();
+    setConfirmDialogOpen(false);
   };
 
   console.log("order AHHHHHH", order);
 
   const currentStepIndex = useMemo(() => {
-    if (order.orderStatus === "delivered" && order.shippingStatus === "delivered") {
+    if (
+      order.orderStatus === "delivered" &&
+      order.shippingStatus === "delivered"
+    ) {
       return 3; // Show all steps as completed for delivered orders
     }
-    if (order.paymentStatus === "unpaid" && order.shippingStatus === "pending") {
+    if (
+      order.paymentStatus === "unpaid" &&
+      order.shippingStatus === "pending"
+    ) {
       return 0; // Show first step as active for pending unpaid orders
     }
     if (order.shippedAt) return 2;
     if (order.paymentStatus === "paid") return 1;
     return 0;
-  }, [order.paymentStatus, order.shippedAt, order.shippingStatus, order.orderStatus]);
+  }, [
+    order.paymentStatus,
+    order.shippedAt,
+    order.shippingStatus,
+    order.orderStatus,
+  ]);
 
   const steps = [
     {
@@ -340,13 +362,46 @@ export function OrderStatusSheet({ order, disabled }: OrderStatusSheetProps) {
                 Have you received your item? Please confirm the delivery once
                 you have received it.
               </p>
-              <Button
-                onClick={handleConfirmDelivery}
-                disabled={isPending}
-                className="w-full"
+              <Dialog
+                open={confirmDialogOpen}
+                onOpenChange={setConfirmDialogOpen}
               >
-                {isPending ? "Confirming..." : "Confirm Delivery"}
-              </Button>
+                <DialogTrigger asChild>
+                  <Button className="w-full">Confirm Delivery</Button>
+                </DialogTrigger>
+                <DialogContent className="[&>button]:hidden">
+                  <DialogHeader>
+                    <DialogTitle>Confirm Delivery</DialogTitle>
+                    <DialogDescription>
+                      By confirming delivery, you acknowledge that:
+                      <div className="bg-gray-100 p-4 rounded-lg mt-2">
+                        <ul className="text-gray-600 text-sm space-y-2">
+                          <li>• You have received the item</li>
+                          <li>• The item is in good condition</li>
+                          <li>
+                            • The item matches the description provided by the
+                            seller
+                          </li>
+                        </ul>
+                      </div>
+                    </DialogDescription>
+                  </DialogHeader>
+                  <DialogFooter className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => setConfirmDialogOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleConfirmDelivery}
+                      disabled={isPending}
+                    >
+                      {isPending ? "Confirming..." : "Yes, Confirm Delivery"}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </div>
           )}
         </div>

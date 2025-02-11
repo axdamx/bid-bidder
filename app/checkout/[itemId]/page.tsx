@@ -42,18 +42,19 @@ import { createToyyibPayment, getCheckoutItems } from "./actions";
 import CheckoutSkeleton from "../components/CheckoutSkeleton";
 import CountdownTimer from "../components/CheckoutCountdownTimer";
 import { formatCurrency } from "@/lib/utils";
+import { Separator } from "@/components/ui/separator";
 
 const checkoutFormSchema = z.object({
   fullName: z.string().min(1, "Full name is required"),
   email: z.string().email("Invalid email address"),
   phone: z.string().min(1, "Phone number is required"),
   country: z.string().min(1, "Country is required"),
-  city: z.string().optional(),
-  state: z.string().optional(),
-  zipCode: z.string().optional(),
+  city: z.string().min(1, "City is required"),
+  state: z.string().min(1, "State is required"),
+  zipCode: z.string().min(1, "Zip code is required"),
   shippingRegion: z.enum(["WEST", "EAST"]),
   addressLine1: z.string().min(1, "Address Line 1 is required"),
-  addressLine2: z.string().optional(),
+  addressLine2: z.string().min(1, "Address Line 2 is required"),
 });
 
 type CheckoutFormData = z.infer<typeof checkoutFormSchema>;
@@ -244,10 +245,12 @@ export default function CheckoutPage({
         <Dialog open={showTimerDialog} onOpenChange={setShowTimerDialog}>
           <DialogContent className="[&>button]:hidden">
             <DialogHeader>
-              <DialogTitle>Time Remaining to Complete Checkout</DialogTitle>
-              <DialogDescription>
+              <DialogTitle>
                 Please complete your checkout before the timer expires:
-              </DialogDescription>
+              </DialogTitle>
+              {/* <DialogDescription>
+                Please complete your checkout before the timer expires:
+              </DialogDescription> */}
             </DialogHeader>
             {checkoutItems?.order && (
               <div className="py-4">
@@ -316,7 +319,7 @@ export default function CheckoutPage({
 
                   <Card>
                     <CardContent className="p-0">
-                      <div className="relative aspect-[4/3] bg-black border border-gray-200 rounded-lg">
+                      <div className="relative bg-black border border-gray-200 rounded-lg overflow-hidden">
                         <OptimizedImage
                           width={800}
                           height={600}
@@ -342,12 +345,13 @@ export default function CheckoutPage({
 
               <div className="space-y-8">
                 <div>
-                  <h2 className="text-2xl font-semibold mb-4">
+                  {/* <h2 className="text-2xl font-semibold mb-4">
                     Payment Details
+                  </h2> */}
+                  <h2 className="text-2xl font-semibold mb-4 text-gray-600">
+                    Complete your purchase by providing your payment details
+                    below.
                   </h2>
-                  <p className="text-gray-600">
-                    Complete your purchase by providing your payment details.
-                  </p>
                 </div>
 
                 <Form {...form}>
@@ -500,7 +504,7 @@ export default function CheckoutPage({
                       />
                     </div>
 
-                    <div className="space-y-4">
+                    <div className="space-y-4 border border-black rounded-lg p-4">
                       <div className="flex justify-between text-sm">
                         <span>Sold Price</span>
                         <span>{formatCurrency(item?.currentBid)}</span>
@@ -565,6 +569,7 @@ export default function CheckoutPage({
                               {formatCurrency(item?.currentBid! * 0.06)}
                             </span>
                           </div>
+                          <div className="border-t border-black" />
                           <div className="flex justify-between font-medium">
                             <span>Total Amount</span>
                             <span>
@@ -585,6 +590,7 @@ export default function CheckoutPage({
                               {formatCurrency(item?.currentBid! * 0.06)}
                             </span>
                           </div>
+                          <div className="border-t border-black" />
                           <div className="flex justify-between font-medium">
                             <span>Payable Amount</span>
                             <span>

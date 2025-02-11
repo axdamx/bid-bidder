@@ -68,7 +68,7 @@ export function ImageGallery({ images }: { images: string[] }) {
             key={index}
             onClick={() => setCurrentImageIndex(index)}
             className={cn(
-              "relative aspect-square overflow-hidden rounded-md",
+              "relative overflow-hidden rounded-md",
               currentImageIndex === index && "ring-primary"
             )}
           >

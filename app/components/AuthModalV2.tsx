@@ -294,13 +294,13 @@ export default function AuthModalV2({
       <Dialog open={isOpen} onOpenChange={handleClose}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>
-              {magicLinkSent ? "Check your email" : "Welcome"}
+            <DialogTitle className="text-center">
+              {magicLinkSent ? "Check your email" : "Welcome to Renown"}
             </DialogTitle>
             <DialogDescription>
               {magicLinkSent
                 ? "We've sent you a magic link to sign in."
-                : "Sign in or create an account to continue"}
+                : "Sign in with your email or continue with Google."}
             </DialogDescription>
           </DialogHeader>
 

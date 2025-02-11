@@ -266,16 +266,11 @@ export async function handleToyyibCallback(data: any) {
   console.log("[HANDLE CALLBACK] Found transaction:", transaction);
 
   // Determine payment status first
-  const paymentStatus = status === "1" ? "success" : "failed";
+  const paymentStatus =
+    status === "1" ? "success" : status === "2" ? "pending" : "failed";
   console.log("[HANDLE CALLBACK] Payment status determined as:", paymentStatus);
 
-  // If payment failed, we can return early
-  if (paymentStatus === "failed") {
-    return { success: false, error: "Payment failed", status: paymentStatus };
-  }
-
-  // For successful payments, trigger background updates and return success immediately
-  // We'll handle any update errors in the background
+  // Update payment records regardless of payment status
   updatePaymentRecords(
     supabase,
     transaction,
@@ -285,6 +280,11 @@ export async function handleToyyibCallback(data: any) {
     console.error("[BACKGROUND UPDATE ERROR]", error);
     // Here you might want to implement some retry logic or notification system
   });
+
+  // If payment failed, return failure response
+  if (paymentStatus === "failed") {
+    return { success: false, error: "Payment failed", status: paymentStatus };
+  }
 
   return { success: true, status: paymentStatus };
 }
@@ -329,24 +329,36 @@ async function updatePaymentRecords(
 
     // Update order status
     const paymentStatusUpdate =
-      paymentStatus === "success" ? "paid" : "pending";
-    const orderStatusUpdate = paymentStatus === "success" ? "paid" : "pending";
+      paymentStatus === "success"
+        ? "paid"
+        : paymentStatus === "pending"
+        ? "pending"
+        : "failed";
+    // Only update order status if payment is successful
+    const orderStatusUpdate = paymentStatus === "success" ? "paid" : undefined;
+
+    const updateData: any = {
+      paymentStatus: paymentStatusUpdate,
+      updatedAt: new Date().toISOString(),
+      totalAmount: transaction.amount,
+      customerName: transaction.customerName,
+      customerEmail: transaction.customerEmail,
+      customerPhone: transaction.customerPhone,
+      shippingAddress: `${transaction.customerAddressLine1}, ${transaction.customerAddressLine2}, ${transaction.customerCity}, ${transaction.customerState}, ${transaction.customerZipCode}, ${transaction.customerCountry}`,
+      paidAt: paymentStatus === "success" ? new Date().toISOString() : null,
+      buyersPremium: transaction.buyersPremium,
+      shippingCost: transaction.shippingCost,
+      shippingRegion: transaction.shippingRegion,
+    };
+
+    // Only include orderStatus in the update if it's defined
+    if (orderStatusUpdate !== undefined) {
+      updateData.orderStatus = orderStatusUpdate;
+    }
+
     const { error: updateOrderError } = await supabase
       .from("orders")
-      .update({
-        orderStatus: orderStatusUpdate,
-        paymentStatus: paymentStatusUpdate,
-        updatedAt: new Date().toISOString(),
-        totalAmount: transaction.amount,
-        customerName: transaction.customerName,
-        customerEmail: transaction.customerEmail,
-        customerPhone: transaction.customerPhone,
-        shippingAddress: `${transaction.customerAddressLine1}, ${transaction.customerAddressLine2}, ${transaction.customerCity}, ${transaction.customerState}, ${transaction.customerZipCode}, ${transaction.customerCountry}`,
-        paidAt: paymentStatus === "success" ? new Date().toISOString() : null,
-        buyersPremium: transaction.buyersPremium,
-        shippingCost: transaction.shippingCost,
-        shippingRegion: transaction.shippingRegion,
-      })
+      .update(updateData)
       .eq("itemId", transaction.itemId);
 
     if (updateOrderError) {

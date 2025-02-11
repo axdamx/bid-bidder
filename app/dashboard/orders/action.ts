@@ -77,6 +77,7 @@ export async function updateOrderShippingStatus(
         courierService: shippingDetails.courier,
         trackingNumber: shippingDetails.trackingNumber,
         shippedAt: new Date().toISOString(),
+        orderStatus: "shipped",
       }),
     };
 

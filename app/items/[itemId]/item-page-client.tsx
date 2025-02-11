@@ -37,12 +37,14 @@ export default function AuctionItem({
   allBids,
   userId,
   hasAcknowledgedBid,
+  isLoadingBids,
   onBidAcknowledge,
 }: {
   item: any;
   allBids: any[];
   userId: string;
   hasAcknowledgedBid: boolean;
+  isLoadingBids?: boolean;
   onBidAcknowledge: () => void;
 }) {
   const [highestBid, setHighestBid] = useState<number | null>(item.currentBid);
@@ -384,7 +386,14 @@ export default function AuctionItem({
               </TabsTrigger>
             </TabsList>
             <TabsContent value="history">
-              <BidHistory bids={bids} handleLinkClick={handleLinkClick} />
+              {isLoadingBids ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
+                  <span className="ml-2 text-gray-500">Loading bid history...</span>
+                </div>
+              ) : (
+                <BidHistory bids={bids} handleLinkClick={handleLinkClick} />
+              )}
             </TabsContent>
             <TabsContent value="chat">
               {userId ? (
