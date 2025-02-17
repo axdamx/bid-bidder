@@ -349,7 +349,7 @@ export default function CreatePage() {
           <Accordion type="single" collapsible className="w-full space-y-4">
             <AccordionItem value="images">
               <AccordionTrigger className="text-lg font-semibold">
-                Upload Images (Max 5)
+                1. Upload Images (Max 5)
               </AccordionTrigger>
               <AccordionContent className="p-4 space-y-4">
                 <div className="mt-2 space-y-2">
@@ -413,7 +413,7 @@ export default function CreatePage() {
                         <Button
                           type="button"
                           variant="outline"
-                          onClick={() => open()}
+                          onClick={() => open?.()}
                           disabled={isMaxImages}
                           className="relative w-full h-[160px] border-2 border-dashed hover:border-primary/50 transition-colors"
                         >
@@ -539,7 +539,7 @@ export default function CreatePage() {
 
             <AccordionItem value="dealingMethod">
               <AccordionTrigger className="text-lg font-semibold">
-                Dealing Method
+                2. Dealing Method
               </AccordionTrigger>
               <AccordionContent className="p-4 space-y-4">
                 <div className="space-y-4">
@@ -600,7 +600,7 @@ export default function CreatePage() {
 
             <AccordionItem value="details">
               <AccordionTrigger className="text-lg font-semibold">
-                Item Details
+                3. Item Details
               </AccordionTrigger>
               <AccordionContent className="p-4 space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { userAtom } from "@/app/atom/userAtom";
 import { SkeletonLoaderProfile } from "./components/SkeletonLoader";
 import { UserHeader } from "./components/UserHeader";
@@ -29,7 +29,7 @@ const ProfilePage = ({
   const pathname = usePathname();
   const router = useRouter();
 
-  const { userQuery, followDataQuery, ownedItemsQuery, isLoading, isFetching } =
+  const { userQuery, followDataQuery, ownedItemsQuery, isLoading } =
     useProfileData(ownerId, user?.id || "");
 
   useEffect(() => {
@@ -58,13 +58,14 @@ const ProfilePage = ({
     (ownedItemsQuery.data?.length || 0) / itemsPerPage
   );
 
-  if (isLoading) {
+  if (isLoading || !userQuery.data) {
     console.log("ProfilePage is in loading state");
     return <SkeletonLoaderProfile />;
   }
+
   if (!userQuery.data) {
     console.log("User data not found");
-    return <div>User not found</div>;
+    return <div className="p-4 text-center">User not found</div>;
   }
 
   console.log(`ProfilePage rendering completed for ownerId: ${ownerId}`);
@@ -73,7 +74,6 @@ const ProfilePage = ({
   return (
     <div className="min-h-screen">
       <Dialog open={isNavigating} modal>
-        <DialogTitle className="[&>button]:hidden" />
         <DialogContent className="[&>button]:hidden">
           <div className="flex flex-col items-center justify-center space-y-4">
             <Loader2 className="h-8 w-8 animate-spin" />
@@ -106,7 +106,7 @@ const ProfilePage = ({
                 page={page}
                 setPage={setPage}
                 totalPages={totalPages}
-                handleLinkClick={handleLinkClick}
+                isLoading={ownedItemsQuery.isLoading}
               />
             </TabsContent>
 
@@ -115,7 +115,7 @@ const ProfilePage = ({
             </TabsContent>
 
             <TabsContent value="reviews">
-              <ReviewsTab />
+              <ReviewsTab userId={ownerId} />
             </TabsContent>
           </Tabs>
         </div>

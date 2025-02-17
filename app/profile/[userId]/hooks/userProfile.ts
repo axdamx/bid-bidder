@@ -14,44 +14,32 @@ const useProfileData = (ownerId: string, currentUserId: string) => {
     queries: [
       {
         queryKey: ["user", memoizedOwnerId],
-        queryFn: () => {
-          console.log(`Fetching user data for ownerId: ${memoizedOwnerId}`);
-          return fetchUser(memoizedOwnerId);
-        },
-        // staleTime: 5 * 60 * 1000, // 5 minutes
+        queryFn: () => fetchUser(memoizedOwnerId),
+        // staleTime: 30000, // 30 seconds
+        // retry: 1,
       },
       {
         queryKey: ["followData", memoizedCurrentUserId, memoizedOwnerId],
-        queryFn: () => {
-          console.log(
-            `Fetching follow data for currentUserId: ${memoizedCurrentUserId}, ownerId: ${memoizedOwnerId}`
-          );
-          return fetchFollowData(memoizedCurrentUserId, memoizedOwnerId);
-        },
-        // staleTime: 5 * 60 * 1000, // 5 minutes
+        queryFn: () => fetchFollowData(memoizedCurrentUserId, memoizedOwnerId),
+        // staleTime: 30000,
+        // retry: 1,
       },
       {
         queryKey: ["ownedItems", memoizedOwnerId],
-        queryFn: () => {
-          console.log(`Fetching owned items for ownerId: ${memoizedOwnerId}`);
-          return fetchOwnedItems(memoizedOwnerId);
-        },
-        // staleTime: 5 * 60 * 1000, // 5 minutes
+        queryFn: () => fetchOwnedItems(memoizedOwnerId),
+        // staleTime: 30000,
+        // retry: 1,
       },
     ],
   });
 
   const [userQuery, followDataQuery, ownedItemsQuery] = results;
 
-  console.log(
-    `Query states - User: ${userQuery.status}, Follow: ${followDataQuery.status}, OwnedItems: ${ownedItemsQuery.status}`
-  );
-
   return {
     userQuery,
     followDataQuery,
     ownedItemsQuery,
-    isLoading: results.some((query) => query.isLoading),
+    isLoading: userQuery.isLoading, // Only consider user data for initial loading
     isFetching: results.some((query) => query.isFetching),
   };
 };

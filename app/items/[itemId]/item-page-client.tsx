@@ -31,6 +31,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ShoppingBag } from "lucide-react";
 import { CheckCircle2 } from "lucide-react";
 import AuthModalV2 from "@/app/components/AuthModalV2";
+import { Separator } from "@/components/ui/separator";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function AuctionItem({
   item,
@@ -70,6 +72,7 @@ export default function AuctionItem({
   const [user] = useAtom(userAtom);
   const router = useRouter();
   const pathname = usePathname();
+  const queryClient = useQueryClient();
 
   console.log("item", item);
   const isBidOver = new Date(item.endDate) < new Date() || item.isBoughtOut;
@@ -249,6 +252,12 @@ export default function AuctionItem({
     submitBuyItNow();
   };
 
+  const handleCloseDialog = useCallback(() => {
+    setShowWinnerModal(false);
+    // Invalidate and refetch item data
+    queryClient.invalidateQueries({ queryKey: ["item", item.id] });
+  }, [item.id, queryClient]);
+
   return (
     <div className="container w-full px-4 py-8 md:py-12 overflow-x-hidden">
       <Dialog open={isNavigating} modal>
@@ -389,7 +398,9 @@ export default function AuctionItem({
               {isLoadingBids ? (
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
-                  <span className="ml-2 text-gray-500">Loading bid history...</span>
+                  <span className="ml-2 text-gray-500">
+                    Loading bid history...
+                  </span>
                 </div>
               ) : (
                 <BidHistory bids={bids} handleLinkClick={handleLinkClick} />
@@ -594,75 +605,25 @@ export default function AuctionItem({
         <DialogContent className="sm:max-w-md [&>button]:hidden">
           <DialogHeader>
             {isWinner ? (
-              <div>
-                <DialogTitle className="flex items-center justify-center gap-2 text-2xl ">
-                  <Trophy className="h-8 w-8 text-yellow-500" />
-                  <span>Congratulations! You Won!</span>
-                </DialogTitle>
-              </div>
+              <WinnerDialog
+                setShowWinnerModal={handleCloseDialog}
+                item={item}
+                highestBid={highestBid!}
+                handleCheckout={handleCheckout}
+                isCreatingOrder={isCreatingOrder}
+              />
             ) : bids.length > 0 ? (
               <LoserDialog
-                setShowWinnerModal={setShowWinnerModal}
+                setShowWinnerModal={handleCloseDialog}
                 latestBidderName={
                   item.isBoughtOut ? "another buyer" : bids[0].users.name
                 }
                 finalPrice={item.isBoughtOut ? item.binPrice : item.currentBid}
               />
             ) : (
-              <NoWinnerDialog setShowWinnerModal={setShowWinnerModal} />
+              <NoWinnerDialog setShowWinnerModal={handleCloseDialog} />
             )}
           </DialogHeader>
-          {isWinner && (
-            <Card className="border-none bg-green-50">
-              <CardContent className="space-y-4 p-6 text-center">
-                <div className="space-y-2">
-                  <h3 className="text-xl font-semibold text-green-800">
-                    You&apos;ve won this auction!
-                  </h3>
-                  <p className="text-green-700">
-                    You won <span className="font-semibold">{item.name}</span>{" "}
-                    with a final bid of
-                  </p>
-                  <Badge
-                    variant="secondary"
-                    className="mx-auto text-lg font-bold"
-                  >
-                    {item.isBoughtOut
-                      ? formatCurrency(item.binPrice)
-                      : formatCurrency(highestBid!)}
-                  </Badge>
-                </div>
-                <p className="text-sm text-green-600">
-                  Please proceed to checkout to complete your purchase
-                </p>
-              </CardContent>
-            </Card>
-          )}
-          {isWinner && (
-            <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
-              <Button
-                variant="default"
-                className="bg-primary hover:bg-primary/90"
-                onClick={handleCheckout}
-                disabled={isCreatingOrder}
-              >
-                {isCreatingOrder ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating order...
-                  </>
-                ) : (
-                  "Proceed to Checkout"
-                )}
-              </Button>
-              {/* <Button
-                variant="outline"
-                onClick={() => setShowWinnerModal(false)}
-              >
-                Close
-              </Button> */}
-            </div>
-          )}
         </DialogContent>
       </Dialog>
 
@@ -674,6 +635,100 @@ export default function AuctionItem({
       /> */}
       <AuthModalV2 isOpen={isAuthModalsOpen} setIsOpen={setIsAuthModalsOpen} />
     </div>
+  );
+}
+
+function WinnerDialog({
+  setShowWinnerModal,
+  item,
+  highestBid,
+  handleCheckout,
+  isCreatingOrder,
+}: {
+  setShowWinnerModal: React.Dispatch<React.SetStateAction<boolean>>;
+  item: any;
+  highestBid: number;
+  handleCheckout: () => void;
+  isCreatingOrder: boolean;
+}) {
+  const finalPrice = item.isBoughtOut ? item.binPrice : highestBid;
+  const buyersPremium = finalPrice * 0.06;
+  const shippingCost = item.dealingMethodType === "SHIPPED" ? 10 : 0; // Example shipping cost
+  const totalCost = finalPrice + buyersPremium + shippingCost;
+
+  return (
+    <>
+      <DialogHeader>
+        <div className="text-center">
+          <DialogTitle className="text-2xl font-bold text-green-700">
+            Congratulations!
+          </DialogTitle>
+        </div>
+      </DialogHeader>
+      <Card className="border-none bg-green-50">
+        <CardContent className="space-y-6 p-6">
+          <div className="space-y-2 text-center">
+            <h3 className="text-xl font-semibold text-green-800">
+              You&apos;ve won this auction!
+            </h3>
+            <p className="text-green-700">
+              You won <span className="font-semibold">{item.name}</span>
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">Final Bid Price:</span>
+              <span className="font-semibold">
+                {formatCurrency(finalPrice)}
+              </span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">Buyer&apos;s Premium (6%):</span>
+              <span className="font-semibold">
+                {formatCurrency(buyersPremium)}
+              </span>
+            </div>
+            <Separator className="my-2" />
+            <div className="flex justify-between text-base font-bold">
+              <span className="text-gray-700">Total:</span>
+              <span className="text-green-700">
+                {formatCurrency(totalCost)}
+              </span>
+            </div>
+          </div>
+
+          <div className="rounded-lg bg-blue-50 p-4 text-sm text-blue-700">
+            <p>
+              An order has been created for this item. For more details about
+              your purchase, including payment and{" "}
+              {item.dealingMethodType === "SHIPPING" ? "shipping" : "pickup"}{" "}
+              information, please proceed to the checkout page.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+      <div className="mt-8 flex flex-col gap-2 sm:flex-row sm:justify-center">
+        <Button
+          variant="default"
+          className="bg-primary hover:bg-primary/90"
+          onClick={handleCheckout}
+          disabled={isCreatingOrder}
+        >
+          {isCreatingOrder ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Processing...
+            </>
+          ) : (
+            "Proceed to Checkout"
+          )}
+        </Button>
+        {/* <Button variant="outline" onClick={() => setShowWinnerModal(false)}>
+          Close
+        </Button> */}
+      </div>
+    </>
   );
 }
 

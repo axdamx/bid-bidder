@@ -28,8 +28,9 @@ export default function ItemPage({
   const { data: item, isLoading: isItemLoading } = useQuery({
     queryKey: ["item", itemId],
     queryFn: () => fetchItem(itemId),
-    staleTime: 1000 * 60, // 1 minute
-    refetchOnMount: true,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+    gcTime: 0
   });
 
   // Bids query - load after item
@@ -37,7 +38,9 @@ export default function ItemPage({
     queryKey: ["bids", itemId],
     queryFn: () => fetchBids(itemId),
     enabled: !!item, // Only start loading after item is loaded
-    staleTime: 1000 * 30, // 30 seconds
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+    gcTime: 0
   });
 
   // Bid acknowledgment query - non-critical, can load last
@@ -45,7 +48,8 @@ export default function ItemPage({
     queryKey: ["bidAcknowledgment", itemId, user?.id],
     queryFn: () => checkBidAcknowledgmentAction(itemId, user?.id ?? null),
     enabled: !!user?.id && !!item,
-    staleTime: Infinity,
+    refetchOnMount: "always",
+    gcTime: 0
   });
 
   useEffect(() => {

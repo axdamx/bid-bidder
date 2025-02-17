@@ -83,6 +83,7 @@ import { usePathname, useRouter } from "next/navigation";
 
 const DealingMethodBadge = ({ type }: { type: string }) => {
   const getMethodColor = (type: string) => {
+    if (!type) return null;
     switch (type.toLowerCase()) {
       case "cod":
         return "bg-orange-100 text-orange-800 border-orange-200";
@@ -94,6 +95,7 @@ const DealingMethodBadge = ({ type }: { type: string }) => {
   };
 
   const getMethodIcon = (type: string) => {
+    if (!type) return null;
     switch (type.toLowerCase()) {
       case "cod":
         return <Banknote className="h-3 w-3 mr-1" />;
@@ -111,7 +113,7 @@ const DealingMethodBadge = ({ type }: { type: string }) => {
       )}`}
     >
       {getMethodIcon(type)}
-      {type.toUpperCase()}
+      {type && type.toUpperCase()}
     </span>
   );
 };
@@ -137,6 +139,7 @@ const StatusBadge = ({ status }: { status: string }) => {
   };
 
   const getStatusIcon = (status: string) => {
+    if (!status) return null;
     switch (status.toLowerCase()) {
       case "paid":
         return <CreditCard className="h-3 w-3 mr-1" />;

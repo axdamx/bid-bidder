@@ -30,24 +30,41 @@ export async function getLatestBidWithUser(itemId: number) {
 export async function createBidAction(
   itemId: number,
   userId: string,
-  isBuyItNow: boolean = false
-) {
-  // Get item
-  const { data: item, error: itemError } = await supabase
-    .from("items")
-    .select("*")
-    .eq("id", itemId)
-    .single();
-
-  if (itemError || !item) {
-    throw new Error("Item not found!");
+  isBuyItNow: boolean = false,
+  currentItemData?: {
+    currentBid: number;
+    startingPrice: number;
+    bidInterval: number;
+    binPrice: number;
   }
+) {
+  let bidAmount: number;
 
-  const bidAmount = isBuyItNow
-    ? item.binPrice
-    : item.currentBid
-    ? item.currentBid + item.bidInterval
-    : item.startingPrice + item.bidInterval;
+  if (currentItemData) {
+    // Calculate bid amount using provided data
+    bidAmount = isBuyItNow
+      ? currentItemData.binPrice
+      : currentItemData.currentBid
+      ? currentItemData.currentBid + currentItemData.bidInterval
+      : currentItemData.startingPrice + currentItemData.bidInterval;
+  } else {
+    // Fallback to fetching item data if not provided
+    const { data: item, error: itemError } = await supabase
+      .from("items")
+      .select("*")
+      .eq("id", itemId)
+      .single();
+
+    if (itemError || !item) {
+      throw new Error("Item not found!");
+    }
+
+    bidAmount = isBuyItNow
+      ? item.binPrice
+      : item.currentBid
+      ? item.currentBid + item.bidInterval
+      : item.startingPrice + item.bidInterval;
+  }
 
   // Insert new bid
   const { error: bidError } = await supabase.from("bids").insert({
@@ -77,7 +94,7 @@ export async function createBidAction(
     .update({
       currentBid: bidAmount,
       ...(isBuyItNow
-        ? { isBoughtOut: true, status: "CHECKOUT", winnerId: userId }
+        ? { isBoughtOut: true, status: "PENDING", winnerId: userId }
         : {}),
     })
     .eq("id", itemId);
@@ -88,10 +105,10 @@ export async function createBidAction(
 }
 
 export async function updateItemStatus(itemId: number, userId: string) {
-  // Update the item status to "checkout" and associate with the winning user
+  // Update the item status to "pending" and associate with the winning user
   const { error: updateError } = await supabase
     .from("items")
-    .update({ status: "CHECKOUT", winnerId: userId })
+    .update({ status: "PENDING", winnerId: userId })
     .eq("id", itemId);
 
   if (updateError) {
@@ -106,10 +123,10 @@ export async function updateItemStatus(itemId: number, userId: string) {
 }
 
 export async function updateBINItemStatus(itemId: number, userId: string) {
-  // Update the item status to "checkout" and associate with the winning user
+  // Update the item status to "pending" and associate with the winning user
   const { error: updateError } = await supabase
     .from("items")
-    .update({ status: "CHECKOUT", winnerId: userId, isBoughtOut: true })
+    .update({ status: "PENDING", winnerId: userId, isBoughtOut: true })
     .eq("id", itemId);
 
   if (updateError) {
@@ -251,7 +268,10 @@ export async function createOrderAction(
     const { data: order, error } = await supabase
       .from("orders")
       .insert({
-        id: `RN-${new Date().toLocaleDateString('en-GB').split('/').join('')}-${Math.floor(10000 + Math.random() * 90000)}`,
+        id: `RN-${new Date()
+          .toLocaleDateString("en-GB")
+          .split("/")
+          .join("")}-${Math.floor(10000 + Math.random() * 90000)}`,
         itemId,
         buyerId: userId,
         sellerId,
@@ -277,7 +297,7 @@ export async function createOrderAction(
 
     if (updateError) throw updateError;
 
-    revalidatePath(`/items/${itemId}`);
+    // revalidatePath(`/items/${itemId}`);
 
     return order;
   } catch (error) {

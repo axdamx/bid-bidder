@@ -55,7 +55,8 @@ const ItemCard: React.FC<ItemCardProps> = ({ item }) => {
     queryClient.invalidateQueries({ queryKey: ["liveAuctions"] });
   };
 
-  const isItemEnded = isBidOver(item.endDate);
+  // const isItemEnded = isBidOver(item.endDate);
+  const isItemEnded = item.status === "ENDED" || item.status === "PENDING";
 
   function isBidOver(endDate: Date) {
     return new Date(endDate) < new Date() || item.isBoughtOut;
@@ -117,7 +118,9 @@ const ItemCard: React.FC<ItemCardProps> = ({ item }) => {
             </div>
           </div>
           <div className="mt-4">
-            <div className="text-sm text-muted-foreground">Current Bid</div>
+            <div className="text-sm text-muted-foreground">
+              {isItemEnded ? "Final Price" : "Current Bid"}
+            </div>
             <div className="text-xl font-bold">
               {formatCurrency(item.currentBid)}
             </div>

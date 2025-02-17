@@ -3,7 +3,7 @@ import { MotionGrid } from "@/app/components/motionGrid";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Star } from "lucide-react";
 
-export const ReviewsTab = () => {
+export const ReviewsTab = ({ userId }: { userId: string }) => {
   return (
     <div className="space-y-6 mb-6">
       {Array.from({ length: 3 }).map((_, i) => (

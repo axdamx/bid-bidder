@@ -34,7 +34,12 @@ export function useAuctionMutations(
   });
 
   const { mutate: submitBid, isPending: isBidPending } = useMutation({
-    mutationFn: () => createBidAction(itemId, userId),
+    mutationFn: () => createBidAction(itemId, userId, false, {
+      currentBid: item.currentBid,
+      startingPrice: item.startingPrice,
+      bidInterval: item.bidInterval,
+      binPrice: item.binPrice,
+    }),
     onError: (error) => {
       console.error("Error placing bid:", error);
       toast.error("Failed to place bid. Please try again.");
@@ -53,7 +58,12 @@ export function useAuctionMutations(
   });
 
   const { mutate: submitBuyItNow, isPending: isBuyItNowPending } = useMutation({
-    mutationFn: () => createBidAction(itemId, userId, true),
+    mutationFn: () => createBidAction(itemId, userId, true, {
+      currentBid: item.currentBid,
+      startingPrice: item.startingPrice,
+      bidInterval: item.bidInterval,
+      binPrice: item.binPrice,
+    }),
     onSuccess: () => {
       createBinOrder();
     },

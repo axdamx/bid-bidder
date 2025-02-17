@@ -18,7 +18,7 @@ interface ListingsTabProps {
   page: number;
   setPage: (page: number) => void;
   totalPages: number;
-  handleLinkClick: (e: React.MouseEvent, path: string) => void;
+  isLoading: boolean;
 }
 
 export const ListingsTab = ({
@@ -26,7 +26,7 @@ export const ListingsTab = ({
   page,
   setPage,
   totalPages,
-  handleLinkClick,
+  isLoading,
 }: ListingsTabProps) => {
   return (
     <div className="space-y-6 mb-6">
@@ -62,7 +62,6 @@ export const ListingsTab = ({
                 <Link
                   href="/items/create"
                   className="hover:underline whitespace-nowrap"
-                  onClick={(e) => handleLinkClick(e, "/items/create")}
                 >
                   <Button>Create Auction</Button>
                 </Link>
