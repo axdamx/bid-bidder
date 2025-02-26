@@ -91,7 +91,9 @@ const ItemCard: React.FC<ItemCardProps> = ({ item }) => {
             </Badge>
             <Badge
               variant={isItemEnded ? "destructive" : "default"}
-              className="absolute top-2 right-2"
+              className={`absolute top-2 right-2 ${
+                isItemEnded ? "bg-red-600" : "bg-green-600"
+              }`}
             >
               {isItemEnded ? "Ended" : "Active"}
             </Badge>

@@ -276,13 +276,33 @@ export function Header() {
           </nav>
         </div>
       </header>
-      <div className="sticky top-[64px] z-40 w-full bg-primary/90 backdrop-blur supports-[backdrop-filter]:bg-primary/60">
-        <div className="container flex h-10 items-center justify-center">
+      <div className="sticky top-[64px] z-40 w-full overflow-hidden">
+        {/* Aurora gradient background */}
+        <div
+          className="absolute inset-0 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-500 bg-[length:300%_300%] animate-aurora"
+          style={{
+            willChange: "background-position",
+            transform: "translateZ(0)", // Force GPU acceleration
+          }}
+        />
+
+        {/* Overlay with radial gradient for aurora effect */}
+        <div className="absolute inset-0 bg-black/10">
+          <div
+            className="absolute inset-0 bg-radial-gradient from-white/10 to-transparent opacity-70 mix-blend-overlay"
+            style={{
+              willChange: "opacity",
+              transform: "translateZ(0)", // Force GPU acceleration
+            }}
+          />
+        </div>
+
+        <div className="container relative z-10 flex h-10 items-center justify-center">
           <Link
             href="/how-auction-work"
-            className="text-sm font-medium text-primary-foreground hover:underline"
+            className="text-sm font-medium text-white hover:underline drop-shadow-md px-4 py-1 rounded-full bg-black/20 backdrop-blur-sm transition-all hover:bg-black/30"
           >
-            🎯 Learn how our auction platform works{" "}
+            ✨ Learn how our auction platform works{" "}
             <ArrowRight className="inline-block ml-1" size={16} />
           </Link>
         </div>

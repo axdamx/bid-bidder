@@ -112,6 +112,20 @@ const formSchema = z
     dealingMethodLocation: z.string().optional(),
   })
   .refine(
+    (data) => data.bidInterval <= data.startingPrice,
+    {
+      message: "Bid interval cannot be greater than starting price",
+      path: ["bidInterval"],
+    }
+  )
+  .refine(
+    (data) => !data.binPrice || data.binPrice >= data.startingPrice,
+    {
+      message: "Buy it now price cannot be less than starting price",
+      path: ["binPrice"],
+    }
+  )
+  .refine(
     (data) => {
       if (data.dealingMethodType === "SHIPPING") {
         return (

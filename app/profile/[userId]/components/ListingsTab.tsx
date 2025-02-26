@@ -11,7 +11,8 @@ import {
 } from "@/components/ui/pagination";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Package } from "lucide-react";
+import { Loader2, Package } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ListingsTabProps {
   items: any[]; // Replace 'any' with a proper item type
@@ -28,6 +29,31 @@ export const ListingsTab = ({
   totalPages,
   isLoading,
 }: ListingsTabProps) => {
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="space-y-6 mb-6">
+        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 w-full">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Card key={i} className="overflow-hidden">
+              <CardContent className="p-0">
+                <Skeleton className="aspect-square w-full" />
+                <div className="p-4 space-y-2">
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <div className="flex justify-center items-center py-4">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          <span className="ml-2 text-sm text-muted-foreground">Loading items...</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 mb-6">
       <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 w-full">
@@ -70,44 +96,28 @@ export const ListingsTab = ({
           </MotionGrid>
         )}
       </div>
-      {items.length > 0 && (
-        <Pagination className="justify-center p-4">
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious
-                onClick={() => setPage(Math.max(page - 1, 1))}
-                className={
-                  page === 1
-                    ? "pointer-events-none opacity-50"
-                    : "cursor-pointer"
-                }
-              />
-            </PaginationItem>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-              (pageNumber) => (
-                <PaginationItem key={pageNumber}>
-                  <PaginationLink
-                    onClick={() => setPage(pageNumber)}
-                    isActive={pageNumber === page}
-                    className="cursor-pointer opacity-100"
-                  >
-                    {pageNumber}
-                  </PaginationLink>
-                </PaginationItem>
-              )
-            )}
-            <PaginationItem>
-              <PaginationNext
-                onClick={() => setPage(Math.min(page + 1, totalPages))}
-                className={
-                  page === totalPages
-                    ? "pointer-events-none opacity-50"
-                    : "cursor-pointer"
-                }
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
+      {items.length > 0 && totalPages > 0 && (
+        <div className="flex justify-center items-center gap-2 py-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage(Math.max(page - 1, 1))}
+            disabled={page === 1}
+          >
+            Previous
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            Page {page} of {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage(Math.min(page + 1, totalPages))}
+            disabled={page === totalPages}
+          >
+            Next
+          </Button>
+        </div>
       )}
     </div>
   );

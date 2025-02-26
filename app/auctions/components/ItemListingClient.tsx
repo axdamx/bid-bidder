@@ -40,6 +40,8 @@ import {
 } from "@/components/ui/carousel";
 import { cn } from "@/lib/utils";
 import { useDebounce } from "@/app/components/headerSearch";
+import { Badge } from "@/components/ui/badge";
+import Image from "next/image";
 
 interface ItemsListingClientProps {
   items: any[];
@@ -156,6 +158,9 @@ export default function ItemsListingClient({
 
   console.log("paginatedItems", paginatedItems);
 
+  const isItemEnded = (item: any) =>
+    item.status === "ENDED" || item.isBoughtOut;
+
   return (
     <MotionGrid
       initial={{ opacity: 0 }}
@@ -258,35 +263,80 @@ export default function ItemsListingClient({
                             handleLinkClick(e, `/items/${item.id}`)
                           }
                         >
-                          <Card className="overflow-hidden">
+                          <Card className="group overflow-hidden transition-all duration-300 hover:shadow-lg border-2 border-transparent hover:border-primary/20">
                             <CardContent className="p-0">
-                              <div
-                                className={`relative aspect-square ${item.backgroundColor}`}
-                              >
+                              <div className="relative aspect-[4/3] overflow-hidden">
                                 <OptimizedImage
-                                  width={400}
-                                  height={300}
                                   src={item.imageId}
                                   alt={item.name}
-                                  className="object-cover w-full h-full rounded-t-lg"
+                                  fill
+                                  className="object-cover w-full h-full rounded-t-lg transition-transform duration-300 group-hover:scale-105"
                                   quality="eco"
                                 />
+                                {isItemEnded(item) && (
+                                  <div className="absolute top-0 right-0 m-2">
+                                    <Badge
+                                      variant="destructive"
+                                      className="font-semibold"
+                                    >
+                                      Ended
+                                    </Badge>
+                                  </div>
+                                )}
+                                {!isItemEnded(item) && (
+                                  <div className="absolute top-0 right-0 m-2">
+                                    <Badge
+                                      variant="default"
+                                      className="font-semibold bg-green-600 hover:bg-green-700"
+                                    >
+                                      Active
+                                    </Badge>
+                                  </div>
+                                )}
                               </div>
                               <div className="p-4">
-                                <h3 className="text-lg font-semibold">
+                                <h3 className="text-lg font-semibold line-clamp-1 mb-1 group-hover:text-primary transition-colors">
                                   {item.name}
                                 </h3>
-                                <p className="text-sm text-gray-500">
-                                  Current bid: {formatCurrency(item.currentBid)}
-                                </p>
-                                <p className="text-xs text-gray-400">
-                                  Starting Price:{" "}
-                                  {formatCurrency(item.startingPrice)}
-                                </p>
-                                <CountdownTimer
-                                  endDate={item.endDate}
-                                  isOver={item.isBoughtOut}
-                                />
+                                <div className="flex justify-between items-center mb-2">
+                                  <div>
+                                    <p className="text-sm font-medium">
+                                      Current bid:{" "}
+                                      <span className="text-primary font-bold">
+                                        {formatCurrency(item.currentBid)}
+                                      </span>
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                      Starting:{" "}
+                                      {formatCurrency(item.startingPrice)}
+                                    </p>
+                                  </div>
+                                  {item.binPrice && (
+                                    <div className="text-xs bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 px-2 py-1 rounded">
+                                      BIN: {formatCurrency(item.binPrice)}
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="mt-3">
+                                  <CountdownTimer
+                                    endDate={item.endDate}
+                                    isOver={isItemEnded(item)}
+                                    className="mt-1"
+                                  />
+                                </div>
+                                {isItemEnded(item) ? (
+                                  <div className="mt-3 w-full">
+                                    <div className="text-center py-1.5 px-3 bg-gray-100 dark:bg-gray-800 rounded-md text-sm font-medium">
+                                      View Details
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="mt-3 w-full">
+                                    <div className="text-center py-1.5 px-3 bg-primary/10 text-primary rounded-md text-sm font-medium hover:bg-primary/20 transition-colors">
+                                      Bid Now
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             </CardContent>
                           </Card>
@@ -396,35 +446,80 @@ export default function ItemsListingClient({
                             handleLinkClick(e, `/items/${item.id}`)
                           }
                         >
-                          <Card className="overflow-hidden">
+                          <Card className="group overflow-hidden transition-all duration-300 hover:shadow-lg border-2 border-transparent hover:border-primary/20">
                             <CardContent className="p-0">
-                              <div
-                                className={`relative aspect-square ${item.backgroundColor}`}
-                              >
+                              <div className="relative aspect-[4/3] overflow-hidden">
                                 <OptimizedImage
-                                  width={400}
-                                  height={300}
                                   src={item.imageId}
                                   alt={item.name}
-                                  className="object-cover w-full h-full rounded-t-lg"
+                                  fill
+                                  className="object-cover w-full h-full rounded-t-lg transition-transform duration-300 group-hover:scale-105"
                                   quality="eco"
                                 />
+                                {isItemEnded(item) && (
+                                  <div className="absolute top-0 right-0 m-2">
+                                    <Badge
+                                      variant="destructive"
+                                      className="font-semibold"
+                                    >
+                                      Ended
+                                    </Badge>
+                                  </div>
+                                )}
+                                {!isItemEnded(item) && (
+                                  <div className="absolute top-0 right-0 m-2">
+                                    <Badge
+                                      variant="default"
+                                      className="font-semibold bg-green-600 hover:bg-green-700"
+                                    >
+                                      Active
+                                    </Badge>
+                                  </div>
+                                )}
                               </div>
                               <div className="p-4">
-                                <h3 className="text-lg font-semibold">
+                                <h3 className="text-lg font-semibold line-clamp-1 mb-1 group-hover:text-primary transition-colors">
                                   {item.name}
                                 </h3>
-                                <p className="text-sm text-gray-500">
-                                  Current bid: {formatCurrency(item.currentBid)}
-                                </p>
-                                <p className="text-xs text-gray-400">
-                                  Starting Price:{" "}
-                                  {formatCurrency(item.startingPrice)}
-                                </p>
-                                <CountdownTimer
-                                  endDate={item.endDate}
-                                  isOver={item.isBoughtOut}
-                                />
+                                <div className="flex justify-between items-center mb-2">
+                                  <div>
+                                    <p className="text-sm font-medium">
+                                      Current bid:{" "}
+                                      <span className="text-primary font-bold">
+                                        {formatCurrency(item.currentBid)}
+                                      </span>
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                      Starting:{" "}
+                                      {formatCurrency(item.startingPrice)}
+                                    </p>
+                                  </div>
+                                  {item.binPrice && (
+                                    <div className="text-xs bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 px-2 py-1 rounded">
+                                      BIN: {formatCurrency(item.binPrice)}
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="mt-3">
+                                  <CountdownTimer
+                                    endDate={item.endDate}
+                                    isOver={isItemEnded(item)}
+                                    className="mt-1"
+                                  />
+                                </div>
+                                {isItemEnded(item) ? (
+                                  <div className="mt-3 w-full">
+                                    <div className="text-center py-1.5 px-3 bg-gray-100 dark:bg-gray-800 rounded-md text-sm font-medium">
+                                      View Details
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="mt-3 w-full">
+                                    <div className="text-center py-1.5 px-3 bg-primary/10 text-primary rounded-md text-sm font-medium hover:bg-primary/20 transition-colors">
+                                      Bid Now
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             </CardContent>
                           </Card>
@@ -531,35 +626,80 @@ export default function ItemsListingClient({
                             handleLinkClick(e, `/items/${item.id}`)
                           }
                         >
-                          <Card className="overflow-hidden">
+                          <Card className="group overflow-hidden transition-all duration-300 hover:shadow-lg border-2 border-transparent hover:border-primary/20">
                             <CardContent className="p-0">
-                              <div
-                                className={`relative aspect-square ${item.backgroundColor}`}
-                              >
+                              <div className="relative aspect-[4/3] overflow-hidden">
                                 <OptimizedImage
-                                  width={400}
-                                  height={300}
                                   src={item.imageId}
                                   alt={item.name}
-                                  className="object-cover w-full h-full rounded-t-lg"
+                                  fill
+                                  className="object-cover w-full h-full rounded-t-lg transition-transform duration-300 group-hover:scale-105"
                                   quality="eco"
                                 />
+                                {isItemEnded(item) && (
+                                  <div className="absolute top-0 right-0 m-2">
+                                    <Badge
+                                      variant="destructive"
+                                      className="font-semibold"
+                                    >
+                                      Ended
+                                    </Badge>
+                                  </div>
+                                )}
+                                {!isItemEnded(item) && (
+                                  <div className="absolute top-0 right-0 m-2">
+                                    <Badge
+                                      variant="default"
+                                      className="font-semibold bg-green-600 hover:bg-green-700"
+                                    >
+                                      Active
+                                    </Badge>
+                                  </div>
+                                )}
                               </div>
                               <div className="p-4">
-                                <h3 className="text-lg font-semibold">
+                                <h3 className="text-lg font-semibold line-clamp-1 mb-1 group-hover:text-primary transition-colors">
                                   {item.name}
                                 </h3>
-                                <p className="text-sm text-gray-500">
-                                  Current bid: {formatCurrency(item.currentBid)}
-                                </p>
-                                <p className="text-xs text-gray-400">
-                                  Starting Price:{" "}
-                                  {formatCurrency(item.startingPrice)}
-                                </p>
-                                <CountdownTimer
-                                  endDate={item.endDate}
-                                  isOver={item.isBoughtOut}
-                                />
+                                <div className="flex justify-between items-center mb-2">
+                                  <div>
+                                    <p className="text-sm font-medium">
+                                      Current bid:{" "}
+                                      <span className="text-primary font-bold">
+                                        {formatCurrency(item.currentBid)}
+                                      </span>
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                      Starting:{" "}
+                                      {formatCurrency(item.startingPrice)}
+                                    </p>
+                                  </div>
+                                  {item.binPrice && (
+                                    <div className="text-xs bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 px-2 py-1 rounded">
+                                      BIN: {formatCurrency(item.binPrice)}
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="mt-3">
+                                  <CountdownTimer
+                                    endDate={item.endDate}
+                                    isOver={isItemEnded(item)}
+                                    className="mt-1"
+                                  />
+                                </div>
+                                {isItemEnded(item) ? (
+                                  <div className="mt-3 w-full">
+                                    <div className="text-center py-1.5 px-3 bg-gray-100 dark:bg-gray-800 rounded-md text-sm font-medium">
+                                      View Details
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="mt-3 w-full">
+                                    <div className="text-center py-1.5 px-3 bg-primary/10 text-primary rounded-md text-sm font-medium hover:bg-primary/20 transition-colors">
+                                      Bid Now
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             </CardContent>
                           </Card>
