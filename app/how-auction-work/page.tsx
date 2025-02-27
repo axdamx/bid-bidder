@@ -199,7 +199,7 @@ export default function HowAuctionWork() {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <a
-                href="https://discord.gg/7r374uCt"
+                href="https://discord.gg/ZM4fGYk7"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 bg-[#5865F2] hover:bg-[#4752C4] text-white px-6 py-3 rounded-lg transition-colors"
