@@ -17,7 +17,7 @@ export default function HowAuctionWork() {
           How Our Auction Platform Works
         </h1>
 
-        <section className="border bg-muted/50 my-6 rounded-xl">
+        {/* <section className="border bg-muted/50 my-6 rounded-xl">
           <div className="container py-12 md:py-24">
             <div className="grid gap-8 md:gap-12">
               <div className="grid gap-8 md:grid-cols-3">
@@ -56,7 +56,7 @@ export default function HowAuctionWork() {
               </div>
             </div>
           </div>
-        </section>
+        </section> */}
 
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 mb-12">
           <Card className="p-6 hover:shadow-lg transition-shadow">

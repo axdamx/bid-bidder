@@ -300,7 +300,7 @@ export function Header() {
         <div className="container relative z-10 flex h-10 items-center justify-center">
           <Link
             href="/how-auction-work"
-            className="text-sm font-medium text-white hover:underline drop-shadow-md px-4 py-1 rounded-full bg-black/20 backdrop-blur-sm transition-all hover:bg-black/30"
+            className="text-sm font-medium text-white hover:underline drop-shadow-md px-1 py-1 rounded-full bg-black/20 backdrop-blur-sm transition-all hover:bg-black/30"
           >
             ✨ Learn how our auction platform works{" "}
             <ArrowRight className="inline-block ml-1" size={16} />

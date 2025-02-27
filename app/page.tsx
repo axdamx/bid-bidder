@@ -17,6 +17,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { MotionGrid } from "./components/motionGrid";
 
 function LoadingSection({ message }: { message: string }) {
   return (
@@ -102,6 +103,25 @@ export default function Home() {
     }
   }, [searchParams, user, hasTriggeredSuccess]);
 
+  // How It Works section data
+  const howItWorksSteps = [
+    {
+      icon: <Users className="h-8 w-8" />,
+      title: "Create an Account",
+      description: "Browse through our diverse collection of items. Create an account to participate in auctions and keep track of your bids."
+    },
+    {
+      icon: <Gavel className="h-8 w-8" />,
+      title: "Place Bids",
+      description: "Find an item you're interested in and place your bid. Our system will notify you if you're outbid or if you win the auction."
+    },
+    {
+      icon: <Trophy className="h-8 w-8" />,
+      title: "Win & Collect",
+      description: "If you win an auction, you'll be notified immediately. Follow the payment instructions to complete your purchase."
+    }
+  ];
+
   return (
     <>
       {showErrorDialog && (
@@ -171,7 +191,31 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Removed "How It Works" section - moved to /how-auction-works page */}
+        <section className="border bg-muted/50 my-6 rounded-xl">
+          <div className="container py-12 md:py-24">
+            <div className="grid gap-8 md:gap-12">
+              <div className="grid gap-8 md:grid-cols-3">
+                {howItWorksSteps.map((step, index) => (
+                  <MotionGrid 
+                    key={index}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: index * 0.2 }}
+                    className="flex flex-col items-center space-y-4 text-center"
+                  >
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                      {step.icon}
+                    </div>
+                    <h3 className="text-xl font-bold">{step.title}</h3>
+                    <p className="text-muted-foreground text-sm">
+                      {step.description}
+                    </p>
+                  </MotionGrid>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
 
         {/* Upcoming Auctions - Notable Drops */}
         {/* <section className="container px-4 md:px-6">
