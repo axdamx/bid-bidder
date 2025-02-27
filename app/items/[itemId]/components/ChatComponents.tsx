@@ -330,15 +330,17 @@ export default function ChatComponent({
           </div>
         )}
         <form onSubmit={sendMessage} className="flex items-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isUploading}
-          >
-            <ImageIcon className="h-5 w-5" />
-          </Button>
+          {isOwner && (
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+            >
+              <ImageIcon className="h-5 w-5" />
+            </Button>
+          )}
           <input
             type="file"
             accept="image/*"

@@ -18,7 +18,7 @@ export function ImageGallery({ images }: { images: string[] }) {
     );
 
   const slides = images.map((publicId) => ({
-    src: `https://res.cloudinary.com/dmqhabag1/image/upload/${publicId}`,
+    src: `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/${publicId}`,
   }));
 
   return (

@@ -493,7 +493,7 @@ const UserDetailsPage = ({ initialUser }: { initialUser: User }) => {
             </div>
           </div>
           <CldUploadWidget
-            uploadPreset="jzhhmoah"
+            uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_API_PRESET}
             onSuccess={handleUpload}
             options={{
               maxFiles: 1,

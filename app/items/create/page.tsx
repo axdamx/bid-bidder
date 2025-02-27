@@ -111,20 +111,14 @@ const formSchema = z
     eastMalaysiaShippingPrice: z.number().optional(),
     dealingMethodLocation: z.string().optional(),
   })
-  .refine(
-    (data) => data.bidInterval <= data.startingPrice,
-    {
-      message: "Bid interval cannot be greater than starting price",
-      path: ["bidInterval"],
-    }
-  )
-  .refine(
-    (data) => !data.binPrice || data.binPrice >= data.startingPrice,
-    {
-      message: "Buy it now price cannot be less than starting price",
-      path: ["binPrice"],
-    }
-  )
+  .refine((data) => data.bidInterval <= data.startingPrice, {
+    message: "Bid interval cannot be greater than starting price",
+    path: ["bidInterval"],
+  })
+  .refine((data) => !data.binPrice || data.binPrice >= data.startingPrice, {
+    message: "Buy it now price cannot be less than starting price",
+    path: ["binPrice"],
+  })
   .refine(
     (data) => {
       if (data.dealingMethodType === "SHIPPING") {
@@ -372,7 +366,7 @@ export default function CreatePage() {
                     message="Uploading image..."
                   />
                   <CldUploadWidget
-                    uploadPreset="jzhhmoah"
+                    uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_API_PRESET}
                     options={
                       {
                         maxFiles: 5,

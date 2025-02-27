@@ -757,7 +757,10 @@ export default function OnboardingFlow({
                                   </AvatarFallback>
                                 </Avatar>
                                 <CldUploadWidget
-                                  uploadPreset="jzhhmoah"
+                                  uploadPreset={
+                                    process.env
+                                      .NEXT_PUBLIC_CLOUDINARY_API_PRESET
+                                  }
                                   onSuccess={handleUpload}
                                   options={{
                                     maxFiles: 1,
