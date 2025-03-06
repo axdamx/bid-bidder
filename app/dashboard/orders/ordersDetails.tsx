@@ -10,7 +10,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -18,7 +17,6 @@ import {
   Truck,
   Clock,
   CheckCircle2,
-  ShoppingBag,
   XCircle,
   Loader2,
   Banknote,
@@ -43,26 +41,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getOrders, updateOrderShippingStatus } from "./action";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/lib/utils";
-import { LoadingModal } from "@/app/components/LoadingModal";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
 import Link from "next/link";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Order } from "@/app/types/order";
 import { ShippingDetailsModal } from "@/app/components/ShippingDetailsModal";
 import { OrderStatusSheet } from "@/app/components/OrderStatusSheet";

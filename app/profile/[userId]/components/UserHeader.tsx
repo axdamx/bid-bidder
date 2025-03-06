@@ -2,6 +2,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CalendarDays, MapPin, Package, Star, Users } from "lucide-react";
 import { FollowButton } from "./follow-button";
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { getSellerRatingSummary } from "@/app/dashboard/reviews/action";
 
 interface UserHeaderProps {
   user: any; // Replace 'any' with a proper user type
@@ -18,6 +20,13 @@ export const UserHeader = ({
 }: UserHeaderProps) => {
   // State to control animation - helps with performance by reducing animation when not visible
   const [isVisible, setIsVisible] = useState(false);
+
+  // Fetch the user's rating summary
+  const { data: ratingSummary } = useQuery({
+    queryKey: ["reviews", "summary", user.id],
+    queryFn: () => getSellerRatingSummary(user.id),
+    enabled: !!user.id,
+  });
 
   useEffect(() => {
     // Only start animation when component is mounted and visible
@@ -99,7 +108,7 @@ export const UserHeader = ({
             <div className="flex items-center justify-center sm:justify-start gap-2">
               <Star className="h-4 w-4" />
               <span className="text-base sm:text-lg">
-                {user.rating || 0} Rating
+                {ratingSummary?.averageRating.toFixed(1) || "0.0"} Rating ({ratingSummary?.totalReviews || 0} reviews)
               </span>
             </div>
           </div>

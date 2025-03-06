@@ -189,12 +189,54 @@ export async function checkBidAcknowledgmentAction(
 }
 
 export async function fetchItem(itemId: string) {
-  const { data: item } = await supabase
+  // First fetch the item with user details
+  const { data: item, error } = await supabase
     .from("items")
     .select("*, images (*), users!items_userId_fkey (*)") // Added users relation
     .eq("id", parseInt(itemId))
     .single();
-  return item;
+
+  if (error) {
+    console.error("Error fetching item:", error);
+    return null;
+  }
+
+  if (!item || !item.users) {
+    return item;
+  }
+
+  // Then fetch the seller's review summary
+  const sellerId = item.users.id;
+  const { data: reviews, error: reviewsError } = await supabase
+    .from("reviews")
+    .select("rating")
+    .eq("sellerId", sellerId);
+
+  if (reviewsError) {
+    console.error("Error fetching seller reviews:", reviewsError);
+    return item;
+  }
+
+  // Calculate the review summary
+  const totalReviews = reviews ? reviews.length : 0;
+  let averageRating = 0;
+  
+  if (totalReviews > 0) {
+    const sum = reviews.reduce((acc, review) => acc + review.rating, 0);
+    averageRating = sum / totalReviews;
+  }
+
+  // Add the review summary to the user object
+  return {
+    ...item,
+    users: {
+      ...item.users,
+      reviewSummary: {
+        averageRating,
+        totalReviews
+      }
+    }
+  };
 }
 
 // export async function fetchItemUser(userId: string) {

@@ -62,8 +62,8 @@ export default function HowAuctionWork() {
           <Card className="p-6 hover:shadow-lg transition-shadow">
             <h2 className="text-2xl font-semibold mb-4">Safety & Security</h2>
             <p className="text-muted-foreground text-sm">
-              Our platform uses secure payment processing and verification
-              systems to ensure safe transactions for all users.
+              Our platform uses secure payment processing via (FPX) and
+              verification systems to ensure safe transactions for all users.
             </p>
           </Card>
 
@@ -80,20 +80,19 @@ export default function HowAuctionWork() {
           </Card>
 
           <Card className="p-6 hover:shadow-lg transition-shadow">
-            <h2 className="text-2xl font-semibold mb-4">Billing Setup</h2>
+            <h2 className="text-2xl font-semibold mb-4">Payout Method</h2>
             <p className="text-muted-foreground text-sm">
-              Add your preferred billing method in your dashboard to facilitate
+              Add your preferred payout method in your dashboard to facilitate
               smooth transactions. For sellers, this ensures quick disbursement
-              of funds after successful sales. For buyers, this enables swift
-              payment processing upon winning an auction.
+              of funds after successful sales.
             </p>
           </Card>
         </div>
 
         <div className="mt-12">
-          <h2 className="text-3xl font-bold text-center mb-8">
+          <h1 className="text-4xl font-bold mb-8 text-center">
             Post-Auction Process
-          </h2>
+          </h1>
           <Tabs defaultValue="buyer" className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-8">
               <TabsTrigger value="buyer">For Buyers</TabsTrigger>

@@ -13,6 +13,7 @@ export const AboutTab = ({ user }: AboutTabProps) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ delay: 0.125 }}
+      className="space-y-6"
     >
       <Card>
         <CardContent className="grid gap-4 p-6">

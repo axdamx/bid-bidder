@@ -21,6 +21,10 @@ export interface OrderItem {
   dealingMethodLocation?: string;
 }
 
+export interface Seller {
+  name?: string;
+  image?: string;
+}
 export interface Order {
   buyerId: string | undefined;
   id: number;
@@ -43,4 +47,6 @@ export interface Order {
   shippedAt?: string;
   shippingAddress?: string;
   paidAt?: string;
+  sellerId?: string;
+  seller: Seller;
 }

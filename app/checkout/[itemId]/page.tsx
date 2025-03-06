@@ -255,7 +255,7 @@ export default function CheckoutPage({
             {checkoutItems?.order && (
               <div className="py-4">
                 <CountdownTimer
-                  createdAt={checkoutItems.order.createdAt}
+                  createdAt={checkoutItems.order.orderDate}
                   orderId={checkoutItems.order.id}
                   userId={user.id!}
                   onTimerExpired={() => setIsTimerExpired(true)}
@@ -301,7 +301,7 @@ export default function CheckoutPage({
                 {checkoutItems?.order && (
                   <div className="mb-8">
                     <CountdownTimer
-                      createdAt={checkoutItems.order.createdAt}
+                      createdAt={checkoutItems.order.orderDate}
                       orderId={checkoutItems.order.id}
                       userId={user?.id!}
                       onTimerExpired={() => setIsTimerExpired(true)}
