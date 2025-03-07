@@ -50,13 +50,17 @@ export default function Home() {
     const error = searchParams.get("error");
     const error_code = searchParams.get("error_code");
     const auth_error = searchParams.get("auth-error");
-
-    if (auth_error === "true") {
+    const error_description = searchParams.get("error_description");
+    
+    // Check for errors either with auth-error param or direct error params
+    const hasError = auth_error === "true" || (error && error_code);
+    
+    if (hasError) {
       let errorMessage = "An error occurred during login. Please try again.";
 
       // Handle specific error cases
       if (error === "access_denied" && error_code === "otp_expired") {
-        errorMessage =
+        errorMessage = error_description || 
           "Email link is invalid or has expired. Please try logging in again.";
       } else if (error === "database_error") {
         errorMessage =
@@ -74,6 +78,11 @@ export default function Home() {
       newUrl.searchParams.delete("auth-error");
       newUrl.searchParams.delete("error");
       newUrl.searchParams.delete("error_code");
+      newUrl.searchParams.delete("error_description");
+      // Also clean up hash fragment if it contains error params
+      if (newUrl.hash && newUrl.hash.includes('error=')) {
+        newUrl.hash = '';
+      }
       window.history.replaceState({}, "", newUrl.toString());
     }
   }, [searchParams]);
