@@ -197,6 +197,16 @@ export function OrderStatusSheet({ order, disabled }: OrderStatusSheetProps) {
                   <p className="text-muted-foreground">Buyer's Premium</p>
                   <p className="font-medium">{formatCurrency(serviceTax)}</p>
                 </div>
+                {order.item.dealingMethodType === "SHIPPING" && (
+                  <div>
+                    <p className="text-muted-foreground">Shipping Cost</p>
+                    <p className="font-medium">
+                      {order.totalAmount && order.amount
+                        ? formatCurrency(order.totalAmount - order.amount - serviceTax)
+                        : "N/A"}
+                    </p>
+                  </div>
+                )}
                 <div>
                   <p className="text-muted-foreground">Total Amount Paid</p>
                   <p className="font-medium">

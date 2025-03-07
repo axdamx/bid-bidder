@@ -74,10 +74,10 @@ export function NotificationDropdown() {
         case "order_shipped":
         case "delivery_confirmed":
         case "payment_disbursed":
-          router.push(`/dashboard?tab=orders`);
+          router.push(`/dashboard?tab=orders&refresh=${Date.now()}`);
           break;
         case "order_cancelled":
-          router.push(`/dashboard?tab=items`);
+          router.push(`/dashboard?tab=items&refresh=${Date.now()}`);
           break;
         default:
           console.warn(`Unknown notification type: ${notification.type}`);

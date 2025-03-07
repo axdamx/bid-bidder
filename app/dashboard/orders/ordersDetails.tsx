@@ -198,10 +198,16 @@ const OrdersTable = ({
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 7;
-  const totalPages = Math.ceil((orders?.length || 0) / itemsPerPage);
+  
+  // Sort orders by orderDate (newest first)
+  const sortedOrders = orders?.slice().sort((a, b) => {
+    return new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime();
+  });
+  
+  const totalPages = Math.ceil((sortedOrders?.length || 0) / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentOrders = orders?.slice(startIndex, endIndex);
+  const currentOrders = sortedOrders?.slice(startIndex, endIndex);
 
   const RefreshButton = () => (
     <Button
