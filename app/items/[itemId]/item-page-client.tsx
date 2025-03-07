@@ -1,6 +1,5 @@
 "use client";
 
-import { updateItemStatusToEndedAction } from "../create/actions";
 import { useState, useEffect, useCallback } from "react";
 import { useAuctionQueries } from "./hooks/useAuctionQueries";
 import { useAuctionMutations } from "./hooks/useAuctionMutations";
@@ -33,6 +32,7 @@ import { CheckCircle2 } from "lucide-react";
 import AuthModalV2 from "@/app/components/AuthModalV2";
 import { Separator } from "@/components/ui/separator";
 import { useQueryClient } from "@tanstack/react-query";
+import { updateItemStatusToEndedAction } from "./actions";
 
 export default function AuctionItem({
   item,

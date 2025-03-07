@@ -5,17 +5,22 @@ import {
   getSellerReviews,
   getSellerRatingSummary,
 } from "../dashboard/reviews/action";
-import { StarIcon } from "lucide-react";
+import { StarIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { OptimizedImage } from "./OptimizedImage";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 interface SellerReviewsProps {
   sellerId: string;
 }
 
 export function SellerReviews({ sellerId }: SellerReviewsProps) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const reviewsPerPage = 3;
+
   const { data: reviews, isLoading: isReviewsLoading } = useQuery({
     queryKey: ["reviews", sellerId],
     queryFn: () => getSellerReviews(sellerId),
@@ -29,6 +34,26 @@ export function SellerReviews({ sellerId }: SellerReviewsProps) {
   });
 
   const isLoading = isReviewsLoading || isSummaryLoading;
+
+  // Pagination logic
+  const indexOfLastReview = currentPage * reviewsPerPage;
+  const indexOfFirstReview = indexOfLastReview - reviewsPerPage;
+  const currentReviews = reviews
+    ? reviews.slice(indexOfFirstReview, indexOfLastReview)
+    : [];
+  const totalPages = reviews ? Math.ceil(reviews.length / reviewsPerPage) : 0;
+
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const goToPrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
 
   if (isLoading) {
     return <ReviewsSkeleton />;
@@ -100,7 +125,7 @@ export function SellerReviews({ sellerId }: SellerReviewsProps) {
 
       {/* Reviews List */}
       <div className="space-y-6">
-        {reviews.map((review) => (
+        {currentReviews.map((review) => (
           <div
             key={review.id}
             className="border rounded-lg p-4 space-y-3 hover:bg-muted/20 transition-colors"
@@ -108,7 +133,7 @@ export function SellerReviews({ sellerId }: SellerReviewsProps) {
             <div className="flex justify-between">
               <div className="flex items-center gap-2">
                 <div className="relative h-10 w-10 rounded-full overflow-hidden border">
-                  {review.reviewer?.image ? (
+                  {/* {review.reviewer?.image ? (
                     <OptimizedImage
                       width={50}
                       height={50}
@@ -117,11 +142,11 @@ export function SellerReviews({ sellerId }: SellerReviewsProps) {
                       className="object-cover"
                       quality="eco"
                     />
-                  ) : (
-                    <div className="h-full w-full bg-primary/10 flex items-center justify-center text-sm font-medium">
-                      {(review.reviewer?.name || "A")[0].toUpperCase()}
-                    </div>
-                  )}
+                  ) : ( */}
+                  <div className="h-full w-full bg-primary/10 flex items-center justify-center text-sm font-medium">
+                    {(review.reviewer?.name || "A")[0].toUpperCase()}
+                  </div>
+                  {/* )} */}
                 </div>
                 <div>
                   <p className="font-medium">
@@ -184,6 +209,42 @@ export function SellerReviews({ sellerId }: SellerReviewsProps) {
             )}
           </div>
         ))}
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t">
+            <div className="text-sm text-muted-foreground text-center sm:text-left">
+              Showing {indexOfFirstReview + 1}-
+              {Math.min(indexOfLastReview, reviews.length)} of {reviews.length}{" "}
+              reviews
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={goToPrevPage}
+                disabled={currentPage === 1}
+                className="h-8 w-8 p-0"
+                aria-label="Previous page"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <div className="text-sm min-w-[80px] text-center">
+                Page {currentPage} of {totalPages}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={goToNextPage}
+                disabled={currentPage === totalPages}
+                className="h-8 w-8 p-0"
+                aria-label="Next page"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

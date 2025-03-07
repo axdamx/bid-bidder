@@ -220,7 +220,7 @@ export async function fetchItem(itemId: string) {
   // Calculate the review summary
   const totalReviews = reviews ? reviews.length : 0;
   let averageRating = 0;
-  
+
   if (totalReviews > 0) {
     const sum = reviews.reduce((acc, review) => acc + review.rating, 0);
     averageRating = sum / totalReviews;
@@ -233,9 +233,9 @@ export async function fetchItem(itemId: string) {
       ...item.users,
       reviewSummary: {
         averageRating,
-        totalReviews
-      }
-    }
+        totalReviews,
+      },
+    },
   };
 }
 
@@ -339,11 +339,30 @@ export async function createOrderAction(
 
     if (updateError) throw updateError;
 
-    // revalidatePath(`/items/${itemId}`);
+    revalidatePath(`/items/${itemId}`);
 
     return order;
   } catch (error) {
     console.error("Error creating order:", error);
     throw error;
+  }
+}
+
+export async function updateItemStatusToEndedAction(itemId: string) {
+  try {
+    const { error } = await supabase
+      .from("items")
+      .update({ status: "ENDED" })
+      .eq("id", itemId);
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    revalidatePath(`/items/${itemId}`);
+
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: "Failed to update item status" };
   }
 }

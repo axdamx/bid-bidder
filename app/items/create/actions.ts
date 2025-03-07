@@ -1,6 +1,7 @@
 "use server";
 
 import { createServerSupabase } from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 const dealingMethodSchema = z
@@ -163,22 +164,5 @@ export async function createItemAction(
       success: false,
       error: error.message || "Failed to create item",
     };
-  }
-}
-
-export async function updateItemStatusToEndedAction(itemId: string) {
-  try {
-    const { error } = await supabase
-      .from('items')
-      .update({ status: 'ENDED' })
-      .eq('id', itemId);
-
-    if (error) {
-      return { success: false, error: error.message };
-    }
-
-    return { success: true };
-  } catch (error) {
-    return { success: false, error: 'Failed to update item status' };
   }
 }
