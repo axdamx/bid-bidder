@@ -83,7 +83,7 @@ export default function PaymentStatusPage() {
               </div>
               <Button
                 variant="default"
-                onClick={() => router.push("/dashboard?tab=orders")}
+                onClick={() => router.push("/dashboard?tab=orders&refresh=" + new Date().getTime())}
                 className="mt-6 w-full bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg transition-all duration-200 transform hover:scale-105"
               >
                 View Order Details
@@ -115,7 +115,7 @@ export default function PaymentStatusPage() {
               <div className="flex flex-col gap-3 mt-6">
                 <Button
                   variant="default"
-                  onClick={() => router.push("/dashboard?tab=orders")}
+                  onClick={() => router.push("/dashboard?tab=orders&refresh=" + new Date().getTime())}
                   className="w-full bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-all duration-200 transform hover:scale-105"
                 >
                   View Failed Order

@@ -58,7 +58,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 const DealingMethodBadge = ({ type }: { type: string }) => {
   const getMethodColor = (type: string) => {
@@ -417,6 +417,7 @@ const OrdersTable = ({
                           </Select>
                         </div>
                       ) : order.orderStatus === "paid" ||
+                        order.orderStatus === "shipped" ||
                         order.orderStatus === "delivered" ? (
                         <OrderStatusSheet order={order} disabled={false} />
                       ) : (
@@ -573,6 +574,7 @@ const OrdersTable = ({
                           </SelectContent>
                         </Select>
                       ) : order.orderStatus === "paid" ||
+                        order.orderStatus === "shipped" ||
                         order.orderStatus === "delivered" ? (
                         <OrderStatusSheet order={order} disabled={false} />
                       ) : (
@@ -617,6 +619,7 @@ export default function OrderDetails() {
   const [showErrorDialog, setShowErrorDialog] = useState(false);
   const [isShippingModalOpen, setIsShippingModalOpen] = useState(false);
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [isNavigating, setIsNavigating] = useState(false);
 
   const { toast } = useToast();
@@ -634,6 +637,15 @@ export default function OrderDetails() {
     setIsNavigating(true);
     router.push(path);
   };
+
+  // Check if we need to refetch data based on URL params
+  useEffect(() => {
+    const refreshParam = searchParams.get('refresh');
+    if (refreshParam && user?.id) {
+      // Invalidate and refetch data when refresh parameter is present
+      queryClient.invalidateQueries({ queryKey: ["orders", user?.id] });
+    }
+  }, [searchParams, queryClient, user?.id]);
 
   const {
     data: orders,
