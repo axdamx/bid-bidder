@@ -15,6 +15,7 @@ import cn from "classnames";
 import { formatCurrency, getDateInfo } from "../utils/formatters";
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
+import { RichTextContent, RichTextStyles } from "@/app/components/RichTextEditor";
 
 export function AuctionDetails({
   item,
@@ -338,14 +339,17 @@ export function AuctionDetails({
           <h3 className="text-xl font-semibold mb-3">Description</h3>
           <div
             className={cn(
-              "text-muted-foreground relative",
+              "relative",
               !isDescriptionExpanded &&
                 item.description.length > 500 &&
                 "max-h-[240px] overflow-hidden"
             )}
             style={{ overflowWrap: "break-word" }}
           >
-            <p className="text-base leading-relaxed">{item.description}</p>
+            <div className="text-base leading-relaxed text-muted-foreground">
+              <RichTextContent content={item.description} />
+              <RichTextStyles />
+            </div>
             {!isDescriptionExpanded && item.description.length > 500 && (
               <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-background to-transparent" />
             )}

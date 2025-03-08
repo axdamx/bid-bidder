@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { RichTextEditor } from "@/app/components/RichTextEditor";
 import {
   CldUploadWidget,
   CloudinaryUploadWidgetOptions,
@@ -821,11 +822,24 @@ export default function CreatePage() {
                         </Tooltip>
                       </TooltipProvider>
                     </div>
-                    <Textarea
-                      id="description"
+                    <RichTextEditor
                       {...register("description")}
-                      placeholder="Enter item description"
-                      className="min-h-[100px]"
+                      value={watch("description") || ""}
+                      onChange={(value) => {
+                        // Check if the HTML content is empty or only contains whitespace/empty tags
+                        const isEmptyHtml = !value || 
+                          value === "<p></p>" || 
+                          value === "<p><br></p>" || 
+                          value.replace(/<[^>]*>/g, '').trim() === "";
+                        
+                        // Set the value to empty string if it's empty HTML, otherwise use the value
+                        setValue(
+                          "description", 
+                          isEmptyHtml ? "" : value, 
+                          { shouldValidate: true }
+                        );
+                      }}
+                      placeholder="Enter a detailed description of your item"
                     />
                     {errors.description && (
                       <p className="text-sm text-red-500">
@@ -915,6 +929,7 @@ export default function CreatePage() {
                 !watch("startingPrice") ||
                 !watch("bidInterval") ||
                 !watch("endDate") ||
+                !watch("description") || // Add check for description
                 !watch("dealingMethodType") ||
                 (watch("dealingMethodType") === "SHIPPING" &&
                   (!watch("westMalaysiaShippingPrice") ||
