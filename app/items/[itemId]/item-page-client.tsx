@@ -31,6 +31,12 @@ import { ShoppingBag } from "lucide-react";
 import { CheckCircle2 } from "lucide-react";
 import AuthModalV2 from "@/app/components/AuthModalV2";
 import { Separator } from "@/components/ui/separator";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useQueryClient } from "@tanstack/react-query";
 import { updateItemStatusToEndedAction } from "./actions";
 
@@ -678,7 +684,7 @@ function WinnerDialog({
 
           <div className="space-y-3">
             <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Final Bid Price:</span>
+              <span className="text-gray-600">Final Sold Price:</span>
               <span className="font-semibold">
                 {formatCurrency(finalPrice)}
               </span>
@@ -692,9 +698,25 @@ function WinnerDialog({
             <Separator className="my-2" />
             <div className="flex justify-between text-base font-bold">
               <span className="text-gray-700">Total:</span>
-              <span className="text-green-700">
-                {formatCurrency(totalCost)}
-              </span>
+              {item.dealingMethodType === "SHIPPING" ? (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="text-green-700 flex items-center">
+                        {formatCurrency(finalPrice + buyersPremium)}
+                        <AlertCircle className="ml-1 h-4 w-4 text-gray-500" />
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Not including shipping cost.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : (
+                <span className="text-green-700">
+                  {formatCurrency(totalCost)}
+                </span>
+              )}
             </div>
           </div>
 
@@ -743,29 +765,44 @@ function LoserDialog({
 }) {
   return (
     <>
-      <DialogTitle className="flex items-center gap-2">
-        <AlertCircle className="w-6 h-6 text-blue-500" />
-        Auction Ended
-      </DialogTitle>
-      <DialogDescription className="space-y-4">
-        <div className="p-4 bg-blue-50 rounded-lg mt-4 text-center">
-          <h1 className="font-medium text-blue-700">This auction has ended</h1>
-          <h1 className="text-sm text-blue-600 mt-2">
-            The winning bid was {formatCurrency(finalPrice)} by{" "}
-            {latestBidderName}
-          </h1>
-          <h1 className="text-sm text-blue-600 mt-2">
-            Better luck next time! Check out our other active auctions.
-          </h1>
-          <Button
-            variant="outline"
-            className="mt-8 mb-4 mx-auto"
-            onClick={() => setShowWinnerModal(false)}
-          >
-            Close
-          </Button>
+      <DialogHeader>
+        <div className="text-center">
+          <DialogTitle className="text-2xl font-bold text-blue-700">
+            Auction Ended
+          </DialogTitle>
         </div>
-      </DialogDescription>
+      </DialogHeader>
+      <Card className="border-none bg-blue-50">
+        <CardContent className="space-y-6 p-6">
+          <div className="space-y-2 text-center">
+            <h3 className="text-xl font-semibold text-blue-800">
+              This auction has ended
+            </h3>
+            <p className="text-blue-700">
+              The winning bid was by{" "}
+              <span className="font-semibold">{latestBidderName}</span>
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex justify-between text-base font-bold">
+              <span className="text-gray-700">Final Price:</span>
+              <span className="text-blue-700">
+                {formatCurrency(finalPrice)}
+              </span>
+            </div>
+          </div>
+
+          <div className="rounded-lg bg-blue-100 p-4 text-sm text-blue-700">
+            <p>Better luck next time! Check out our other active auctions.</p>
+          </div>
+        </CardContent>
+      </Card>
+      <div className="mt-8 flex flex-col gap-2 sm:flex-row sm:justify-center">
+        <Button variant="outline" onClick={() => setShowWinnerModal(false)}>
+          Close
+        </Button>
+      </div>
     </>
   );
 }
@@ -777,29 +814,34 @@ function NoWinnerDialog({
 }) {
   return (
     <>
-      <DialogTitle className="flex items-center gap-2">
-        <AlertCircle className="w-6 h-6 text-red-500" />
-        Auction Ended
-      </DialogTitle>
-      <DialogDescription className="space-y-4">
-        <div className="p-4 bg-red-50 rounded-lg mt-4 text-center">
-          <h1 className="text-sm text-red-600 mt-2">
-            Unfortunately, this auction has ended.
-          </h1>
-          <h1 className="text-sm text-red-600 mt-2">
-            Please check out our other active auctions.
-          </h1>
+      <DialogHeader>
+        <div className="text-center">
+          <DialogTitle className="text-2xl font-bold text-red-700">
+            Auction Ended
+          </DialogTitle>
         </div>
-        <div className="flex justify-center">
-          <Button
-            variant="default"
-            className="mt-8 mb-4"
-            onClick={() => setShowWinnerModal(false)}
-          >
-            Close
-          </Button>
-        </div>
-      </DialogDescription>
+      </DialogHeader>
+      <Card className="border-none bg-red-50">
+        <CardContent className="space-y-6 p-6">
+          <div className="space-y-2 text-center">
+            <h3 className="text-xl font-semibold text-red-800">
+              No winner for this auction
+            </h3>
+            <p className="text-red-700">
+              Unfortunately, this auction has ended without a winner.
+            </p>
+          </div>
+
+          <div className="rounded-lg bg-red-100 p-4 text-sm text-red-700">
+            <p>Please check out our other active auctions.</p>
+          </div>
+        </CardContent>
+      </Card>
+      <div className="mt-8 flex flex-col gap-2 sm:flex-row sm:justify-center">
+        <Button variant="default" onClick={() => setShowWinnerModal(false)}>
+          Close
+        </Button>
+      </div>
     </>
   );
 }

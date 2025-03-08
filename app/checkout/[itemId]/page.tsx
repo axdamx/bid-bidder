@@ -74,6 +74,25 @@ export default function CheckoutPage({
   const [selectedShippingRegion, setSelectedShippingRegion] = useState<
     "WEST" | "EAST"
   >("WEST");
+  
+  // Function to detect shipping region based on zipcode
+  const detectShippingRegion = (zipCode: string): "WEST" | "EAST" => {
+    // Validate zipcode format (5 digits)
+    if (!/^\d{5}$/.test(zipCode)) {
+      return "WEST"; // Default to West Malaysia if invalid format
+    }
+    
+    // Extract the first two digits
+    const prefix = parseInt(zipCode.substring(0, 2), 10);
+    
+    // East Malaysia: Sabah (88-91) and Sarawak (93-98)
+    if ((prefix >= 88 && prefix <= 91) || (prefix >= 93 && prefix <= 98)) {
+      return "EAST";
+    }
+    
+    // All other zipcodes are West Malaysia
+    return "WEST";
+  };
 
   const handleGoToDashboard = () => {
     router.push("/dashboard?tab=orders");
@@ -496,7 +515,27 @@ export default function CheckoutPage({
                           <FormItem>
                             <FormLabel>ZIP Code</FormLabel>
                             <FormControl>
-                              <Input placeholder="Enter ZIP code" {...field} />
+                              <Input 
+                                placeholder="Enter ZIP code" 
+                                {...field} 
+                                onChange={(e) => {
+                                  field.onChange(e);
+                                  // Auto-detect shipping region when zipcode changes
+                                  const zipCode = e.target.value;
+                                  
+                                  if (zipCode && zipCode.length === 5) {
+                                    // When zipcode is complete (5 digits), auto-detect region
+                                    const region = detectShippingRegion(zipCode);
+                                    setSelectedShippingRegion(region);
+                                    form.setValue("shippingRegion", region);
+                                  } else if (zipCode && zipCode.length > 0) {
+                                    // When zipcode is partially entered, disable manual selection
+                                    // but don't change the region yet
+                                  } else {
+                                    // When zipcode is empty, allow manual selection
+                                  }
+                                }}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -517,40 +556,53 @@ export default function CheckoutPage({
                               Shipping Region
                             </span>
                             <div className="flex gap-4">
-                              <label className="flex items-center space-x-2">
+                              <label className={`flex items-center space-x-2 ${form.watch("zipCode")?.length > 0 ? "opacity-70" : ""}`}>
                                 <input
                                   type="radio"
                                   name="shippingRegion"
                                   value="WEST"
                                   checked={selectedShippingRegion === "WEST"}
                                   onChange={(e) => {
-                                    setSelectedShippingRegion("WEST");
-                                    form.setValue("shippingRegion", "WEST");
+                                    if (!form.watch("zipCode")?.length) {
+                                      setSelectedShippingRegion("WEST");
+                                      form.setValue("shippingRegion", "WEST");
+                                    }
                                   }}
                                   className="h-4 w-4"
+                                  disabled={form.watch("zipCode")?.length > 0}
                                 />
                                 <span className="text-sm">
                                   West Malaysia (RM{" "}
                                   {item?.westMalaysiaShippingPrice})
                                 </span>
                               </label>
-                              <label className="flex items-center space-x-2">
+                              <label className={`flex items-center space-x-2 ${form.watch("zipCode")?.length > 0 ? "opacity-70" : ""}`}>
                                 <input
                                   type="radio"
                                   name="shippingRegion"
                                   value="EAST"
                                   checked={selectedShippingRegion === "EAST"}
                                   onChange={(e) => {
-                                    setSelectedShippingRegion("EAST");
-                                    form.setValue("shippingRegion", "EAST");
+                                    if (!form.watch("zipCode")?.length) {
+                                      setSelectedShippingRegion("EAST");
+                                      form.setValue("shippingRegion", "EAST");
+                                    }
                                   }}
                                   className="h-4 w-4"
+                                  disabled={form.watch("zipCode")?.length > 0}
                                 />
                                 <span className="text-sm">
                                   East Malaysia (RM{" "}
                                   {item?.eastMalaysiaShippingPrice})
                                 </span>
                               </label>
+                            </div>
+                            <div className="text-xs text-gray-500 italic">
+                              {form.watch("zipCode")?.length === 5 ? 
+                                `Shipping region automatically detected based on zipcode ${form.watch("zipCode")}` : 
+                                form.watch("zipCode")?.length > 0 ?
+                                "Please enter a complete 5-digit zipcode to detect your shipping region" :
+                                "Enter your zipcode to auto-detect shipping region or select manually"}
                             </div>
                           </div>
                           <div className="flex justify-between text-sm">

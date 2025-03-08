@@ -193,17 +193,17 @@ const OrdersTable = ({
   type: "buying" | "selling";
   isLoading: boolean;
   onRefresh: () => Promise<void>;
-  onOrderShippingStatusUpdate: (orderId: number, status: string) => void;
+  onOrderShippingStatusUpdate: (orderId: number, status: string, previousStatus?: string) => void;
   handleLinkClick: (e: React.MouseEvent, path: string) => void;
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 7;
-  
+
   // Sort orders by orderDate (newest first)
   const sortedOrders = orders?.slice().sort((a, b) => {
     return new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime();
   });
-  
+
   const totalPages = Math.ceil((sortedOrders?.length || 0) / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
@@ -384,9 +384,9 @@ const OrdersTable = ({
                       {type === "selling" ? (
                         <div className="space-y-2">
                           <Select
-                            defaultValue={order.shippingStatus}
+                            value={order.shippingStatus}
                             onValueChange={(value) =>
-                              onOrderShippingStatusUpdate(order.id, value)
+                              onOrderShippingStatusUpdate(order.id, value, order.shippingStatus)
                             }
                             disabled={order.orderStatus === "cancelled"}
                           >
@@ -541,44 +541,47 @@ const OrdersTable = ({
 
                     <div className="pt-3 border-t">
                       {type === "selling" ? (
-                        <Select
-                          defaultValue={order.shippingStatus}
-                          onValueChange={(value) =>
-                            onOrderShippingStatusUpdate(order.id, value)
-                          }
-                          disabled={order.orderStatus === "cancelled"}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Update shipping status" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {["pending", "shipped", "delivered"].map(
-                              (status) => {
-                                const isAvailable = getAvailableStatusOptions(
-                                  order.shippingStatus,
-                                  order.item.dealingMethodType,
-                                  order.paymentStatus
-                                ).includes(status);
+                        <div className="space-y-3">
+                          <Select
+                            value={order.shippingStatus}
+                            onValueChange={(value) =>
+                              onOrderShippingStatusUpdate(order.id, value, order.shippingStatus)
+                            }
+                            disabled={order.orderStatus === "cancelled"}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Update shipping status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {["pending", "shipped", "delivered"].map(
+                                (status) => {
+                                  const isAvailable = getAvailableStatusOptions(
+                                    order.shippingStatus,
+                                    order.item.dealingMethodType,
+                                    order.paymentStatus
+                                  ).includes(status);
 
-                                return (
-                                  <SelectItem
-                                    key={status}
-                                    value={status}
-                                    disabled={!isAvailable}
-                                    className={
-                                      !isAvailable
-                                        ? "opacity-50 cursor-not-allowed"
-                                        : ""
-                                    }
-                                  >
-                                    {status.charAt(0).toUpperCase() +
-                                      status.slice(1)}
-                                  </SelectItem>
-                                );
-                              }
-                            )}
-                          </SelectContent>
-                        </Select>
+                                  return (
+                                    <SelectItem
+                                      key={status}
+                                      value={status}
+                                      disabled={!isAvailable}
+                                      className={
+                                        !isAvailable
+                                          ? "opacity-50 cursor-not-allowed"
+                                          : ""
+                                      }
+                                    >
+                                      {status.charAt(0).toUpperCase() +
+                                        status.slice(1)}
+                                    </SelectItem>
+                                  );
+                                }
+                              )}
+                            </SelectContent>
+                          </Select>
+                          <OrderStatusSheet order={order} disabled={false} />
+                        </div>
                       ) : order.orderStatus === "paid" ||
                         order.orderStatus === "shipped" ||
                         order.orderStatus === "delivered" ? (
@@ -624,6 +627,7 @@ export default function OrderDetails() {
   const [isUpdating, setIsUpdating] = useState(false);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
   const [isShippingModalOpen, setIsShippingModalOpen] = useState(false);
+  const [orderBeingUpdated, setOrderBeingUpdated] = useState<{id: number, previousStatus: string} | null>(null);
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isNavigating, setIsNavigating] = useState(false);
@@ -646,7 +650,7 @@ export default function OrderDetails() {
 
   // Check if we need to refetch data based on URL params
   useEffect(() => {
-    const refreshParam = searchParams.get('refresh');
+    const refreshParam = searchParams.get("refresh");
     if (refreshParam && user?.id) {
       // Invalidate and refetch data when refresh parameter is present
       queryClient.invalidateQueries({ queryKey: ["orders", user?.id] });
@@ -708,11 +712,30 @@ export default function OrderDetails() {
 
   const handleOrderShippingStatusUpdate = async (
     orderId: number,
-    status: string
+    status: string,
+    previousStatus?: string
   ) => {
     if (status === "shipped") {
-      setSelectedOrder({ id: orderId } as Order);
-      setIsShippingModalOpen(true);
+      // Store the current order and its previous status
+      let currentOrder: Order | undefined;
+      
+      // Find the order in either winningOrders or sellingOrders
+      if (orders?.winningOrders) {
+        currentOrder = orders.winningOrders.find((order: Order) => order.id === orderId);
+      }
+      
+      if (!currentOrder && orders?.sellingOrders) {
+        currentOrder = orders.sellingOrders.find((order: Order) => order.id === orderId);
+      }
+      
+      if (currentOrder) {
+        setOrderBeingUpdated({
+          id: orderId,
+          previousStatus: previousStatus || currentOrder.shippingStatus || "pending"
+        });
+        setSelectedOrder({ id: orderId } as Order);
+        setIsShippingModalOpen(true);
+      }
       return;
     }
 
@@ -768,7 +791,15 @@ export default function OrderDetails() {
     <div className="h-full flex flex-col">
       <ShippingDetailsModal
         isOpen={isShippingModalOpen}
-        onClose={() => setIsShippingModalOpen(false)}
+        onClose={() => {
+          setIsShippingModalOpen(false);
+          // Force a refetch to reset the UI state
+          if (orderBeingUpdated) {
+            // Refetch to reset the UI
+            queryClient.invalidateQueries({ queryKey: ["orders", user?.id] });
+            setOrderBeingUpdated(null);
+          }
+        }}
         onSubmit={handleShippingDetailsSubmit}
       />
 
