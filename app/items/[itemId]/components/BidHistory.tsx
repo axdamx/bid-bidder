@@ -9,6 +9,7 @@ import {
 import Link from "next/link";
 import { CrownIcon } from "lucide-react";
 import { formatCurrency, formatTimestamp } from "../utils/formatters";
+import { Card } from "@/components/ui/card";
 
 export function BidHistory({
   bids,
@@ -18,7 +19,8 @@ export function BidHistory({
   handleLinkClick: (e: React.MouseEvent, path: string) => void;
 }) {
   return (
-    <div className="overflow-x-auto">
+    <Card className="w-full mx-auto flex flex-col">
+      <div className={`${bids.length > 0 ? 'overflow-x-auto overflow-y-auto max-h-[500px] md:max-h-[500px]' : ''}`}>
       {bids.length > 0 ? (
         <Table>
           <TableHeader>
@@ -29,7 +31,7 @@ export function BidHistory({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {bids.slice(0, 10).map((bid) => (
+            {bids.map((bid) => (
               <TableRow key={bid.id}>
                 <TableCell>
                   <Link
@@ -54,6 +56,7 @@ export function BidHistory({
       ) : (
         <p className="p-4">No bids yet.</p>
       )}
-    </div>
+      </div>
+    </Card>
   );
 }
