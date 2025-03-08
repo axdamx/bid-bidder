@@ -20,42 +20,48 @@ export function BidHistory({
 }) {
   return (
     <Card className="w-full mx-auto flex flex-col">
-      <div className={`${bids.length > 0 ? 'overflow-x-auto overflow-y-auto max-h-[500px] md:max-h-[500px]' : ''}`}>
-      {bids.length > 0 ? (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Bidder Name</TableHead>
-              <TableHead>Bid Amount</TableHead>
-              <TableHead>Time</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {bids.map((bid) => (
-              <TableRow key={bid.id}>
-                <TableCell>
-                  <Link
-                    href={`/profile/${bid.users.id}`}
-                    className="hover:underline cursor-pointer flex items-center gap-1"
-                    onClick={(e) =>
-                      handleLinkClick(e, `/profile/${bid.users.id}`)
-                    }
-                  >
-                    {bid.users.name}
-                    {bids.indexOf(bid) === 0 && (
-                      <CrownIcon className="h-5 w-5 text-yellow-400" />
-                    )}
-                  </Link>
-                </TableCell>
-                <TableCell>{formatCurrency(bid.amount)}</TableCell>
-                <TableCell>{formatTimestamp(bid.timestamp)}</TableCell>
+      <div
+        className={`${
+          bids.length > 0
+            ? "overflow-x-auto overflow-y-auto max-h-[500px] md:max-h-[500px]"
+            : ""
+        }`}
+      >
+        {bids.length > 0 ? (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Bidder Name</TableHead>
+                <TableHead>Bid Amount</TableHead>
+                <TableHead>Time</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      ) : (
-        <p className="p-4">No bids yet.</p>
-      )}
+            </TableHeader>
+            <TableBody>
+              {bids.map((bid) => (
+                <TableRow key={bid.id}>
+                  <TableCell>
+                    <Link
+                      href={`/profile/${bid.users.id}`}
+                      className="hover:underline cursor-pointer flex items-center gap-1"
+                      onClick={(e) =>
+                        handleLinkClick(e, `/profile/${bid.users.id}`)
+                      }
+                    >
+                      {bid.users.name}
+                      {bids.indexOf(bid) === 0 && (
+                        <CrownIcon className="h-5 w-5 text-yellow-400" />
+                      )}
+                    </Link>
+                  </TableCell>
+                  <TableCell>{formatCurrency(bid.amount)}</TableCell>
+                  <TableCell>{formatTimestamp(bid.timestamp)}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        ) : (
+          <p className="p-4">No bids.</p>
+        )}
       </div>
     </Card>
   );
