@@ -533,9 +533,6 @@ export function AuctionDetails({
                 <DropdownMenuItem onClick={() => addToCalendar("ical", item)}>
                   Apple Calendar
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => addToCalendar("yahoo", item)}>
-                  Yahoo Calendar
-                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
