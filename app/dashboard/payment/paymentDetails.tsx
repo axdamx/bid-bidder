@@ -357,7 +357,7 @@ export default function PaymentsAndPayouts() {
                 type="submit"
                 disabled={addPayoutMethodMutation.isPending}
               >
-                Add Payout Method
+                {addPayoutMethodMutation.isPending ? "Saving..." : "Add Payout Method"}
               </Button>
             </DialogFooter>
           </form>

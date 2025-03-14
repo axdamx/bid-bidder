@@ -23,7 +23,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { CreditCard, Home, PlusCircle } from "lucide-react";
+import { CreditCard, Home, Pencil, PlusCircle } from "lucide-react";
 import toast from "react-hot-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -199,12 +199,12 @@ export default function AddressDetails() {
             </p>
           </div>
           <Button
-            // variant="outline"
             onClick={() => openAddressDialog()}
-            disabled={!canAddAddress}
+            disabled={isLoading || !canAddAddress}
           >
             <PlusCircle className="mr-2 h-4 w-4" />
-            {canAddAddress ? "Add Address" : "Maximum addresses reached"}
+            Add Address
+            {!canAddAddress && " (Max Reached)"}
           </Button>
           {/* <Button
           onClick={() => setIsAddDialogOpen(true)}
@@ -225,49 +225,47 @@ export default function AddressDetails() {
             {[1, 2].map((n) => (
               <Card key={n} className="p-4">
                 <div className="flex items-start gap-4">
-                  <div className="h-4 w-4 mt-1 rounded-full bg-muted animate-enhanced-pulse" />
+                  <div className="h-4 w-4 mt-1 rounded-full bg-muted animate-pulse" />
                   <div className="flex-1 min-w-0 space-y-3">
-                    <div className="h-4 w-3/4 bg-muted rounded animate-enhanced-pulse" />
-                    <div className="h-4 w-1/2 bg-muted rounded animate-enhanced-pulse" />
-                    <div className="h-4 w-2/3 bg-muted rounded animate-enhanced-pulse" />
-                    <div className="h-4 w-1/4 bg-muted rounded animate-enhanced-pulse" />
+                    <div className="h-4 w-3/4 bg-muted rounded animate-pulse" />
+                    <div className="h-4 w-1/2 bg-muted rounded animate-pulse" />
+                    <div className="h-4 w-2/3 bg-muted rounded animate-pulse" />
+                    <div className="h-4 w-1/4 bg-muted rounded animate-pulse" />
                   </div>
-                  <div className="h-8 w-16 bg-muted rounded animate-enhanced-pulse" />
+                  <div className="h-8 w-16 bg-muted rounded animate-pulse" />
                 </div>
               </Card>
             ))}
           </div>
-        ) : (
+        ) : addresses.length > 0 ? (
           <RadioGroup
             value={defaultAddressId}
             onValueChange={handleDefaultChange}
-            className="space-y-4"
+            className="grid gap-4"
           >
             {addresses.map((address) => (
-              <Card key={address.id} className="p-3 sm:p-4 relative">
-                <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-4">
-                  <div className="absolute left-4 top-4">
-                    <RadioGroupItem
-                      value={address.id}
-                      id={`address-${address.id}`}
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0 pl-10 sm:pl-8">
-                    <Label
-                      htmlFor={`address-${address.id}`}
-                      className="flex flex-col gap-1"
-                    >
+              <div key={address.id} className="relative">
+                <RadioGroupItem
+                  value={address.id}
+                  id={`address-${address.id}`}
+                  className="peer sr-only"
+                  disabled={isLoading}
+                />
+                <Label
+                  htmlFor={`address-${address.id}`}
+                  className="flex flex-col sm:flex-row items-start sm:items-center justify-between rounded-lg border p-4 hover:bg-accent peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="bg-primary/10 p-2 rounded-full">
+                      <Home className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-medium truncate">
                           {address.addressLine1}
                         </span>
                         {address.isDefault && (
-                          <Badge
-                            variant="secondary"
-                            className="text-xs font-normal"
-                          >
-                            Default
-                          </Badge>
+                          <Badge variant="outline">Default</Badge>
                         )}
                       </div>
                       {address.addressLine2 && (
@@ -275,32 +273,39 @@ export default function AddressDetails() {
                           {address.addressLine2}
                         </span>
                       )}
+                      <br />
                       <span className="text-sm truncate">
                         {`${address.city}, ${address.state} ${address.postcode}`}
                       </span>
+                      <br />
                       <span className="text-sm">{address.country}</span>
-                    </Label>
+                    </div>
                   </div>
                   <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => openAddressDialog(address)}
-                    className="shrink-0 w-full sm:w-auto justify-center sm:justify-start"
+                    variant="ghost"
+                    size="icon"
+                    className="text-muted-foreground hover:text-foreground hover:bg-accent"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      openAddressDialog(address);
+                    }}
+                    disabled={isLoading}
                   >
-                    Edit
+                    <Pencil className="h-4 w-4" />
                   </Button>
-                </div>
-              </Card>
-            ))}
-
-            {addresses.length === 0 && (
-              <div className="text-center py-8 px-4">
-                <p className="text-muted-foreground">
-                  No addresses found. Add a new address to get started.
-                </p>
+                </Label>
               </div>
-            )}
+            ))}
           </RadioGroup>
+        ) : (
+          <Card className="p-6">
+            <div className="text-center space-y-2">
+              <h3 className="font-semibold">No addresses</h3>
+              <p className="text-sm text-muted-foreground">
+                Add an address to get started
+              </p>
+            </div>
+          </Card>
         )}
       </div>
 
@@ -416,7 +421,11 @@ export default function AddressDetails() {
                 disabled={isLoading}
                 className="sm:w-auto w-full"
               >
-                {isLoading ? "Saving..." : selectedAddress ? "Update" : "Add"}
+                {isLoading
+                  ? "Saving..."
+                  : selectedAddress
+                  ? "Update Address"
+                  : "Add Address"}
               </Button>
             </div>
           </form>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { OrderCancelledModal } from "@/app/components/OrderCancelledModal";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
@@ -684,6 +685,11 @@ export default function OrderDetails() {
   const [isUpdating, setIsUpdating] = useState(false);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
   const [isShippingModalOpen, setIsShippingModalOpen] = useState(false);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [cancelledOrder, setCancelledOrder] = useState<{
+    id: number;
+    itemName: string;
+  } | null>(null);
   const [orderBeingUpdated, setOrderBeingUpdated] = useState<{
     id: number;
     previousStatus: string;
@@ -730,6 +736,79 @@ export default function OrderDetails() {
     staleTime: 0,
     gcTime: 0,
     // refetchInterval: 5000, // Poll every 5 seconds for updates
+  });
+
+  // Function to check if an order is expired (more than 30 minutes old)
+  const isOrderExpired = (order: Order) => {
+    const created = new Date(order.orderDate);
+    const deadline = new Date(created.getTime() + 30 * 60 * 1000); // 30 mins after creation
+    const now = new Date();
+    return now > deadline;
+  };
+
+  // Query to check and cancel expired orders
+  const checkExpiredOrdersMutation = useMutation({
+    mutationFn: async (orderId: number) => {
+      const { updateOrderStatusToCancelled } = await import('@/app/checkout/[itemId]/actions');
+      return updateOrderStatusToCancelled(orderId, user?.id as string);
+    },
+    onSuccess: (result, orderId) => {
+      if (result.success) {
+        // Find the order to get its name
+        const allOrders = [...(orders?.winningOrders || []), ...(orders?.sellingOrders || [])];
+        const cancelledOrderItem = allOrders.find(order => order.id === orderId);
+        
+        if (cancelledOrderItem) {
+          // Show the cancellation modal
+          setCancelledOrder({
+            id: orderId,
+            itemName: cancelledOrderItem.item.name
+          });
+          setIsCancelModalOpen(true);
+        }
+        
+        // Refresh the orders list
+        queryClient.invalidateQueries({ queryKey: ["orders", user?.id] });
+      }
+    },
+    onError: (error) => {
+      console.error('Error cancelling expired order:', error);
+      toast({
+        title: "Error",
+        description: "Failed to cancel expired order",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Use a query to check for expired orders
+  useQuery({
+    queryKey: ["check-expired-orders", user?.id],
+    queryFn: async () => {
+      if (!orders || !user?.id) return null;
+      
+      // Only check pending orders
+      const pendingOrders = [...(orders.winningOrders || []), ...(orders.sellingOrders || [])]
+        .filter(order => order.orderStatus === 'pending' && order.paymentStatus === 'unpaid');
+      
+      // Process all expired orders in parallel
+      const expiredOrders = pendingOrders.filter(isOrderExpired);
+      
+      // If there are expired orders, cancel them one by one
+      // We don't want to do this in parallel to avoid race conditions
+      for (const order of expiredOrders) {
+        await checkExpiredOrdersMutation.mutateAsync(order.id);
+      }
+      
+      return expiredOrders.length;
+    },
+    enabled: !!orders && !!user?.id,
+    // Run this query whenever orders data changes
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    refetchOnReconnect: true,
+    // Run every minute to check for newly expired orders
+    refetchInterval: 60 * 1000,
   });
 
   // Mutation for updating order shipping status
@@ -866,6 +945,16 @@ export default function OrderDetails() {
           }
         }}
         onSubmit={handleShippingDetailsSubmit}
+      />
+      
+      <OrderCancelledModal
+        isOpen={isCancelModalOpen}
+        onClose={() => {
+          setIsCancelModalOpen(false);
+          setCancelledOrder(null);
+        }}
+        orderId={cancelledOrder?.id || null}
+        itemName={cancelledOrder?.itemName || null}
       />
 
       <div className="max-w-7xl mx-auto w-full p-4 space-y-8 flex-1 overflow-hidden">

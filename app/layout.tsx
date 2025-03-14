@@ -7,6 +7,7 @@ import { Footer } from "./footer";
 import { Providers } from "./Providers";
 import { AnimatedBackground } from "./AnimatedBackground";
 import { Analytics } from "@vercel/analytics/react";
+import Script from "next/script";
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -25,6 +26,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <meta name="google-site-verification" content="rveUeW8a9X2bMP_1qdudSLOfSd7FV1Kt88q8wgCxwc0" />
+      </head>
       <body
         className={cn(
           "min-h-screen text-base md:text-xl font-serif tracking-wide overflow-x-hidden",

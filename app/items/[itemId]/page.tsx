@@ -30,7 +30,7 @@ export default function ItemPage({
     queryFn: () => fetchItem(itemId),
     refetchOnMount: "always",
     refetchOnWindowFocus: true,
-    gcTime: 0
+    gcTime: 0,
   });
 
   // Bids query - load after item
@@ -40,7 +40,7 @@ export default function ItemPage({
     enabled: !!item, // Only start loading after item is loaded
     refetchOnMount: "always",
     refetchOnWindowFocus: true,
-    gcTime: 0
+    gcTime: 0,
   });
 
   // Bid acknowledgment query - non-critical, can load last
@@ -49,7 +49,7 @@ export default function ItemPage({
     queryFn: () => checkBidAcknowledgmentAction(itemId, user?.id ?? null),
     enabled: !!user?.id && !!item,
     refetchOnMount: "always",
-    gcTime: 0
+    gcTime: 0,
   });
 
   useEffect(() => {

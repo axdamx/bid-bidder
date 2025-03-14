@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { User, Loader2, Share2 } from "lucide-react";
+import { User, Loader2, Share2, Calendar } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import CountdownTimer from "@/app/countdown-timer";
 import { Button as MovingBorderButton } from "@/components/ui/moving-border";
@@ -15,7 +15,105 @@ import cn from "classnames";
 import { formatCurrency, getDateInfo } from "../utils/formatters";
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
-import { RichTextContent, RichTextStyles } from "@/app/components/RichTextEditor";
+import {
+  RichTextContent,
+  RichTextStyles,
+} from "@/app/components/RichTextEditor";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+// Function to detect device/platform
+const detectPlatform = () => {
+  if (typeof window === "undefined") return "unknown";
+
+  const userAgent = window.navigator.userAgent.toLowerCase();
+
+  // Mobile detection
+  const isIOS = /iphone|ipad|ipod/.test(userAgent);
+  const isAndroid = /android/.test(userAgent);
+
+  // Desktop detection
+  const isMac = /macintosh|mac os x/.test(userAgent) && !isIOS;
+  const isWindows = /windows/.test(userAgent);
+
+  if (isIOS) return "ios";
+  if (isAndroid) return "android";
+  if (isMac) return "mac";
+  if (isWindows) return "windows";
+
+  return "unknown";
+};
+
+// Function to format date for calendar
+const formatCalendarDate = (date: string | Date) => {
+  const d = new Date(date);
+  return d.toISOString().replace(/-|:|\.\d+/g, "");
+};
+
+// Function to add event to calendar based on platform
+const addToCalendar = (calendarType: string, item: any) => {
+  const platform = detectPlatform();
+  const startDate = new Date(item.startDate || new Date());
+  const endDate = new Date(item.endDate);
+
+  const title = encodeURIComponent(`Auction: ${item.name}`);
+  const description = encodeURIComponent(
+    `Bid on: ${item.name}\n\nCurrent bid: ${formatCurrency(
+      item.currentBid
+    )}\n\nDescription: ${
+      item.description ? item.description.replace(/<[^>]*>?/gm, "") : ""
+    }`
+  );
+  const location = encodeURIComponent(window.location.href);
+
+  const startDateFormatted = formatCalendarDate(startDate);
+  const endDateFormatted = formatCalendarDate(endDate);
+
+  let calendarUrl = "";
+
+  switch (calendarType) {
+    case "google":
+      calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startDateFormatted}/${endDateFormatted}&details=${description}&location=${location}`;
+      break;
+    case "outlook":
+      calendarUrl = `https://outlook.office.com/calendar/0/deeplink/compose?subject=${title}&startdt=${startDate.toISOString()}&enddt=${endDate.toISOString()}&body=${description}&location=${location}`;
+      break;
+    case "ical":
+      // For iOS/macOS, we create a downloadable .ics file
+      const icsContent = [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "BEGIN:VEVENT",
+        `DTSTART:${startDateFormatted}`,
+        `DTEND:${endDateFormatted}`,
+        `SUMMARY:${title.replace(/%20/g, " ")}`,
+        `DESCRIPTION:${description.replace(/%20/g, " ")}`,
+        `LOCATION:${location.replace(/%20/g, " ")}`,
+        "END:VEVENT",
+        "END:VCALENDAR",
+      ].join("\r\n");
+
+      const blob = new Blob([icsContent], {
+        type: "text/calendar;charset=utf-8",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `auction-${item.id}.ics`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      return;
+    default:
+      calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startDateFormatted}/${endDateFormatted}&details=${description}&location=${location}`;
+  }
+
+  window.open(calendarUrl, "_blank");
+};
 
 export function AuctionDetails({
   item,
@@ -414,6 +512,32 @@ export function AuctionDetails({
                 <path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" />
               </svg>
             </Button>
+
+            {/* Add to Calendar Button */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon" className="rounded-full">
+                  <span className="sr-only">Add to Calendar</span>
+                  <Calendar className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => addToCalendar("google", item)}>
+                  Google Calendar
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => addToCalendar("outlook", item)}
+                >
+                  Outlook/Office 365
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => addToCalendar("ical", item)}>
+                  Apple Calendar
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => addToCalendar("yahoo", item)}>
+                  Yahoo Calendar
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 

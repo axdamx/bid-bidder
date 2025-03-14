@@ -322,10 +322,9 @@ export default function ItemsDetails() {
               onChange={(e) => {
                 const value = e.target.value;
                 if (!value) return;
-                // Convert local time to UTC by subtracting 8 hours
+                // Create a proper Date object from the input value
                 const date = new Date(value);
-                const utcDate = new Date(date.getTime() - 8 * 60 * 60 * 1000);
-                setSelectedDate(utcDate);
+                setSelectedDate(date);
               }}
               min={format(new Date(), "yyyy-MM-dd'T'HH:mm")}
             />
@@ -573,7 +572,9 @@ export default function ItemsDetails() {
                       <h3 className="font-small">
                         <Link
                           href={`/items/${item.id}`}
-                          onClick={(e) => handleLinkClick(e, `/items/${item.id}`)}
+                          onClick={(e) =>
+                            handleLinkClick(e, `/items/${item.id}`)
+                          }
                           className="hover:underline"
                         >
                           {item.name}
@@ -597,7 +598,9 @@ export default function ItemsDetails() {
                       <div className="text-sm">
                         {item.winner ? (
                           <div className="flex items-center gap-1">
-                            <span className="text-muted-foreground">Winner:</span>
+                            <span className="text-muted-foreground">
+                              Winner:
+                            </span>
                             <Link
                               href={`/profile/${item.winner.id}`}
                               onClick={(e) =>

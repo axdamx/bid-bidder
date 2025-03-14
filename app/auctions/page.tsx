@@ -7,7 +7,7 @@ import ItemsListingClient from "./components/ItemListingClient";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Auctions | Bid Bidder",
+  title: "Auctions | Renown",
   description: "Browse all available auctions and place your bids",
 };
 
@@ -30,11 +30,11 @@ export default async function AuctionsPage({
       title = "Live Auctions";
       description = "Currently active auctions";
       break;
-    case "upcoming":
-      items = await getUpcomingAuctions();
-      title = "Upcoming Auctions";
-      description = "Auctions starting soon";
-      break;
+    // case "upcoming":
+    //   items = await getUpcomingAuctions();
+    //   title = "Upcoming Auctions";
+    //   description = "Auctions starting soon";
+    //   break;
     case "ended":
       items = await getEndedAuctions();
       title = "Ended Auctions";

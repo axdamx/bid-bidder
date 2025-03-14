@@ -74,22 +74,22 @@ export default function CheckoutPage({
   const [selectedShippingRegion, setSelectedShippingRegion] = useState<
     "WEST" | "EAST"
   >("WEST");
-  
+
   // Function to detect shipping region based on zipcode
   const detectShippingRegion = (zipCode: string): "WEST" | "EAST" => {
     // Validate zipcode format (5 digits)
     if (!/^\d{5}$/.test(zipCode)) {
       return "WEST"; // Default to West Malaysia if invalid format
     }
-    
+
     // Extract the first two digits
     const prefix = parseInt(zipCode.substring(0, 2), 10);
-    
+
     // East Malaysia: Sabah (88-91) and Sarawak (93-98)
     if ((prefix >= 88 && prefix <= 91) || (prefix >= 93 && prefix <= 98)) {
       return "EAST";
     }
-    
+
     // All other zipcodes are West Malaysia
     return "WEST";
   };
@@ -515,17 +515,18 @@ export default function CheckoutPage({
                           <FormItem>
                             <FormLabel>ZIP Code</FormLabel>
                             <FormControl>
-                              <Input 
-                                placeholder="Enter ZIP code" 
-                                {...field} 
+                              <Input
+                                placeholder="Enter ZIP code"
+                                {...field}
                                 onChange={(e) => {
                                   field.onChange(e);
                                   // Auto-detect shipping region when zipcode changes
                                   const zipCode = e.target.value;
-                                  
+
                                   if (zipCode && zipCode.length === 5) {
                                     // When zipcode is complete (5 digits), auto-detect region
-                                    const region = detectShippingRegion(zipCode);
+                                    const region =
+                                      detectShippingRegion(zipCode);
                                     setSelectedShippingRegion(region);
                                     form.setValue("shippingRegion", region);
                                   } else if (zipCode && zipCode.length > 0) {
@@ -556,7 +557,13 @@ export default function CheckoutPage({
                               Shipping Region
                             </span>
                             <div className="flex gap-4">
-                              <label className={`flex items-center space-x-2 ${form.watch("zipCode")?.length > 0 ? "opacity-70" : ""}`}>
+                              <label
+                                className={`flex items-center space-x-2 ${
+                                  form.watch("zipCode")?.length > 0
+                                    ? "opacity-70"
+                                    : ""
+                                }`}
+                              >
                                 <input
                                   type="radio"
                                   name="shippingRegion"
@@ -576,7 +583,13 @@ export default function CheckoutPage({
                                   {item?.westMalaysiaShippingPrice})
                                 </span>
                               </label>
-                              <label className={`flex items-center space-x-2 ${form.watch("zipCode")?.length > 0 ? "opacity-70" : ""}`}>
+                              <label
+                                className={`flex items-center space-x-2 ${
+                                  form.watch("zipCode")?.length > 0
+                                    ? "opacity-70"
+                                    : ""
+                                }`}
+                              >
                                 <input
                                   type="radio"
                                   name="shippingRegion"
@@ -598,11 +611,13 @@ export default function CheckoutPage({
                               </label>
                             </div>
                             <div className="text-xs text-gray-500 italic">
-                              {form.watch("zipCode")?.length === 5 ? 
-                                `Shipping region automatically detected based on zipcode ${form.watch("zipCode")}` : 
-                                form.watch("zipCode")?.length > 0 ?
-                                "Please enter a complete 5-digit zipcode to detect your shipping region" :
-                                "Enter your zipcode to auto-detect shipping region or select manually"}
+                              {form.watch("zipCode")?.length === 5
+                                ? `Shipping region automatically detected based on zipcode ${form.watch(
+                                    "zipCode"
+                                  )}`
+                                : form.watch("zipCode")?.length > 0
+                                ? "Please enter a complete 5-digit zipcode to detect your shipping region"
+                                : "Enter your zipcode to auto-detect shipping region or select manually"}
                             </div>
                           </div>
                           <div className="flex justify-between text-sm">
@@ -717,17 +732,17 @@ export default function CheckoutPage({
 
                     <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
                       <Lock className="h-4 w-4" />
-                      Payments are secure and encrypted
+                      Payments are secure and encrypted (via FPX)
                     </div>
 
                     <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
                       <span>Powered by Toyyib Pay</span>
                       <span>·</span>
-                      <a href="#" className="hover:underline">
+                      <a href="/terms-of-service" className="hover:underline">
                         Terms
                       </a>
                       <span>·</span>
-                      <a href="#" className="hover:underline">
+                      <a href="/privacy-policy" className="hover:underline">
                         Privacy
                       </a>
                     </div>
