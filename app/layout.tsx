@@ -6,6 +6,7 @@ import { Header } from "./header";
 import { Footer } from "./footer";
 import { Providers } from "./Providers";
 import { AnimatedBackground } from "./AnimatedBackground";
+import { Analytics } from "@vercel/analytics/react";
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -38,6 +39,7 @@ export default function RootLayout({
             <main className="flex-1 relative w-full">
               <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-full">
                 {children}
+                <Analytics />
               </div>
             </main>
             <Footer />
