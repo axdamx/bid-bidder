@@ -27,7 +27,14 @@ import {
   RefreshCw,
   MessageCircle,
   ShieldCheck,
+  Info,
 } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   Select,
   SelectContent,
@@ -193,7 +200,11 @@ const OrdersTable = ({
   type: "buying" | "selling";
   isLoading: boolean;
   onRefresh: () => Promise<void>;
-  onOrderShippingStatusUpdate: (orderId: number, status: string, previousStatus?: string) => void;
+  onOrderShippingStatusUpdate: (
+    orderId: number,
+    status: string,
+    previousStatus?: string
+  ) => void;
   handleLinkClick: (e: React.MouseEvent, path: string) => void;
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -325,7 +336,43 @@ const OrdersTable = ({
                 <TableHead>Dealing Method</TableHead>
                 <TableHead>Order Status</TableHead>
                 <TableHead>Payment Status</TableHead>
-                <TableHead>Final Amount</TableHead>
+                {/* <TableHead>
+                  <div className="flex items-center gap-1">
+                    Final Amount
+                    {type === "selling" && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="h-4 w-4 text-muted-foreground" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>
+                              For SHIPPING orders, this is the amount you will
+                              receive (sold price + shipping cost). For COD, the
+                              final amount is the item's (sold price)
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                    {type === "buying" && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="h-4 w-4 text-muted-foreground" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>
+                              For SHIPPING orders, total amount is the amount
+                              you have paid (sold price + shipping cost). For
+                              COD, total amount is the item's (sold price)
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                  </div>
+                </TableHead> */}
                 {type === "selling" ? (
                   <>
                     <TableHead>Update Status</TableHead>
@@ -379,14 +426,20 @@ const OrdersTable = ({
                     <TableCell>
                       <StatusBadge status={order.paymentStatus} />
                     </TableCell>
-                    <TableCell>{formatCurrency(order.amount)}</TableCell>
+                    {/* <TableCell>
+                      {formatCurrency(order.amount + (order.shippingCost || 0))}
+                    </TableCell> */}
                     <TableCell>
                       {type === "selling" ? (
                         <div className="space-y-2">
                           <Select
                             value={order.shippingStatus}
                             onValueChange={(value) =>
-                              onOrderShippingStatusUpdate(order.id, value, order.shippingStatus)
+                              onOrderShippingStatusUpdate(
+                                order.id,
+                                value,
+                                order.shippingStatus
+                              )
                             }
                             disabled={order.orderStatus === "cancelled"}
                           >
@@ -545,7 +598,11 @@ const OrdersTable = ({
                           <Select
                             value={order.shippingStatus}
                             onValueChange={(value) =>
-                              onOrderShippingStatusUpdate(order.id, value, order.shippingStatus)
+                              onOrderShippingStatusUpdate(
+                                order.id,
+                                value,
+                                order.shippingStatus
+                              )
                             }
                             disabled={order.orderStatus === "cancelled"}
                           >
@@ -627,7 +684,10 @@ export default function OrderDetails() {
   const [isUpdating, setIsUpdating] = useState(false);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
   const [isShippingModalOpen, setIsShippingModalOpen] = useState(false);
-  const [orderBeingUpdated, setOrderBeingUpdated] = useState<{id: number, previousStatus: string} | null>(null);
+  const [orderBeingUpdated, setOrderBeingUpdated] = useState<{
+    id: number;
+    previousStatus: string;
+  } | null>(null);
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isNavigating, setIsNavigating] = useState(false);
@@ -718,20 +778,25 @@ export default function OrderDetails() {
     if (status === "shipped") {
       // Store the current order and its previous status
       let currentOrder: Order | undefined;
-      
+
       // Find the order in either winningOrders or sellingOrders
       if (orders?.winningOrders) {
-        currentOrder = orders.winningOrders.find((order: Order) => order.id === orderId);
+        currentOrder = orders.winningOrders.find(
+          (order: Order) => order.id === orderId
+        );
       }
-      
+
       if (!currentOrder && orders?.sellingOrders) {
-        currentOrder = orders.sellingOrders.find((order: Order) => order.id === orderId);
+        currentOrder = orders.sellingOrders.find(
+          (order: Order) => order.id === orderId
+        );
       }
-      
+
       if (currentOrder) {
         setOrderBeingUpdated({
           id: orderId,
-          previousStatus: previousStatus || currentOrder.shippingStatus || "pending"
+          previousStatus:
+            previousStatus || currentOrder.shippingStatus || "pending",
         });
         setSelectedOrder({ id: orderId } as Order);
         setIsShippingModalOpen(true);

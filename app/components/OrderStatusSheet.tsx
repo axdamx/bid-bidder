@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import Image from "next/image";
 import {
   Sheet,
   SheetContent,
@@ -21,7 +22,7 @@ import { cn, formatCurrency } from "@/lib/utils";
 import { OptimizedImage } from "./OptimizedImage";
 import { Order } from "@/app/types/order";
 import { useState, useMemo, useEffect } from "react";
-import { confirmDelivery } from "../dashboard/orders/action";
+import { confirmDelivery, nudgeSellerToShip } from "../dashboard/orders/action";
 import { userAtom } from "../atom/userAtom";
 import { useAtom } from "jotai";
 import { useToast } from "@/hooks/use-toast";
@@ -52,8 +53,117 @@ export function OrderStatusSheet({ order, disabled }: OrderStatusSheetProps) {
   const [open, setOpen] = useState(false);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
+  const [isNudging, setIsNudging] = useState(false);
 
   console.log("inside order status sheet", order);
+
+  // Calculate time remaining until nudge is available
+  const timeRemainingForNudge = useMemo(() => {
+    if (!order.orderDate) return { hours: 24, minutes: 0, canNudge: false };
+
+    const orderDate = new Date(order.orderDate);
+    const currentDate = new Date();
+
+    // Calculate time difference
+    const diffTime = currentDate.getTime() - orderDate.getTime();
+
+    // If order is less than 24 hours old, calculate remaining time
+    if (diffTime < 24 * 60 * 60 * 1000) {
+      const remainingMs = 24 * 60 * 60 * 1000 - diffTime;
+      const remainingHours = Math.floor(remainingMs / (1000 * 60 * 60));
+      const remainingMinutes = Math.floor(
+        (remainingMs % (1000 * 60 * 60)) / (1000 * 60)
+      );
+
+      return {
+        hours: remainingHours,
+        minutes: remainingMinutes,
+        canNudge: false,
+      };
+    }
+
+    // If order is older than 24 hours, nudge is available
+    return { hours: 0, minutes: 0, canNudge: true };
+  }, [order.orderDate]);
+
+  // Check if order is at least 1 day old
+  const isOrderOlderThanOneDay = useMemo(() => {
+    return timeRemainingForNudge.canNudge;
+  }, [timeRemainingForNudge]);
+
+  // Calculate time remaining since last nudge
+  const timeRemainingSinceLastNudge = useMemo(() => {
+    if (!order.lastNudgedAt) return { hours: 0, minutes: 0, canNudge: true };
+
+    const lastNudgeDate = new Date(order.lastNudgedAt);
+    const currentDate = new Date();
+
+    // Calculate time difference
+    const diffTime = currentDate.getTime() - lastNudgeDate.getTime();
+
+    // If last nudge was less than 24 hours ago, calculate remaining time
+    if (diffTime < 24 * 60 * 60 * 1000) {
+      const remainingMs = 24 * 60 * 60 * 1000 - diffTime;
+      const remainingHours = Math.floor(remainingMs / (1000 * 60 * 60));
+      const remainingMinutes = Math.floor(
+        (remainingMs % (1000 * 60 * 60)) / (1000 * 60)
+      );
+
+      return {
+        hours: remainingHours,
+        minutes: remainingMinutes,
+        canNudge: false,
+      };
+    }
+
+    // If last nudge was more than 24 hours ago, nudge is available
+    return { hours: 0, minutes: 0, canNudge: true };
+  }, [order.lastNudgedAt]);
+
+  // Check if user can nudge seller (based on lastNudgedAt)
+  const canNudgeSeller = useMemo(() => {
+    return timeRemainingSinceLastNudge.canNudge;
+  }, [timeRemainingSinceLastNudge]);
+
+  const { mutate: nudgeSellerMutation } = useMutation({
+    mutationFn: async () => {
+      if (!user?.id) throw new Error("User not authenticated");
+      return await nudgeSellerToShip(order.id, user.id);
+    },
+    onMutate: () => {
+      setIsNudging(true);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      toast({
+        title: "Seller Nudged",
+        description: "The seller has been notified to ship your item.",
+      });
+      setIsNudging(false);
+    },
+    onError: (error) => {
+      console.error("Error nudging seller:", error);
+      if (error instanceof Error) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Error nudging seller",
+          variant: "destructive",
+        });
+      }
+      setIsNudging(false);
+    },
+  });
+
+  const handleNudgeSeller = () => {
+    if (!user?.id) return;
+    nudgeSellerMutation();
+  };
 
   const { mutate: confirmDeliveryMutation, isPending } = useMutation({
     mutationFn: async () => {
@@ -202,7 +312,9 @@ export function OrderStatusSheet({ order, disabled }: OrderStatusSheetProps) {
                     <p className="text-muted-foreground">Shipping Cost</p>
                     <p className="font-medium">
                       {order.totalAmount && order.amount
-                        ? formatCurrency(order.totalAmount - order.amount - serviceTax)
+                        ? formatCurrency(
+                            order.totalAmount - order.amount - serviceTax
+                          )
                         : "N/A"}
                     </p>
                   </div>
@@ -319,7 +431,29 @@ export function OrderStatusSheet({ order, disabled }: OrderStatusSheetProps) {
                                   {/* {order.customerName && ( */}
                                   <>
                                     <p>Customer: {order.customerName}</p>
-                                    <p>Phone: {order.customerPhone}</p>
+                                    <p>
+                                      Phone: {order.customerPhone}{" "}
+                                      {order.item.dealingMethodType === "COD" && 
+                                        order.paymentStatus === "paid" && (
+                                        <a
+                                          href={`https://wa.me/+6${order.customerPhone?.replace(
+                                            /\D/g,
+                                            ""
+                                          )}`}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="inline-flex items-center ml-2"
+                                        >
+                                          <Image
+                                            src="/whatsapp-icon.svg"
+                                            alt="WhatsApp"
+                                            width={20}
+                                            height={20}
+                                            className="inline"
+                                          />
+                                        </a>
+                                      )}
+                                    </p>
                                     <p>Email: {order.customerEmail}</p>
                                   </>
                                   {/* )} */}
@@ -365,6 +499,46 @@ export function OrderStatusSheet({ order, disabled }: OrderStatusSheetProps) {
                 </div>
               </div>
             }
+
+            {/* Nudge Seller Section - Only show for buyers when shipping status is pending */}
+            {order.item.dealingMethodType === "SHIPPING" &&
+              order.shippingStatus === "pending" &&
+              order.buyerId === user?.id &&
+              order.paymentStatus === "paid" && (
+                <div className="space-y-2 pt-4 border-t">
+                  <h3 className="font-semibold text-lg">Shipping Reminder</h3>
+                  <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
+                    <div className="flex items-start gap-3">
+                      <Clock className="h-5 w-5 text-amber-500 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p className="text-sm font-medium text-amber-800">
+                          Waiting for seller to ship your item
+                        </p>
+                        <p className="text-xs text-amber-700 mt-1">
+                          {isOrderOlderThanOneDay
+                            ? canNudgeSeller
+                              ? "You can send a friendly reminder to the seller to ship your item."
+                              : `You've already sent a reminder. You can send another reminder in ${timeRemainingSinceLastNudge.hours}h ${timeRemainingSinceLastNudge.minutes}m.`
+                            : `You can send a reminder in ${timeRemainingForNudge.hours}h ${timeRemainingForNudge.minutes}m.`}
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-3 w-full border-amber-300 bg-amber-100 hover:bg-amber-200 text-amber-900"
+                      onClick={handleNudgeSeller}
+                      disabled={
+                        !isOrderOlderThanOneDay || !canNudgeSeller || isNudging
+                      }
+                    >
+                      {isNudging
+                        ? "Sending reminder..."
+                        : "Send Shipping Reminder"}
+                    </Button>
+                  </div>
+                </div>
+              )}
 
             {/* Delivery Confirmation Section */}
             {((order.shippingStatus === "shipped" &&

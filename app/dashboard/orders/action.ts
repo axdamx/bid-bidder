@@ -130,7 +130,9 @@ export async function confirmDelivery(orderId: number, userId: string) {
         buyerId: order.buyerId,
         sellerId: order.sellerId,
         paidAmount: order.totalAmount,
-        disbursementAmount: order.courierService ? order.amount : 0,
+        disbursementAmount: order.courierService
+          ? order.amount + order.shippingCost
+          : 0,
         status: order.courierService ? "pending" : "completed",
         createdAt: new Date().toISOString(),
         buyersPremiumAmount: order.buyersPremium,
@@ -146,6 +148,60 @@ export async function confirmDelivery(orderId: number, userId: string) {
     return data;
   } catch (error) {
     console.error("Error confirming delivery:", error);
+    throw error;
+  }
+}
+
+export async function nudgeSellerToShip(orderId: number, userId: string) {
+  try {
+    // Verify that the user is the buyer of this order
+    const { data: order, error: fetchError } = await supabase
+      .from("orders")
+      .select("*")
+      .eq("id", orderId)
+      .single();
+
+    if (fetchError) throw fetchError;
+    
+    // Check if user is the buyer
+    if (order.buyerId !== userId) {
+      throw new Error("Unauthorized: Only the buyer can nudge the seller");
+    }
+    
+    // Check if shipping status is pending
+    if (order.shippingStatus !== "pending") {
+      throw new Error("Cannot nudge: Item is already being shipped or delivered");
+    }
+    
+    // Check if last nudge was sent less than 24 hours ago
+    if (order.lastNudgedAt) {
+      const lastNudgeTime = new Date(order.lastNudgedAt).getTime();
+      const currentTime = new Date().getTime();
+      const hoursSinceLastNudge = (currentTime - lastNudgeTime) / (1000 * 60 * 60);
+      
+      if (hoursSinceLastNudge < 24) {
+        throw new Error("You can only nudge the seller once every 24 hours");
+      }
+    }
+    
+    // Update the lastNudgedAt timestamp
+    const { data, error } = await supabase
+      .from("orders")
+      .update({
+        lastNudgedAt: new Date().toISOString(),
+      })
+      .eq("id", orderId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    
+    // TODO: Send notification to seller (implement notification system)
+    // This would involve adding a record to a notifications table or triggering a webhook
+    
+    return data;
+  } catch (error) {
+    console.error("Error nudging seller:", error);
     throw error;
   }
 }

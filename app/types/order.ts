@@ -49,4 +49,7 @@ export interface Order {
   paidAt?: string;
   sellerId?: string;
   seller: Seller;
+  shippingCost?: number;
+  buyersPremium?: number;
+  lastNudgedAt?: string; // Timestamp of when the buyer last nudged the seller
 }
