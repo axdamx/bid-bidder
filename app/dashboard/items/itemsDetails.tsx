@@ -420,7 +420,7 @@ export default function ItemsDetails() {
                       <Link
                         href={`/items/${item.id}`}
                         onClick={(e) => handleLinkClick(e, `/items/${item.id}`)}
-                        className="hover:underline text-primary"
+                        className="hover:underline text-primary underline"
                       >
                         {item.name}
                       </Link>
@@ -435,7 +435,7 @@ export default function ItemsDetails() {
                           onClick={(e) =>
                             handleLinkClick(e, `/profile/${item.winner.id}`)
                           }
-                          className="hover:underline text-primary"
+                          className="hover:underline text-primary underline"
                         >
                           {item.winner.name}
                         </Link>

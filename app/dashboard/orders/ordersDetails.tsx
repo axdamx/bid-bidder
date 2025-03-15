@@ -408,7 +408,7 @@ const OrdersTable = ({
                       {" "}
                       <Link
                         href={`/items/${order.itemId}`}
-                        className="hover:underline text-primary"
+                        className="hover:underline text-primary underline"
                       >
                         {order.item.name}
                       </Link>
@@ -484,7 +484,7 @@ const OrdersTable = ({
                         <Button
                           variant="outline"
                           size="sm"
-                          className="w-[180px]"
+                          className="w-full"
                           disabled={order.orderStatus === "cancelled"}
                         >
                           <Link
@@ -749,30 +749,37 @@ export default function OrderDetails() {
   // Query to check and cancel expired orders
   const checkExpiredOrdersMutation = useMutation({
     mutationFn: async (orderId: number) => {
-      const { updateOrderStatusToCancelled } = await import('@/app/checkout/[itemId]/actions');
+      const { updateOrderStatusToCancelled } = await import(
+        "@/app/checkout/[itemId]/actions"
+      );
       return updateOrderStatusToCancelled(orderId, user?.id as string);
     },
     onSuccess: (result, orderId) => {
       if (result.success) {
         // Find the order to get its name
-        const allOrders = [...(orders?.winningOrders || []), ...(orders?.sellingOrders || [])];
-        const cancelledOrderItem = allOrders.find(order => order.id === orderId);
-        
+        const allOrders = [
+          ...(orders?.winningOrders || []),
+          ...(orders?.sellingOrders || []),
+        ];
+        const cancelledOrderItem = allOrders.find(
+          (order) => order.id === orderId
+        );
+
         if (cancelledOrderItem) {
           // Show the cancellation modal
           setCancelledOrder({
             id: orderId,
-            itemName: cancelledOrderItem.item.name
+            itemName: cancelledOrderItem.item.name,
           });
           setIsCancelModalOpen(true);
         }
-        
+
         // Refresh the orders list
         queryClient.invalidateQueries({ queryKey: ["orders", user?.id] });
       }
     },
     onError: (error) => {
-      console.error('Error cancelling expired order:', error);
+      console.error("Error cancelling expired order:", error);
       toast({
         title: "Error",
         description: "Failed to cancel expired order",
@@ -786,20 +793,25 @@ export default function OrderDetails() {
     queryKey: ["check-expired-orders", user?.id],
     queryFn: async () => {
       if (!orders || !user?.id) return null;
-      
+
       // Only check pending orders
-      const pendingOrders = [...(orders.winningOrders || []), ...(orders.sellingOrders || [])]
-        .filter(order => order.orderStatus === 'pending' && order.paymentStatus === 'unpaid');
-      
+      const pendingOrders = [
+        ...(orders.winningOrders || []),
+        ...(orders.sellingOrders || []),
+      ].filter(
+        (order) =>
+          order.orderStatus === "pending" && order.paymentStatus === "unpaid"
+      );
+
       // Process all expired orders in parallel
       const expiredOrders = pendingOrders.filter(isOrderExpired);
-      
+
       // If there are expired orders, cancel them one by one
       // We don't want to do this in parallel to avoid race conditions
       for (const order of expiredOrders) {
         await checkExpiredOrdersMutation.mutateAsync(order.id);
       }
-      
+
       return expiredOrders.length;
     },
     enabled: !!orders && !!user?.id,
@@ -946,7 +958,7 @@ export default function OrderDetails() {
         }}
         onSubmit={handleShippingDetailsSubmit}
       />
-      
+
       <OrderCancelledModal
         isOpen={isCancelModalOpen}
         onClose={() => {

@@ -13,12 +13,23 @@ import {
   LayoutGridIcon,
   List,
   Package,
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import {
   Card,
   CardContent,
@@ -306,32 +317,92 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
   const SidebarContent = () => (
     <div className="flex flex-col h-full rounded-xl">
       <div className="p-4 border-b">
-        <div className="flex items-center gap-4 mb-2">
-          {/* <Avatar className="h-10 w-10">
-            <AvatarImage src={initialUser?.image} alt="User" />
-            <AvatarFallback>{initials}</AvatarFallback>
-          </Avatar> */}
-          <Avatar className="w-10 h-10">
-            <AvatarImage src={initialUser?.image} />
-            <AvatarFallback>
-              {initialUser?.name?.charAt(0) || initialUser?.email?.charAt(0)}
-            </AvatarFallback>
-          </Avatar>
-          {isSidebarOpen && (
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.2 }}
-            >
-              <div>
-                <p className="font-semibold text-sm">{initialUser?.name}</p>
-                <p className="text-xs text-muted-foreground">
+        <div className="flex flex-col space-y-3">
+          {/* User info row */}
+          <div className="flex items-center gap-2 w-full">
+            <Avatar className="w-8 h-8 flex-shrink-0">
+              <AvatarImage src={initialUser?.image} />
+              <AvatarFallback>
+                {initialUser?.name?.charAt(0) || initialUser?.email?.charAt(0)}
+              </AvatarFallback>
+            </Avatar>
+            {isSidebarOpen && (
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.2 }}
+                className="min-w-0 flex-1 truncate"
+              >
+                <div className="flex items-center gap-1.5">
+                  <p className="font-semibold text-sm truncate">
+                    {initialUser?.name}
+                  </p>
+                  <Badge
+                    variant="secondary"
+                    className="text-xs px-1.5 py-0 flex-shrink-0"
+                  >
+                    Basic
+                  </Badge>
+                </div>
+                <p className="text-xs text-muted-foreground truncate">
                   {initialUser?.email}
                 </p>
+              </motion.div>
+            )}
+          </div>
+
+          {/* Upgrade button row */}
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button
+                size="sm"
+                variant="outline"
+                className={cn(
+                  "w-full justify-center text-xs h-8",
+                  !isSidebarOpen && "w-8 p-0"
+                )}
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                {isSidebarOpen && (
+                  <span className="ml-1.5">Upgrade to Pro</span>
+                )}
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Upgrade to Pro</DialogTitle>
+                <DialogDescription>
+                  Unlock premium features and enhance your bidding experience.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="py-4">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-yellow-500" />
+                    <p className="text-sm">Unlimited bidding</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-yellow-500" />
+                    <p className="text-sm">Priority customer support</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-yellow-500" />
+                    <p className="text-sm">Advanced analytics</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-yellow-500" />
+                    <p className="text-sm">Custom branding options</p>
+                  </div>
+                </div>
               </div>
-            </motion.div>
-          )}
+              <DialogFooter className="flex justify-center w-full">
+                <p className="text-2xl text-center text-muted-foreground">
+                  Coming soon!
+                </p>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
