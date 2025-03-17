@@ -23,6 +23,63 @@ import { Button as MovingBorderButton } from "@/components/ui/moving-border";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useEffect, useState } from "react";
 import { createClientSupabase } from "@/lib/supabase/client";
+import dynamic from "next/dynamic";
+
+// Client-side only component for the mobile menu button with tooltip
+const MobileMenuButton = dynamic(
+  () =>
+    Promise.resolve(
+      ({}: { isOpen: boolean; setIsOpen: (open: boolean) => void }) => {
+        const [showMenuHint, setShowMenuHint] = useState(false);
+        const [user] = useAtom(userAtom);
+
+        // Check if we should show the menu hint for logged-in users
+        useEffect(() => {
+          if (typeof window !== "undefined" && user) {
+            // Only show the hint if the user is logged in and hasn't seen it before
+            const menuHintShown = localStorage.getItem("headerMenuHintShown");
+            if (menuHintShown !== "true") {
+              setShowMenuHint(true);
+              // Set a timer to automatically hide the hint after 5 seconds
+              const timer = setTimeout(() => {
+                setShowMenuHint(false);
+                localStorage.setItem("headerMenuHintShown", "true");
+              }, 5000);
+
+              return () => clearTimeout(timer);
+            }
+          }
+        }, [user]);
+
+        return (
+          <div className="relative md:hidden">
+            {showMenuHint && user && (
+              <div className="absolute top-10 right-0 bg-popover text-popover-foreground text-xs rounded-md py-1.5 px-3 shadow-md whitespace-nowrap z-50 animate-fade-in-out border">
+                Tap to access your profile
+                <div className="absolute -top-1 right-2 w-2 h-2 bg-popover rotate-45 border-t border-l"></div>
+              </div>
+            )}
+            <SheetTrigger className="relative">
+              <Button
+                variant="secondary"
+                size="icon"
+                className="h-9 w-9 rounded-md border shadow-sm flex items-center justify-center animate-subtle-pulse"
+                onClick={() => {
+                  if (showMenuHint && typeof window !== "undefined") {
+                    setShowMenuHint(false);
+                    localStorage.setItem("headerMenuHintShown", "true");
+                  }
+                }}
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+          </div>
+        );
+      }
+    ),
+  { ssr: false }
+); // Disable SSR for this component
 
 export function Header() {
   const [user, setUser] = useAtom(userAtom);
@@ -157,9 +214,7 @@ export function Header() {
 
             {/* Mobile Menu */}
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
-              <SheetTrigger className="md:hidden">
-                <Menu className="h-5 w-5" />
-              </SheetTrigger>
+              <MobileMenuButton isOpen={isOpen} setIsOpen={setIsOpen} />
               <SheetContent side="right" className="w-[300px] p-0">
                 <div className="flex flex-col h-full">
                   {/* Header Section */}
@@ -185,9 +240,11 @@ export function Header() {
                                       user?.email?.charAt(0)}
                                   </AvatarFallback>
                                 </Avatar>
-                                <div className="flex flex-col">
-                                  <p className="font-medium">{user.name}</p>
-                                  <p className="text-sm text-muted-foreground">
+                                <div className="flex flex-col max-w-[180px]">
+                                  <p className="font-medium truncate" title={user.name}>
+                                    {user.name}
+                                  </p>
+                                  <p className="text-sm text-muted-foreground truncate" title={user.email}>
                                     {user.email}
                                   </p>
                                 </div>

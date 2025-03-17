@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -29,6 +29,7 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogFooter,
+  DialogClose,
 } from "@/components/ui/dialog";
 import {
   Card,
@@ -79,7 +80,7 @@ const ItemsDetails = dynamic(() => import("./items/itemsDetails"), {
 import { userAtom } from "../atom/userAtom";
 import { useAtom } from "jotai";
 import { useRouter, useSearchParams } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MotionGrid } from "../components/motionGrid";
 
@@ -106,12 +107,23 @@ interface DashboardClientProps {
 const DashboardClient = ({ initialUser }: DashboardClientProps) => {
   const searchParams = useSearchParams();
   const router = useRouter();
+  
+  // Check if we should show the hint (only on first visit)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const hintShown = localStorage.getItem('sidebarHintShown');
+      if (hintShown === 'true') {
+        setShowMobileHint(false);
+      }
+    }
+  }, []);
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [activeContent, setActiveContent] = useState(
     searchParams.get("tab") || (initialUser ? "userDetails" : "")
   );
+  const [showMobileHint, setShowMobileHint] = useState(true);
 
   const handleTabChange = useCallback((tabId: string) => {
     setActiveContent(tabId);
@@ -369,37 +381,94 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
                 )}
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Upgrade to Pro</DialogTitle>
-                <DialogDescription>
-                  Unlock premium features and enhance your bidding experience.
+                <DialogTitle className="text-center text-lg sm:text-xl [&>button]:hidden">
+                  Premium Features
+                </DialogTitle>
+                <DialogDescription className="text-center">
+                  Unlock premium features for both sellers and buyers
                 </DialogDescription>
               </DialogHeader>
-              <div className="py-4">
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-yellow-500" />
-                    <p className="text-sm">Unlimited bidding</p>
+              <div className="py-4 sm:py-6 grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                {/* Seller Benefits */}
+                <div className="space-y-3 sm:space-y-4 border rounded-lg p-3 sm:p-4">
+                  <h3 className="font-semibold text-base sm:text-lg text-center border-b pb-2">
+                    For Sellers
+                  </h3>
+                  <div className="space-y-2 sm:space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-yellow-500 flex-shrink-0" />
+                      <p className="text-sm">Up to 20 high-quality images</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-yellow-500 flex-shrink-0" />
+                      <p className="text-sm">Event auction capabilities</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-yellow-500 flex-shrink-0" />
+                      <p className="text-sm">Multiple listing management</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-yellow-500 flex-shrink-0" />
+                      <p className="text-sm">Advanced item tracking</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-yellow-500 flex-shrink-0" />
+                      <p className="text-sm">Boosted listing visibility</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-yellow-500 flex-shrink-0" />
+                      <p className="text-sm">Curated listing features</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-yellow-500 flex-shrink-0" />
+                      <p className="text-sm">And more premium features</p>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-yellow-500" />
-                    <p className="text-sm">Priority customer support</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-yellow-500" />
-                    <p className="text-sm">Advanced analytics</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-yellow-500" />
-                    <p className="text-sm">Custom branding options</p>
+                </div>
+
+                {/* Buyer Benefits */}
+                <div className="space-y-3 sm:space-y-4 border rounded-lg p-3 sm:p-4">
+                  <h3 className="font-semibold text-base sm:text-lg text-center border-b pb-2">
+                    For Buyers
+                  </h3>
+                  <div className="space-y-2 sm:space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-yellow-500 flex-shrink-0" />
+                      <p className="text-sm">Waived buyer's premium</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-yellow-500 flex-shrink-0" />
+                      <p className="text-sm">Advanced purchase tracking</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-yellow-500 flex-shrink-0" />
+                      <p className="text-sm">Early access to exclusive items</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-yellow-500 flex-shrink-0" />
+                      <p className="text-sm">
+                        Priority bidding on popular items
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-yellow-500 flex-shrink-0" />
+                      <p className="text-sm">Personalized recommendations</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-yellow-500 flex-shrink-0" />
+                      <p className="text-sm">And more premium features</p>
+                    </div>
                   </div>
                 </div>
               </div>
               <DialogFooter className="flex justify-center w-full">
-                <p className="text-2xl text-center text-muted-foreground">
-                  Coming soon!
-                </p>
+                <DialogClose asChild>
+                  <Button className="bg-gradient-to-r from-yellow-400 to-amber-600 hover:from-yellow-500 hover:to-amber-700 text-white font-medium px-6 sm:px-8 py-2 text-sm sm:text-base">
+                    Coming Soon
+                  </Button>
+                </DialogClose>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -485,12 +554,15 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
             <Button
               variant="ghost"
               size="icon"
-              className="h-6 w-6"
+              className="h-7 w-7 group relative"
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              aria-label={isSidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
             >
+              <div className="absolute inset-0 bg-muted opacity-0 group-hover:opacity-100 rounded-full transition-opacity duration-200"></div>
               <motion.div
                 animate={{ rotate: isSidebarOpen ? 0 : 180 }}
                 transition={{ duration: 0.3 }}
+                className="relative z-10"
               >
                 {isSidebarOpen ? (
                   <ChevronLeft className="h-4 w-4" />
@@ -498,6 +570,7 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
                   <ChevronRight className="h-4 w-4" />
                 )}
               </motion.div>
+              <span className="sr-only">{isSidebarOpen ? "Collapse sidebar" : "Expand sidebar"}</span>
             </Button>
           </div>
           <SidebarContent />
@@ -516,16 +589,30 @@ const DashboardClient = ({ initialUser }: DashboardClientProps) => {
           layout // This will animate the layout changes
           transition={{ duration: 0.3, ease: "easeInOut" }}
         >
-          <div className="md:hidden flex items-center p-2 border-b bg-background rounded-xl w-full">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="mr-2"
-              onClick={() => setIsMobileOpen(true)}
-            >
-              <List className="h-5 w-5" />
-            </Button>
-            <h1 className="font-semibold">Dashboard</h1>
+          <div className="md:hidden flex items-center p-3 border-b bg-background rounded-xl w-full relative shadow-sm">
+            <div className="relative flex items-center">
+              {showMobileHint && (
+                <div className="absolute top-12 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground text-xs rounded-md py-1.5 px-3 shadow-md whitespace-nowrap z-50 animate-fade-in-out border">
+                  Tap to open sidebar
+                  <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-popover rotate-45 border-t border-l"></div>
+                </div>
+              )}
+              <Button
+                variant="secondary"
+                size="icon"
+                className="mr-3 relative animate-subtle-pulse h-10 w-10 rounded-md border shadow-sm flex items-center justify-center"
+                aria-label="Open sidebar menu"
+                onClick={() => {
+                  setIsMobileOpen(true);
+                  setShowMobileHint(false);
+                  // Save to localStorage that the user has seen the hint
+                  localStorage.setItem('sidebarHintShown', 'true');
+                }}
+              >
+                <List className="h-5 w-5" />
+              </Button>
+            </div>
+            <h1 className="font-semibold text-lg">Dashboard</h1>
           </div>
           <div className="w-full">{renderContent()}</div>
           {/* {renderContent()} */}

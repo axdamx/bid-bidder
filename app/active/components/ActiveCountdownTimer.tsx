@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface TimeLeft {
+  days: number;
   hours: number;
   minutes: number;
   seconds: number;
@@ -21,6 +22,7 @@ export function ActiveCountdownTimer({
   status,
 }: ActiveCountdownTimerProps) {
   const [timeLeft, setTimeLeft] = useState<TimeLeft>({
+    days: 0,
     hours: 0,
     minutes: 0,
     seconds: 0,
@@ -34,17 +36,18 @@ export function ActiveCountdownTimer({
       if (difference <= 0) {
         if (!isExpired) {
           setIsExpired(true);
-          setTimeLeft({ hours: 0, minutes: 0, seconds: 0 });
+          setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
           onExpire();
         }
         return null;
       }
 
-      const hours = Math.floor(difference / (1000 * 60 * 60));
+      const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
       const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((difference % (1000 * 60)) / 1000);
 
-      setTimeLeft({ hours, minutes, seconds });
+      setTimeLeft({ days, hours, minutes, seconds });
     };
 
     const timer = setInterval(calculateTimeLeft, 1000);
@@ -69,9 +72,9 @@ export function ActiveCountdownTimer({
           <span className="text-red-500">Auction Ended</span>
         ) : (
           <>
+            <span>{formatNumber(timeLeft.days)}D</span>
             <span>{formatNumber(timeLeft.hours)}H</span>
             <span>{formatNumber(timeLeft.minutes)}M</span>
-            <span>{formatNumber(timeLeft.seconds)}S</span>
           </>
         )}
       </motion.div>
