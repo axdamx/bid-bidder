@@ -51,16 +51,17 @@ export default function Home() {
     const error_code = searchParams.get("error_code");
     const auth_error = searchParams.get("auth-error");
     const error_description = searchParams.get("error_description");
-    
+
     // Check for errors either with auth-error param or direct error params
     const hasError = auth_error === "true" || (error && error_code);
-    
+
     if (hasError) {
       let errorMessage = "An error occurred during login. Please try again.";
 
       // Handle specific error cases
       if (error === "access_denied" && error_code === "otp_expired") {
-        errorMessage = error_description || 
+        errorMessage =
+          error_description ||
           "Email link is invalid or has expired. Please try logging in again.";
       } else if (error === "database_error") {
         errorMessage =
@@ -80,8 +81,8 @@ export default function Home() {
       newUrl.searchParams.delete("error_code");
       newUrl.searchParams.delete("error_description");
       // Also clean up hash fragment if it contains error params
-      if (newUrl.hash && newUrl.hash.includes('error=')) {
-        newUrl.hash = '';
+      if (newUrl.hash && newUrl.hash.includes("error=")) {
+        newUrl.hash = "";
       }
       window.history.replaceState({}, "", newUrl.toString());
     }
@@ -117,18 +118,21 @@ export default function Home() {
     {
       icon: <Users className="h-8 w-8" />,
       title: "Create an Account",
-      description: "Browse through our diverse collection of items. Create an account to participate in auctions and keep track of your bids."
+      description:
+        "Browse through our diverse collection of items. Create an account to participate in auctions and keep track of your bids.",
     },
     {
       icon: <Gavel className="h-8 w-8" />,
       title: "Place Bids",
-      description: "Find an item you're interested in and place your bid. Our system will notify you if you're outbid or if you win the auction."
+      description:
+        "Find an item you're interested in and place your bid. Our system will notify you if you're outbid or if you win the auction.",
     },
     {
       icon: <Trophy className="h-8 w-8" />,
       title: "Win & Collect",
-      description: "If you win an auction, you'll be notified immediately. Follow the payment instructions to complete your purchase."
-    }
+      description:
+        "If you win an auction, you'll be notified immediately. Follow the payment instructions to complete your purchase.",
+    },
   ];
 
   return (
@@ -205,7 +209,7 @@ export default function Home() {
             <div className="grid gap-8 md:gap-12">
               <div className="grid gap-8 md:grid-cols-3">
                 {howItWorksSteps.map((step, index) => (
-                  <MotionGrid 
+                  <MotionGrid
                     key={index}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -264,7 +268,7 @@ export default function Home() {
               updates, announcements, and more...
             </p>
             <a
-              href="https://discord.gg/ZM4fGYk7"
+              href="https://discord.gg/B4QrNRRdhC"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 bg-[#5865F2] hover:bg-[#4752C4] text-white px-6 py-3 rounded-lg transition-colors"

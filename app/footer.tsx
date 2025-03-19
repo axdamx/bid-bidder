@@ -165,7 +165,7 @@ export function Footer() {
           </p>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <Link
-              href="https://discord.gg/ZM4fGYk7"
+              href="https://discord.gg/B4QrNRRdhC"
               className="text-muted-foreground hover:text-primary"
             >
               <span className="sr-only">Discord</span>

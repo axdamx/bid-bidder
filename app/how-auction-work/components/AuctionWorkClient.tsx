@@ -72,9 +72,9 @@ export function AuctionWorkClient() {
           </h2>
           <p className="text-muted-foreground text-sm">
             We recommend staying on the item page until the auction ends to
-            ensure you don't miss out on last-minute bidding opportunities.
-            The final moments of an auction can be crucial for securing your
-            desired item.
+            ensure you don't miss out on last-minute bidding opportunities. The
+            final moments of an auction can be crucial for securing your desired
+            item.
           </p>
         </Card>
 
@@ -82,8 +82,8 @@ export function AuctionWorkClient() {
           <h2 className="text-2xl font-semibold mb-4">Payout Method</h2>
           <p className="text-muted-foreground text-sm">
             Add your preferred payout method in your dashboard to facilitate
-            smooth transactions. For sellers, this ensures quick disbursement
-            of funds after successful sales.
+            smooth transactions. For sellers, this ensures quick disbursement of
+            funds after successful sales.
           </p>
         </Card>
       </div>
@@ -102,9 +102,7 @@ export function AuctionWorkClient() {
               <h3 className="text-2xl font-semibold mb-6">Buyer's Guide</h3>
               <div className="space-y-6">
                 <div>
-                  <h4 className="text-xl font-medium mb-3">
-                    Checkout Process
-                  </h4>
+                  <h4 className="text-xl font-medium mb-3">Checkout Process</h4>
                   <ul className="list-disc pl-6 space-y-2 text-muted-foreground text-sm">
                     <li>
                       Upon winning, you'll be redirected to the checkout page
@@ -159,9 +157,7 @@ export function AuctionWorkClient() {
                 </div>
 
                 <div>
-                  <h4 className="text-xl font-medium mb-3">
-                    Order Completion
-                  </h4>
+                  <h4 className="text-xl font-medium mb-3">Order Completion</h4>
                   <ul className="list-disc pl-6 space-y-2 text-muted-foreground text-sm">
                     <li>Buyer confirms receipt and satisfaction</li>
                     <li>
@@ -192,12 +188,12 @@ export function AuctionWorkClient() {
         <Card className="p-8">
           <h2 className="text-3xl font-bold mb-6">Need Help?</h2>
           <p className="text-muted-foreground text-lg mb-4">
-            Join our Discord community for real-time support and discussions,
-            or reach out to us via email.
+            Join our Discord community for real-time support and discussions, or
+            reach out to us via email.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <a
-              href="https://discord.gg/ZM4fGYk7"
+              href="https://discord.gg/B4QrNRRdhC"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 bg-[#5865F2] hover:bg-[#4752C4] text-white px-6 py-3 rounded-lg transition-colors"
