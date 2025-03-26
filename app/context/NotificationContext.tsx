@@ -36,7 +36,6 @@ export function NotificationProvider({
 
   const fetchNotifications = async (userId: string) => {
     if (!user) {
-      console.log("3. Early return - no user");
       return;
     }
 
@@ -49,16 +48,13 @@ export function NotificationProvider({
         .limit(50);
 
       if (error) {
-        console.error("6. Error fetching notifications:", error);
         return;
       }
 
       if (existingNotifications) {
         setNotifications(existingNotifications);
       }
-    } catch (error) {
-      console.error("8. Caught error:", error);
-    }
+    } catch (error) {}
   };
 
   const setupChannel = async () => {

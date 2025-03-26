@@ -5,7 +5,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useAtom } from "jotai";
 import { userAtom } from "../atom/userAtom";
-import { createReview } from "../dashboard/reviews/action";
 
 import {
   Dialog,
@@ -20,6 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { StarIcon } from "lucide-react";
 import { OptimizedImage } from "./OptimizedImage";
 import { cn } from "@/lib/utils";
+import { createReview } from "../app/dashboard/reviews/action";
 
 interface ReviewModalProps {
   open: boolean;
@@ -72,7 +72,6 @@ export function ReviewModal({
       setComment("");
     },
     onError: (error) => {
-      console.error("Error submitting review:", error);
       if (error instanceof Error) {
         toast({
           title: "Error",
@@ -109,7 +108,8 @@ export function ReviewModal({
             Rate Your Experience
           </DialogTitle>
           <DialogDescription className="text-center">
-            Share your experience with the seller and help others make informed decisions.
+            Share your experience with the seller and help others make informed
+            decisions.
           </DialogDescription>
         </DialogHeader>
 
@@ -207,7 +207,8 @@ export function ReviewModal({
               className="resize-none"
             />
             <p className="text-xs text-muted-foreground">
-              Your review will be visible to other users and helps maintain quality in our marketplace.
+              Your review will be visible to other users and helps maintain
+              quality in our marketplace.
             </p>
           </div>
         </div>

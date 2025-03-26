@@ -87,27 +87,7 @@ export function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
-  // const supabase = useSupabase();
   const supabase = createClientSupabase();
-
-  // Fetch user data from Supabase, when user first login
-  // const { data: dbUser } = useQuery({
-  //   queryKey: ["getUserById", user?.id],
-  //   queryFn: () => getUserById(user?.id || ""),
-  //   enabled: !!user?.id, // Only run query when we have a user ID
-  //   staleTime: 1000 * 60 * 5, // Cache for 5 minutes
-  //   onSuccess: (data) => {
-  //     if (data) {
-  //       setUser((currentUser) => ({
-  //         ...currentUser,
-  //         ...data,
-  //       }));
-  //     }
-  //   },
-  // });
-
-  // console.log("user header", user);
-  // console.log("initialUser header", dbUser);
 
   // Add this effect to reset navigation state when pathname changes
   useEffect(() => {
@@ -123,7 +103,7 @@ export function Header() {
       return;
     }
     setIsNavigating(true);
-    await router.push(path);
+    router.push(path);
   };
 
   return (
@@ -148,9 +128,9 @@ export function Header() {
             {/* Left Section: Logo and Navigation */}
             <div className="flex items-center gap-4 sm:gap-8">
               <Link
-                href="/"
+                href="/app"
                 className="flex-shrink-0"
-                onClick={(e) => handleLinkClick(e, "/")}
+                onClick={(e) => handleLinkClick(e, "/app")}
               >
                 <Image
                   src="/renown-high-resolution-logo-transparent.png"
@@ -166,18 +146,18 @@ export function Header() {
                 {user && (
                   <>
                     <Link
-                      href="/items/create"
+                      href="/app/items/create"
                       className="hover:underline whitespace-nowrap"
-                      onClick={(e) => handleLinkClick(e, "/items/create")}
+                      onClick={(e) => handleLinkClick(e, "/app/items/create")}
                     >
                       <Button>Create Auction</Button>
                     </Link>
                     <Link
-                      href="/active"
+                      href="/app/active"
                       className="hover:underline whitespace-nowrap"
-                      onClick={(e) => handleLinkClick(e, "/active")}
+                      onClick={(e) => handleLinkClick(e, "/app/active")}
                     >
-                      <Button variant="outline">Active Bids</Button>
+                      <Button variant="outline">Your Bids</Button>
                     </Link>
                   </>
                 )}
@@ -241,10 +221,16 @@ export function Header() {
                                   </AvatarFallback>
                                 </Avatar>
                                 <div className="flex flex-col max-w-[180px]">
-                                  <p className="font-medium truncate" title={user.name}>
+                                  <p
+                                    className="font-medium truncate"
+                                    title={user.name}
+                                  >
                                     {user.name}
                                   </p>
-                                  <p className="text-sm text-muted-foreground truncate" title={user.email}>
+                                  <p
+                                    className="text-sm text-muted-foreground truncate"
+                                    title={user.email}
+                                  >
                                     {user.email}
                                   </p>
                                 </div>
@@ -256,34 +242,36 @@ export function Header() {
                           {/* Navigation Links */}
                           <div className="px-2 py-2">
                             <Link
-                              href={`/profile/${user.id}`}
+                              href={`/app/profile/${user.id}`}
                               className="flex items-center space-x-2 px-2 py-2 rounded-md hover:bg-accent"
                               onClick={(e) =>
-                                handleLinkClick(e, `/profile/${user.id}`)
+                                handleLinkClick(e, `/app/profile/${user.id}`)
                               }
                             >
                               <span>Profile</span>
                             </Link>
                             <Link
-                              href="/dashboard"
+                              href="/app/dashboard"
                               className="flex items-center space-x-2 px-2 py-2 rounded-md hover:bg-accent"
-                              onClick={(e) => handleLinkClick(e, "/dashboard")}
+                              onClick={(e) =>
+                                handleLinkClick(e, "/app/dashboard")
+                              }
                             >
                               <span>Dashboard</span>
                             </Link>
                             <Link
-                              href="/items/create"
+                              href="/app/items/create"
                               className="flex items-center space-x-2 px-2 py-2 rounded-md hover:bg-accent"
                               onClick={(e) =>
-                                handleLinkClick(e, "/items/create")
+                                handleLinkClick(e, "/app/items/create")
                               }
                             >
                               <span>Create Auction</span>
                             </Link>
                             <Link
-                              href="/active"
+                              href="/app/active"
                               className="flex items-center space-x-2 px-2 py-2 rounded-md hover:bg-accent"
-                              onClick={(e) => handleLinkClick(e, "/active")}
+                              onClick={(e) => handleLinkClick(e, "/app/active")}
                             >
                               <span>Active Bids</span>
                             </Link>
@@ -304,10 +292,8 @@ export function Header() {
                                   setUser(null);
 
                                   // Force reload to clear all state
-                                  window.location.href = "/";
-                                } catch (error) {
-                                  console.error("Error signing out:", error);
-                                }
+                                  window.location.href = "/app";
+                                } catch (error) {}
                               }}
                             >
                               <button
@@ -356,7 +342,7 @@ export function Header() {
 
         <div className="container relative z-10 flex h-10 items-center justify-center">
           <Link
-            href="/how-auction-work"
+            href="/app/how-auction-work"
             className="text-sm font-medium text-white hover:underline drop-shadow-md px-1 py-1 rounded-full bg-black/20 backdrop-blur-sm transition-all hover:bg-black/30"
           >
             ✨ Learn how our auction platform works{" "}

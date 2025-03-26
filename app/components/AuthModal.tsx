@@ -27,7 +27,6 @@ import { useRouter } from "next/navigation";
 import { createClientSupabase } from "@/lib/supabase/client";
 import { useAtom } from "jotai";
 import { userAtom } from "../atom/userAtom";
-import OnboardingFlow from "../onboarding/OnboardingFlow";
 // import { supabase } from "@/lib/utils";
 
 type ModalView = "log-in" | "sign-up" | "forgot-password";
@@ -75,9 +74,6 @@ export default function AuthModals({
   const router = useRouter(); // Add this line to use the router
   const supabase = createClientSupabase();
   const [user, setUser] = useAtom(userAtom);
-  // const [showOnboarding, setShowOnboarding] = useState(false);
-
-  // console.log("userAtom", userAtom);
 
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange(

@@ -99,7 +99,9 @@ export function ItemCarousel({
           >
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-2xl font-bold md:text-3xl">{title} ({totalCount ?? items.length})</h2>
+                <h2 className="text-2xl font-bold md:text-3xl">
+                  {title} ({totalCount ?? items.length})
+                </h2>
                 <p className="text-muted-foreground mt-1">{description}</p>
               </div>
               {/* <Link
@@ -159,11 +161,11 @@ export function ItemCarousel({
                           className="h-full flex"
                         >
                           <Link
-                            href={`/auctions?type=${viewAllLink}`}
+                            href={`/app/auctions?type=${viewAllLink}`}
                             onClick={(e) =>
                               handleLinkClick(
                                 e,
-                                `/auctions?type=${viewAllLink}`
+                                `/app/auctions?type=${viewAllLink}`
                               )
                             }
                             className="w-full flex flex-col items-center justify-center p-6 border rounded-lg hover:bg-accent transition-colors text-center"

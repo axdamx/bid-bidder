@@ -64,27 +64,29 @@ export function NotificationDropdown() {
         case "bid":
         case "outbid":
         case "new_item":
-          router.push(`/items/${notification.itemId}`);
+          router.push(`/app/items/${notification.itemId}`);
           break;
         case "follow":
-          router.push(`/profile/${notification.followerId}`);
+          router.push(`/app/profile/${notification.followerId}`);
           break;
         case "order_created":
         case "payment_success":
         case "order_shipped":
         case "delivery_confirmed":
         case "payment_disbursed":
-          router.push("/dashboard?tab=orders&refresh=" + new Date().getTime());
+          router.push(
+            "/app/dashboard?tab=orders&refresh=" + new Date().getTime()
+          );
           break;
         case "order_cancelled":
-          router.push("/dashboard?tab=items&refresh=" + new Date().getTime());
+          router.push(
+            "/app/dashboard?tab=items&refresh=" + new Date().getTime()
+          );
           break;
         default:
-          console.warn(`Unknown notification type: ${notification.type}`);
           break;
       }
     } catch (error) {
-      console.error("Error marking notification as read:", error);
       setNotifications(notifications);
     }
   };
@@ -105,7 +107,6 @@ export function NotificationDropdown() {
 
       if (error) throw error;
     } catch (error) {
-      console.error("Error marking all notifications as read:", error);
       setNotifications(notifications);
     }
   };

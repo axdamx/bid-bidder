@@ -12,7 +12,9 @@ export default function SessionProvider({
   children: React.ReactNode;
 }) {
   const [isInitialized, setIsInitialized] = useState(false);
-  const [sessionState, setSessionState] = useState<"active" | "expired">("expired");
+  const [sessionState, setSessionState] = useState<"active" | "expired">(
+    "expired"
+  );
   const router = useRouter();
   const supabase = createClientSupabase();
 
@@ -26,39 +28,33 @@ export default function SessionProvider({
       isRefreshing = true;
 
       try {
-        console.log("🔍 Performing session check...");
         const {
           data: { session: currentSession },
           error: sessionError,
         } = await supabase.auth.getSession();
 
         if (sessionError) {
-          console.error("Session check error:", sessionError);
           setSessionState("expired");
           return;
         }
 
         if (!currentSession) {
-          console.log("⚠️ No session found, attempting refresh...");
-          const { data, error: refreshError } = await supabase.auth.refreshSession();
-          
+          const { data, error: refreshError } =
+            await supabase.auth.refreshSession();
+
           if (refreshError) {
             if (refreshError.message.includes("no current session")) {
-              console.log("No current session to refresh");
               setSessionState("expired");
             } else {
-              console.error("Session refresh failed:", refreshError);
               setSessionState("expired");
             }
           } else if (data.session) {
-            console.log("✅ Session refreshed successfully");
             setSessionState("active");
           }
         } else {
           setSessionState("active");
         }
       } catch (error) {
-        console.error("Session check/refresh error:", error);
         setSessionState("expired");
       } finally {
         isRefreshing = false;
@@ -67,51 +63,39 @@ export default function SessionProvider({
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
-        console.log("📱 Tab is visible, checking session...");
         checkAndRefreshSession();
       }
     };
 
     const setupSession = async () => {
       try {
-        console.log("🔄 Setting up session...");
         const {
           data: { session },
           error,
         } = await supabase.auth.getSession();
 
         if (error) {
-          console.error("Initial session check error:", error);
           setSessionState("expired");
           return;
         }
 
         if (session) {
-          console.log(
-            "✅ Session found, expires at:",
-            new Date(session.expires_at! * 1000).toLocaleString()
-          );
           setSessionState("active");
 
           // Calculate time until expiry with 5-minute buffer
           const expiresIn = session.expires_at! * 1000 - Date.now() - 300000;
-          console.log(
-            `⏰ Session expires in ${Math.round(expiresIn / 1000)} seconds`
-          );
 
           // Set up refresh timer
           if (expiresIn > 0) {
             refreshTimer = setTimeout(async () => {
-              console.log("🔄 Scheduled session refresh starting...");
-              const { data, error: refreshError } = await supabase.auth.refreshSession();
-              
+              const { data, error: refreshError } =
+                await supabase.auth.refreshSession();
+
               if (refreshError) {
-                console.error("Scheduled refresh failed:", refreshError);
                 setSessionState("expired");
                 // Retry setup after error
                 setTimeout(setupSession, 5000);
               } else if (data.session) {
-                console.log("✅ Scheduled refresh successful");
                 setSessionState("active");
                 // Set up next refresh cycle
                 setupSession();
@@ -122,11 +106,9 @@ export default function SessionProvider({
           // Set up periodic checks
           periodicCheckTimer = setInterval(checkAndRefreshSession, 120000); // Every 2 minutes
         } else {
-          console.log("⚠️ No active session");
           setSessionState("expired");
         }
       } catch (error) {
-        console.error("Session setup error:", error);
         setSessionState("expired");
       } finally {
         setIsInitialized(true);
@@ -137,8 +119,6 @@ export default function SessionProvider({
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("🔔 Auth state changed:", event, session?.user?.email);
-
       switch (event) {
         case "SIGNED_OUT":
           setSessionState("expired");
@@ -164,7 +144,6 @@ export default function SessionProvider({
 
     // Cleanup
     return () => {
-      console.log("🧹 Cleaning up session provider...");
       subscription.unsubscribe();
       if (refreshTimer) clearTimeout(refreshTimer);
       if (periodicCheckTimer) clearInterval(periodicCheckTimer);

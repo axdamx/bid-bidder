@@ -48,80 +48,14 @@ export default function AuthModalV2({
   const [showErrorDialog, setShowErrorDialog] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const router = useRouter();
-  const searchParams = useSearchParams();
   const supabase = createClientSupabase();
   const [user, setUser] = useAtom(userAtom);
 
-  // useEffect(() => {
-  //   const handleAuthStateChange = async (event: string, session: any) => {
-  //     if (session?.user) {
-  //       console.log("Auth state changed:", event, session.user);
-  //       try {
-  //         if (!user) {
-  //           upsertUser(session.user);
-  //         }
-  //         // const upsertedUser = await upsertUser(session.user);
-  //         // setUser(upsertedUser);
-  //         handleClose();
-  //         router.refresh();
-  //       } catch (error) {
-  //         console.error("Error handling auth state change:", error);
-  //         toast.error("Failed to update user data");
-  //       }
-  //     }
-  //   };
-
-  //   const { data: authListener } = supabase.auth.onAuthStateChange(
-  //     handleAuthStateChange
-  //   );
-
-  //   // Check for auth success/error parameters
-  //   const authSuccess = searchParams.get("auth-success");
-  //   const authError = searchParams.get("auth-error");
-  //   const accountExists = searchParams.get("account-exists");
-
-  //   if (authSuccess === "true") {
-  //     if (accountExists === "true") {
-  //       toast.success(
-  //         "Signed in! Note: An account with this email already exists."
-  //       );
-  //     } else {
-  //       toast.success("Successfully signed in!");
-  //     }
-  //     // Remove the parameters from the URL without triggering a refresh
-  //     const newUrl = new URL(window.location.href);
-  //     newUrl.searchParams.delete("auth-success");
-  //     newUrl.searchParams.delete("account-exists");
-  //     window.history.replaceState({}, "", newUrl.toString());
-  //   } else if (authError === "true") {
-  //     toast.error("Authentication failed. Please try again.");
-  //     const newUrl = new URL(window.location.href);
-  //     newUrl.searchParams.delete("auth-error");
-  //     window.history.replaceState({}, "", newUrl.toString());
-  //   }
-
-  //   // Check current session on mount
-  //   const checkSession = async () => {
-  //     const {
-  //       data: { session },
-  //     } = await supabase.auth.getSession();
-  //     if (session?.user) {
-  //       await handleAuthStateChange("INITIAL_SESSION", session);
-  //     }
-  //   };
-
-  //   checkSession();
-
-  //   return () => {
-  //     authListener?.subscription.unsubscribe();
-  //   };
-  // }, [searchParams]);
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange(
       // @ts-ignore
       (event, session) => {
         if (session?.user) {
-          console.log("User signed in:", session.user);
           // This call is necessary on every session change (including rehydration)
           // to keep the local state (userAtom) in sync with the session
           // Without this, your app would lose user state on refresh
@@ -158,7 +92,6 @@ export default function AuthModalV2({
       });
 
       if (googleError) {
-        console.error("Error initiating OAuth sign-in:", googleError.message);
         toast.error("Sign in with Google failed. Please try again.");
         setIsGoogleLoading(false);
         return;
@@ -167,14 +100,10 @@ export default function AuthModalV2({
       // Check if data has a user property
       if (data && "user" in data) {
         // Handle successful sign-in
-        console.log("Signed in user:", data.user);
       } else {
         // Handle case where user is not present
-        console.log("No user data returned from OAuth sign-in");
-        // toast.error("Sign in did not return user information.");
       }
     } catch (error) {
-      console.error("Error signing in with Google:", error);
       toast.error("Sign in with Google failed. Please try again.");
     } finally {
       setIsGoogleLoading(false);
@@ -199,7 +128,6 @@ export default function AuthModalV2({
       });
 
       if (error) {
-        console.log("Error message:", error.message);
         setErrorMessage(error.message);
         throw error;
       }
@@ -208,7 +136,6 @@ export default function AuthModalV2({
       setErrorMessage(""); // Clear error message on success
       toast.success("Magic link sent to your email!");
     } catch (error) {
-      console.error("Error sending magic link:", error);
       toast.error("Failed to send magic link. Please try again.");
     } finally {
       setIsMagicLinkLoading(false);
@@ -237,7 +164,6 @@ export default function AuthModalV2({
         .single();
 
       if (fetchError && fetchError.code !== "PGRST116") {
-        console.error("Error fetching user:", fetchError.message);
         throw fetchError;
       }
 
@@ -264,14 +190,13 @@ export default function AuthModalV2({
         .single();
 
       if (upsertError) {
-        console.error("Error upserting user:", upsertError.message);
         throw upsertError;
       }
 
       setUser(upsertedUser);
 
       if (!existingUser) {
-        router.push("/onboarding");
+        router.push("/app/onboarding");
         return upsertedUser;
       }
 
@@ -279,12 +204,11 @@ export default function AuthModalV2({
         !existingUser.onboardingCompleted &&
         !existingUser.hasSeenOnboarding
       ) {
-        router.push("/onboarding");
+        router.push("/app/onboarding");
       }
 
       return upsertedUser;
     } catch (error) {
-      console.error("Error in upsertUser:", error);
       throw error;
     }
   }
@@ -405,7 +329,7 @@ export default function AuthModalV2({
               <p className="text-xs text-muted-foreground text-center mt-4">
                 By signing in, you agree to our{" "}
                 <Link
-                  href="/terms-of-service"
+                  href="/app/terms-of-service"
                   target="_blank"
                   className="text-primary hover:underline"
                 >
@@ -413,7 +337,7 @@ export default function AuthModalV2({
                 </Link>{" "}
                 and{" "}
                 <Link
-                  href="/privacy-policy"
+                  href="/app/privacy-policy"
                   target="_blank"
                   className="text-primary hover:underline"
                 >

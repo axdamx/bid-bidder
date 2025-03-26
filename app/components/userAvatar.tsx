@@ -31,7 +31,6 @@ export default function UserAvatar({
   email: string;
   userId: string;
 }) {
-  // console.log("name", name);
   const supabase = createClientSupabase();
   const [, setUser] = useAtom(userAtom);
   const [isNavigating, setIsNavigating] = useState(false);
@@ -102,22 +101,19 @@ export default function UserAvatar({
             asChild
           >
             <Link
-              href={`/profile/${userId}`}
+              href={`/app/profile/${userId}`}
               className="flex w-full cursor-pointer items-center"
-              onClick={(e) => handleLinkClick(e, `/profile/${userId}`)}
+              onClick={(e) => handleLinkClick(e, `/app/profile/${userId}`)}
             >
               <User className="mr-2 h-4 w-4" />
               <span>Profile</span>
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => console.log("Go to Dashboard")}
-            asChild
-          >
+          <DropdownMenuItem asChild>
             <Link
-              href={"/dashboard"}
+              href={"/app/dashboard"}
               className="flex w-full cursor-pointer items-center"
-              onClick={(e) => handleLinkClick(e, "/dashboard")}
+              onClick={(e) => handleLinkClick(e, "/app/dashboard")}
             >
               <Settings className="mr-2 h-4 w-4" />
               <span>Dashboard</span>
@@ -135,10 +131,8 @@ export default function UserAvatar({
                 setUser(null);
 
                 // Force reload to clear all state
-                window.location.href = "/";
-              } catch (error) {
-                console.error("Error signing out:", error);
-              }
+                window.location.href = "/app";
+              } catch (error) {}
             }}
           >
             <DropdownMenuItem asChild>
@@ -148,22 +142,6 @@ export default function UserAvatar({
               </button>
             </DropdownMenuItem>
           </form>
-          {/* <DropdownMenuItem asChild>
-          <Button
-            onClick={async () => {
-              const { error } = await supabase.auth.signOut();
-              if (error) {
-                console.error("Error signing out:", error);
-              } else {
-                window.location.href = "/"; // Redirect to homepage
-              }
-            }}
-            className="flex w-full cursor-pointer items-center"
-          >
-            <LogOut className="mr-2 h-4 w-4" />
-            <span>Sign Out</span>
-          </Button>
-        </DropdownMenuItem> */}
         </DropdownMenuContent>
       </DropdownMenu>
     </>

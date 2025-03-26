@@ -22,6 +22,7 @@ import Image from "next/image";
 import { updateItemStatus } from "./action";
 import { useQueryClient } from "@tanstack/react-query";
 
+// TODO: Move this to /app folder
 interface ItemCardProps {
   item: ItemWithUser;
 }
@@ -144,8 +145,8 @@ const ItemCard: React.FC<ItemCardProps> = ({ item }) => {
             asChild
           >
             <Link
-              href={`/items/${item.id}`}
-              onClick={(e) => handleLinkClick(e, `/items/${item.id}`)}
+              href={`/app/items/${item.id}`}
+              onClick={(e) => handleLinkClick(e, `/app/items/${item.id}`)}
             >
               {isItemEnded ? "View Details" : "Place Bid"}
             </Link>

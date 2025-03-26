@@ -22,14 +22,9 @@ import { cn, formatCurrency } from "@/lib/utils";
 import { OptimizedImage } from "./OptimizedImage";
 import { Order } from "@/app/types/order";
 import { useState, useMemo, useEffect } from "react";
-import { confirmDelivery, nudgeSellerToShip } from "../dashboard/orders/action";
 import { userAtom } from "../atom/userAtom";
 import { useAtom } from "jotai";
 import { useToast } from "@/hooks/use-toast";
-import {
-  formatDateWithTime,
-  getDateInfo,
-} from "../items/[itemId]/utils/formatters";
 import {
   Dialog,
   DialogContent,
@@ -40,6 +35,11 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { ReviewModal } from "./ReviewModal";
+import {
+  confirmDelivery,
+  nudgeSellerToShip,
+} from "../app/dashboard/orders/action";
+import { formatDateWithTime } from "../app/items/[itemId]/utils/formatters";
 
 interface OrderStatusSheetProps {
   order: Order;
@@ -54,8 +54,6 @@ export function OrderStatusSheet({ order, disabled }: OrderStatusSheetProps) {
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [isNudging, setIsNudging] = useState(false);
-
-  console.log("inside order status sheet", order);
 
   // Calculate time remaining until nudge is available
   const timeRemainingForNudge = useMemo(() => {
@@ -142,7 +140,6 @@ export function OrderStatusSheet({ order, disabled }: OrderStatusSheetProps) {
       setIsNudging(false);
     },
     onError: (error) => {
-      console.error("Error nudging seller:", error);
       if (error instanceof Error) {
         toast({
           title: "Error",
@@ -180,7 +177,6 @@ export function OrderStatusSheet({ order, disabled }: OrderStatusSheetProps) {
       setShowReviewModal(true);
     },
     onError: (error) => {
-      console.error("Error confirming delivery:", error);
       if (error instanceof Error) {
         toast({
           title: "Error",
@@ -199,8 +195,6 @@ export function OrderStatusSheet({ order, disabled }: OrderStatusSheetProps) {
     if (!user?.id) return;
     confirmDeliveryMutation();
   };
-
-  console.log("order AHHHHHH", order);
 
   const currentStepIndex = useMemo(() => {
     if (
@@ -433,26 +427,26 @@ export function OrderStatusSheet({ order, disabled }: OrderStatusSheetProps) {
                                     <p>Customer: {order.customerName}</p>
                                     <p>
                                       Phone: {order.customerPhone}{" "}
-                                      {order.item.dealingMethodType === "COD" && 
+                                      {order.item.dealingMethodType === "COD" &&
                                         order.paymentStatus === "paid" && (
-                                        <a
-                                          href={`https://wa.me/+6${order.customerPhone?.replace(
-                                            /\D/g,
-                                            ""
-                                          )}`}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="inline-flex items-center ml-2"
-                                        >
-                                          <Image
-                                            src="/whatsapp-icon.svg"
-                                            alt="WhatsApp"
-                                            width={20}
-                                            height={20}
-                                            className="inline"
-                                          />
-                                        </a>
-                                      )}
+                                          <a
+                                            href={`https://wa.me/+6${order.customerPhone?.replace(
+                                              /\D/g,
+                                              ""
+                                            )}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center ml-2"
+                                          >
+                                            <Image
+                                              src="/whatsapp-icon.svg"
+                                              alt="WhatsApp"
+                                              width={20}
+                                              height={20}
+                                              className="inline"
+                                            />
+                                          </a>
+                                        )}
                                     </p>
                                     <p>Email: {order.customerEmail}</p>
                                   </>
