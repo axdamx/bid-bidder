@@ -25,8 +25,6 @@ function GridView({
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
 
-  console.log("items", items);
-
   // Calculate pagination
   // Sort items by latest bid timestamp before pagination
   const sortedItems = [...items].sort((a, b) => {
@@ -82,7 +80,7 @@ function GridView({
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
                   <Link
-                    href={`/items/${item.id}`}
+                    href={`/app/items/${item.id}`}
                     className="font-medium hover:underline block text-lg mb-1"
                   >
                     {item.name}
@@ -157,7 +155,7 @@ function GridView({
                 </div>
 
                 <Button asChild className="w-full">
-                  <Link href={`/items/${item.id}`}>View Details</Link>
+                  <Link href={`/app/items/${item.id}`}>View Details</Link>
                 </Button>
               </div>
             </Card>
@@ -235,7 +233,7 @@ function EmptyState() {
           interested in!
         </p>
         <Button asChild>
-          <Link href="/auctions?tab=live">Browse Live Auctions</Link>
+          <Link href="/app/auctions?tab=live">Browse Live Auctions</Link>
         </Button>
       </div>
     </Card>
@@ -302,7 +300,9 @@ export function ActiveBidsClient() {
             </h3>
             <div className="mt-2 text-sm text-amber-700">
               <p>
-                Please note: The information displayed here may not reflect real-time updates. For the most current data, please visit the original item listing page.
+                Please note: The information displayed here may not reflect
+                real-time updates. For the most current data, please visit the
+                original item listing page.
               </p>
             </div>
           </div>

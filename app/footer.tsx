@@ -126,7 +126,7 @@ export function Footer() {
                 </li> */}
                 <li>
                   <Link
-                    href="/privacy-policy"
+                    href="/app/privacy-policy"
                     className="text-sm text-muted-foreground hover:text-primary"
                   >
                     Privacy Policy
@@ -134,7 +134,7 @@ export function Footer() {
                 </li>
                 <li>
                   <Link
-                    href="/terms-of-service"
+                    href="/app/terms-of-service"
                     className="text-sm text-muted-foreground hover:text-primary"
                   >
                     Terms of Service

@@ -24,10 +24,9 @@ export function SignOut() {
 
       if (error) throw error;
 
-      router.push("/");
+      router.push("/app");
       router.refresh(); // Refresh the page to update auth state
     } catch (error) {
-      console.error("Error signing out:", error);
     } finally {
       setIsLoading(false);
     }

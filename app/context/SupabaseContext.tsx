@@ -26,8 +26,6 @@ export const SupabaseProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    console.log("🔄 Setting up SupabaseProvider");
-
     const setupAuth = async () => {
       try {
         const {
@@ -36,10 +34,8 @@ export const SupabaseProvider = ({ children }: { children: ReactNode }) => {
         } = await supabase.auth.getSession();
         if (error) throw error;
 
-        console.log("📱 Initial session:", initialSession?.user?.email);
         setSession(initialSession);
       } catch (error) {
-        console.error("Error getting session:", error);
       } finally {
         setIsLoading(false);
       }
@@ -50,13 +46,11 @@ export const SupabaseProvider = ({ children }: { children: ReactNode }) => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, newSession) => {
-      console.log("🔔 Auth state changed:", event, newSession?.user?.email);
       setSession(newSession);
       setIsLoading(false);
     });
 
     return () => {
-      console.log("🧹 Cleaning up SupabaseProvider");
       subscription.unsubscribe();
     };
   }, []);

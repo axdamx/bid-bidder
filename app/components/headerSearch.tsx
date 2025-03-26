@@ -86,7 +86,6 @@ export default function SearchCommand() {
         const items = await searchItems(debouncedQuery);
         setResults(items);
       } catch (error) {
-        console.error("Search error:", error);
         setResults([]);
       } finally {
         setLoading(false);
@@ -168,7 +167,7 @@ export default function SearchCommand() {
                         preventDefault: () => {},
                       } as React.MouseEvent;
 
-                      handleLinkClick(syntheticEvent, `/items/${item.id}`);
+                      handleLinkClick(syntheticEvent, `/app/items/${item.id}`);
                     }}
                     className="flex items-center justify-between py-2"
                   >

@@ -13,7 +13,9 @@ export async function GET(request: Request) {
   if (error || error_code) {
     return NextResponse.redirect(
       new URL(
-        `/?auth-error=true&error=${error || ''}&error_code=${error_code || ''}`,
+        `/app?auth-error=true&error=${error || ""}&error_code=${
+          error_code || ""
+        }`,
         requestUrl.origin
       )
     );
@@ -41,16 +43,18 @@ export async function GET(request: Request) {
           .neq("id", session.user.id); // Exclude the current user
 
         if (userError) {
-          console.error("Error checking existing user:", userError);
           return NextResponse.redirect(
-            new URL("/?auth-error=true&error=database_error", requestUrl.origin)
+            new URL(
+              "/app?auth-error=true&error=database_error",
+              requestUrl.origin
+            )
           );
         }
 
         // Build the success URL with all necessary parameters
-        const successUrl = new URL("/", requestUrl.origin);
+        const successUrl = new URL("/app", requestUrl.origin);
         successUrl.searchParams.set("auth-success", "true");
-        
+
         // Add provider info if available
         if (provider) {
           successUrl.searchParams.set("provider", provider);
@@ -63,24 +67,23 @@ export async function GET(request: Request) {
 
         // Add session info
         successUrl.searchParams.set("user_id", session.user.id);
-        
+
         return NextResponse.redirect(successUrl);
       }
 
       // If we get here, something went wrong
       return NextResponse.redirect(
-        new URL("/?auth-error=true&error=no_session", requestUrl.origin)
+        new URL("/app?auth-error=true&error=no_session", requestUrl.origin)
       );
     } catch (error) {
-      console.error("Error in auth callback:", error);
       return NextResponse.redirect(
-        new URL("/?auth-error=true&error=server_error", requestUrl.origin)
+        new URL("/app?auth-error=true&error=server_error", requestUrl.origin)
       );
     }
   }
 
   // If no code, redirect to home page with an error parameter
   return NextResponse.redirect(
-    new URL("/?auth-error=true&error=no_code", requestUrl.origin)
+    new URL("/app?auth-error=true&error=no_code", requestUrl.origin)
   );
 }

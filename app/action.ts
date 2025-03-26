@@ -20,13 +20,11 @@ export async function getUserById(userId: string) {
       .single();
 
     if (error) {
-      console.error("Error fetching user by ID:", error);
       return null;
     }
-    revalidatePath("/dashboard");
+    revalidatePath("/app/dashboard");
     return user;
   } catch (error) {
-    console.error("Unexpected error fetching user by ID:", error);
     return null;
   }
 }
@@ -37,7 +35,6 @@ export const getItemsWithUsers = cache(async () => {
   try {
     // Verify supabase connection
     if (!supabase) {
-      console.error("Supabase client not initialized");
       return { items: [], error: "Database connection failed" };
     }
 
@@ -52,13 +49,11 @@ export const getItemsWithUsers = cache(async () => {
       .throwOnError(); // Add explicit error throwing
 
     if (error) {
-      console.error("Error fetching items with users:", error);
       return { items: [], error: error.message };
     }
 
     return { items: itemsWithUsers || [], error: null };
   } catch (error) {
-    console.error("Unexpected error fetching items with users:", error);
     return { items: [], error: "Database connection failed" };
   }
 });
@@ -122,7 +117,6 @@ export async function searchItems(query: string) {
       .limit(5);
 
     if (error) {
-      console.error("Search error:", error);
       return [];
     }
 
@@ -133,7 +127,6 @@ export async function searchItems(query: string) {
       currentBid: item.currentBid,
     }));
   } catch (error) {
-    console.error("Unexpected error:", error);
     return [];
   }
 }
@@ -144,9 +137,7 @@ export const handleSignOut = async () => {
 
   const { error } = await supabase.auth.signOut();
   if (error) {
-    console.error("Error signing out:", error.message);
   } else {
-    console.log("Sign-out successful");
     // Optionally redirect the user after sign-out
     window.location.href = "/";
   }
@@ -167,11 +158,10 @@ export async function updateItemStatus(itemId: number, status: string) {
 
     // Revalidate the auctions pages
     revalidatePath("/");
-    revalidatePath("/auctions");
+    revalidatePath("/app/auctions");
 
     return { success: true };
   } catch (error) {
-    console.error("Error updating item status:", error);
     return { success: false, error };
   }
 }

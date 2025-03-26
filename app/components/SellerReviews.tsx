@@ -1,10 +1,6 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import {
-  getSellerReviews,
-  getSellerRatingSummary,
-} from "../dashboard/reviews/action";
 import { StarIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { OptimizedImage } from "./OptimizedImage";
@@ -12,6 +8,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import {
+  getSellerRatingSummary,
+  getSellerReviews,
+} from "../app/dashboard/reviews/action";
 
 interface SellerReviewsProps {
   sellerId: string;
@@ -58,8 +58,6 @@ export function SellerReviews({ sellerId }: SellerReviewsProps) {
   if (isLoading) {
     return <ReviewsSkeleton />;
   }
-
-  console.log("reviews", reviews);
 
   if (!reviews || reviews.length === 0) {
     return (

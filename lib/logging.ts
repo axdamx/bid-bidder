@@ -29,9 +29,8 @@ export async function logEvent(
   // Log to Supabase
   const supabase = createServerSupabase();
   const { error } = await supabase.from("logs").insert([logEntry]);
-  
+
   if (error) {
-    console.error("Failed to store log in Supabase:", error);
   }
 
   // Log to PostHog with appropriate event name
@@ -43,16 +42,24 @@ export async function logEvent(
 
   // Also console.log for development
   if (process.env.NODE_ENV === "development") {
-    console.log(`[${level.toUpperCase()}] ${event}:`, details);
   }
 }
 
 // Convenience methods
-export const logInfo = (event: string, details: Record<string, any>, userId?: string) =>
-  logEvent("info", event, details, userId);
+export const logInfo = (
+  event: string,
+  details: Record<string, any>,
+  userId?: string
+) => logEvent("info", event, details, userId);
 
-export const logWarning = (event: string, details: Record<string, any>, userId?: string) =>
-  logEvent("warning", event, details, userId);
+export const logWarning = (
+  event: string,
+  details: Record<string, any>,
+  userId?: string
+) => logEvent("warning", event, details, userId);
 
-export const logError = (event: string, details: Record<string, any>, userId?: string) =>
-  logEvent("error", event, details, userId);
+export const logError = (
+  event: string,
+  details: Record<string, any>,
+  userId?: string
+) => logEvent("error", event, details, userId);
