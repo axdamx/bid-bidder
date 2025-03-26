@@ -1,16 +1,19 @@
 // disabled typescript for this file
 "use client";
 
-import { EmptyState } from "@/app/auctions/empty-state";
-import MainItemCard from "@/app/components/MainItemCard";
 import { MotionGrid } from "@/app/components/motionGrid";
 import ItemCard from "@/app/item-card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { ItemWithUser } from "@/app/items";
+import { EmptyState } from "@/app/app/auctions/empty-state";
 
-export default function PostFeed({ ownedItems }: { ownedItems: ItemWithUser[] }) {
+export default function PostFeed({
+  ownedItems,
+}: {
+  ownedItems: ItemWithUser[];
+}) {
   const [page, setPage] = useState(1);
   const itemsPerPage = 9;
   const hasItems = ownedItems.length > 0;
